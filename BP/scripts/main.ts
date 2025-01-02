@@ -206,17 +206,25 @@ function runInClaims(callback: (playerName: string, claimName: string, claimData
  */
 function getClosestPlayer(blockLocation: Vector3): Player {
     var closestPlayer: Player = undefined;
+    var closestDistance: number = Number.MAX_VALUE;
 
     // find player closest to the specified block
     for (var p of world.getAllPlayers()) {
-        if ((p.dimension == world.getDimension("overworld"))
-            && ((closestPlayer == undefined)
-                || (Math.cbrt(Math.pow(p.location.x, 3) + Math.pow(p.location.y, 3) + Math.pow(p.location.z, 3)) < (Math.cbrt(Math.pow(closestPlayer.location.x, 3) + Math.pow(closestPlayer.location.y, 3) + Math.pow(closestPlayer.location.z, 3)))))) {
-            closestPlayer = p;
+        if (p.dimension == world.getDimension("overworld")) {
+            var distance = Math.sqrt(
+                Math.pow(p.location.x - blockLocation.x, 2) +
+                Math.pow(p.location.y - blockLocation.y, 2) +
+                Math.pow(p.location.z - blockLocation.z, 2)
+            );
+
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestPlayer = p;
+            }
         }
     }
 
-    return (closestPlayer);
+    return closestPlayer;
 }
 
 class Ui {
