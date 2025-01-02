@@ -34,6 +34,147 @@ function saveSettings() {
 }
 
 // load database ----------------------------------------------------------------------------------------------------------
+class PlayerPermissions {
+    id: string; // player entity id
+    name: string; // player name, not used for identification
+    permissions: {
+        enterClaim: boolean;
+        breakBlocks: boolean;
+        useItemsOnBlocks: boolean;
+        hurtEntities: boolean;
+    }
+
+    constructor(id: string, name: string) {
+        this.id = id;
+        this.name = name;
+        this.permissions.enterClaim = true;
+        this.permissions.breakBlocks = false;
+        this.permissions.useItemsOnBlocks = false;
+        this.permissions.hurtEntities = false;
+    }
+}
+
+class Claim {
+    name: string;
+    start: Vector3; // the start x and z position of the claim
+    end: Vector3; // the end x and z position of the claim
+    icon: string; // icon path to be displayed in the ui
+    particlesEnabled: boolean;
+    playerPermissionsList: PlayerPermissions[]; // an array containing what permissions each individual player has
+    publicPermissions: { // default permissions for all players
+        enterClaim: boolean;
+        breakBlocks: boolean;
+        useItemsOnBlocks: boolean;
+        hurtEntities: boolean;
+        useTNT: boolean;
+    }
+
+    constructor(name: string, start: Vector3, end: Vector3, icon: string, particlesEnabled: boolean = true) {
+        this.name = name;
+        this.start = start;
+        this.end = end;
+        this.icon = icon;
+        this.particlesEnabled = particlesEnabled;
+        this.publicPermissions.enterClaim = true;
+        this.publicPermissions.breakBlocks = false;
+        this.publicPermissions.useItemsOnBlocks = false;
+        this.publicPermissions.hurtEntities = false;
+        this.publicPermissions.useTNT = false;
+    }
+
+    /**
+     * returns if a visitor has specified permissions
+     * 
+     * @param permission - Name of the permission to check for
+     * Allowed values: enterClaim, breakBlocks, useItemsOnBlocks, useTNT
+     * 
+     * @param player - Optional; The player you would like to check the permission for
+    */
+    hasPermission(permission: string, player: Player = undefined): boolean {
+
+        // check if player is in specific permissions list
+        if (player != undefined) {
+
+            var playerPermissions: PlayerPermissions = undefined;
+
+            // attempt to find the players permissions
+            for (var p of this.playerPermissionsList) {
+                if (p.id == player.id) {
+                    playerPermissions = p;
+                }
+            }
+
+            if (Object.keys(playerPermissions).includes(permission)) {
+
+                return playerPermissions[permission]
+            }
+        }
+        // default to claims global permissions list
+        else {
+            if (Object.keys(this.publicPermissions).includes(permission)) {
+
+                return (this.publicPermissions[permission]);
+            }
+        }
+
+        // permission not found or something else went wrong ¯\_(ツ)_/¯
+        return (false);
+    }
+
+    /**
+     * returns if the specified area overlaps with the claim
+     * 
+     * @param start - The block representing the first corner of the area
+     * 
+     * @param end - The block representing the opposite second corner of the area
+    */
+    isOverlap(start: Vector3, end: Vector3): boolean {
+        // Get the left, right, bottom, and top coordinates of each rectangle
+        const rect1Left = Math.min(this.start.x, this.end.x);
+        const rect1Right = Math.max(this.start.x, this.end.x);
+        const rect1Top = Math.max(this.start.z, this.end.z);
+        const rect1Bottom = Math.min(this.start.z, this.end.z);
+
+        const rect2Left = Math.min(start.x, end.x);
+        const rect2Right = Math.max(start.x, end.x);
+        const rect2Top = Math.max(start.z, end.z);
+        const rect2Bottom = Math.min(start.z, end.z);
+
+        // Check if there's no overlap on both x and y directions
+        return !(rect1Right < rect2Left || rect2Right < rect1Left || rect1Top < rect2Bottom || rect2Top < rect1Bottom);
+    }
+}
+
+class PlayerData {
+    id: string; // entity id of the player
+    name: string; // name of the player; do not use for identification as it can change
+    inClaim: boolean;
+    viewingClaim: boolean;
+    resizingClaimName: string;
+    firstPoint: Vector3; // used to store the first corner when creating a claim
+    oppositeCorner: Vector3; // used to store the opposite corner of a claim when resizing it
+    entranceVelocity: Vector3; // the reverse velocity is applied to a player when they are not allowed in a claim to kick them out. 
+    claimBlocks: {
+        amount: number;
+        paymentTimeRemaining: number;
+    }
+    claims: Claim[]
+
+    /**
+     * Returns the requested claim
+     * 
+     * @param claimName - The name of the claim to retrieve
+     */
+    getClaim(claimName: string): Claim {
+
+        for (var c of this.claims) {
+            if (c.name == claimName) {
+                return c;
+            }
+        }
+    }
+}
+
 const dbPlayerDefault = {
     "in-claim": false,
     "viewing-claim": false,
@@ -89,39 +230,24 @@ const dbClaimDefault = {
     }
 }
 
-var database = {};
+var database: PlayerData[] = [];
 
 // compile database into a dict
 for (var id of world.getDynamicPropertyIds()) {
     const property = world.getDynamicProperty(id);
 
-    if (id.includes(".") && (id.split(".")[0] == "db")) {
-        database[id.split(".")[1]] = JSON.parse(property.toString());
+    if (id.includes("db.")) {
+        database.push = JSON.parse(property.toString());
     }
 }
 
-// verify that database contains correct properties
-for (var player of Object.keys(database)) {
-    database[player] = { ...dbPlayerDefault, ...database[player] }
-
-    // verify data in claims: {}
-    for (var claim of Object.keys(database[player]["claims"])) {
-        database[player]["claims"][claim] = { ...dbClaimDefault, ...database[player]["claims"][claim] }
-
-        // verify data in player: {}
-        for (var permission_player of Object.keys(database[player]["claims"][claim]["permissions"]["players"])) {
-            database[player]["claims"][claim]["permissions"]["players"][permission_player] = {
-                ...dbPlayerPermissionsDefault,
-                ...database[player]["claims"][claim]["permissions"]["players"][permission_player]
-            }
-        }
-    }
-}
-
-// deconstruct database to save each players data as an individual property
+/**
+ * Transfers the database from memory into long term storage using dynamic world properties
+ */
 function saveDb() {
-    for (var playerName of Object.keys(database)) {
-        world.setDynamicProperty(`db.${playerName}`, JSON.stringify(database[playerName]));
+    for (var playerData of database) {
+        // deconstruct database to save each players data as an individual dynamic property
+        world.setDynamicProperty(`db.${playerData.id}`, JSON.stringify(playerData));
     }
 }
 
@@ -142,57 +268,15 @@ function sendNotification(player: Player, langEntry: string | RawMessage) {
     player.runCommandAsync(`tellraw @s {"rawtext":${JSON.stringify(rawText)}}`);
 }
 
-// // Returns true if two claims (l1, r1) and (l2, r2) overlap 
-function doOverlap(l1: Vector3, r1: Vector3, l2: Vector3, r2: Vector3) {
-    // Get the left, right, bottom, and top coordinates of each rectangle
-    const rect1Left = Math.min(l1.x, r1.x);
-    const rect1Right = Math.max(l1.x, r1.x);
-    const rect1Top = Math.max(l1.z, r1.z);
-    const rect1Bottom = Math.min(l1.z, r1.z);
-
-    const rect2Left = Math.min(l2.x, r2.x);
-    const rect2Right = Math.max(l2.x, r2.x);
-    const rect2Top = Math.max(l2.z, r2.z);
-    const rect2Bottom = Math.min(l2.z, r2.z);
-
-    // Check if there's no overlap on both x and y directions
-    return !(rect1Right < rect2Left || rect2Right < rect1Left || rect1Top < rect2Bottom || rect2Top < rect1Bottom);
-}
-
-// returns if a visitor has specified permission
-function hasPermission(claim: {}, permission: string, player: Player = undefined) {
-    var playerPermissions = claim["permissions"]["players"];
-
-    // check if player is in specific permissions list
-    if ((player != undefined) && Object.keys(playerPermissions).includes(player.name)) {
-        if (Object.keys(playerPermissions[player.name]).includes(permission)) {
-
-            return playerPermissions[player.name][permission]
-        }
-    }
-    // default to claims global permissions list
-    else {
-        if (Object.keys(claim["permissions"]["public"]).includes(permission)) {
-
-            return (claim["permissions"]["public"][permission]);
-        }
-    }
-
-    // permission not found
-    return (false);
-}
-
 /**
  * Runs the callback for every claim saved in the database
+ * 
  */
-function runInClaims(callback: (playerName: string, claimName: string, claimData: {}) => void) {
+function runInAllClaims(callback: (playerId: string, playerName: string, claimData: Claim) => void) {
 
-    for (var playerName of Object.keys(database)) {
-        var claims = database[playerName]["claims"]
-
-        for (var claimName of Object.keys(claims)) {
-
-            callback(playerName, claimName, claims[claimName]);
+    for (var player of database) {
+        for (var claim of player.claims) {
+            callback(player.id, player.name, claim);
         }
     }
 }
@@ -227,6 +311,20 @@ function getClosestPlayer(blockLocation: Vector3): Player {
     return closestPlayer;
 }
 
+/**
+ * Returns the players data including claims
+ * 
+ * @param playerId - The entity id of the player
+ */
+function getPlayerData(playerId: string): PlayerData {
+
+    for (var player of database) {
+        if (playerId == player.id) {
+            return player;
+        }
+    }
+}
+
 class Ui {
     // player selected icons for their claims
     static claimIcons = {
@@ -234,12 +332,14 @@ class Ui {
         "ui.claim.icons:land": "textures/ui/icon_recipe_nature.png",
         "ui.claim.icons:bed": "textures/ui/icon_recipe_item.png",
         "ui.claim.icons:farmland": "textures/ui/icon_new.png",
-        "ui.claim.icons:weapons": "textures\/ui/icon_recipe_equipment.png",
+        "ui.claim.icons:weapons": "textures/ui/icon_recipe_equipment.png",
         "ui.claim.icons:flowers": "textures/ui/icon_spring.png"
     };
 
     static main(owner: Player) {
-        var claims: {} = database[owner.name]["claims"];
+        var playerData: PlayerData = getPlayerData(owner.id);
+
+        world.sendMessage(JSON.stringify(database));
 
         const form = new ActionFormData()
             .title("ui.main:title")
@@ -251,9 +351,9 @@ class Ui {
                     { "text": "\n\n" },
                     { "translate": "ui.main:body.paragraph:3" },
                     { "text": "\n\n" },
-                    { "translate": "ui.main:body.paragraph:4" }, { "text": ` §e${database[owner.name]["claim-blocks"]}§r ` },
+                    { "translate": "ui.main:body.paragraph:4" }, { "text": ` §e${playerData.claimBlocks.amount}§r ` },
                     { "text": "\n\n" },
-                    { "translate": "ui.main:body.paragraph:5-1" }, { "text": ` §a+${settings["claim-block-hourly-payment"]}§r ` }, { "translate": "ui.main:body.paragraph:5-2" }, { "text": ` §9${database[owner.name]["claim-block-payment-time-remaining"]}§r ` }, { "translate": "ui.main:body.paragraph:5-3" }
+                    { "translate": "ui.main:body.paragraph:5-1" }, { "text": ` §a+${settings["claim-block-hourly-payment"]}§r ` }, { "translate": "ui.main:body.paragraph:5-2" }, { "text": ` §9${playerData.claimBlocks.paymentTimeRemaining}§r ` }, { "translate": "ui.main:body.paragraph:5-3" }
                 ]
             })
             .button("ui.main.button:manage", "textures/ui/icon_setting.png")
@@ -261,7 +361,7 @@ class Ui {
 
         form.show(owner).then((response) => {
             if (response.selection == 0) {
-                if (Object.keys(claims).length == 0) {
+                if (playerData.claims.length == 0) {
                     sendNotification(owner, "chat.claim:no_claims");
                     owner.playSound("note.didgeridoo");
                 }
@@ -273,7 +373,7 @@ class Ui {
     }
 
     static newClaim(owner: Player, start: Vector3, end: Vector3) {
-        var claims: {} = database[owner.name]["claims"];
+        var playerData: PlayerData = getPlayerData(owner.id);
 
         const form = new ModalFormData()
             .title("ui.claim.new:title")
@@ -287,15 +387,24 @@ class Ui {
 
                 const name = response.formValues[0].toString();
                 const iconPath = claimIcons[Object.keys(claimIcons)[response.formValues[1].toString()]];
-                const showBorderParticles = response.formValues[2];
+                const showBorderParticles = response.formValues[2] as boolean;
                 const claimWidth = Math.abs(start.x - end.x) + 1;
                 const claimLength = Math.abs(start.z - end.z) + 1;
+
+                var isUniqueName = true;
+
+                // names are used to identify claims, make sure player is using a unique name
+                for (var c of playerData.claims) {
+                    if (c.name == name) {
+                        isUniqueName = false;
+                    }
+                }
 
                 if (name.length == 0) {
                     sendNotification(owner, "chat.claim:name_required")
                     owner.playSound("note.didgeridoo");
                 }
-                else if (name in claims) {
+                else if (!isUniqueName) {
                     sendNotification(owner, "chat.claim:use_unique_name")
                     owner.playSound("note.didgeridoo");
                 }
@@ -303,16 +412,11 @@ class Ui {
                 else {
 
                     // subtract claim blocks
-                    database[owner.name]["claim-blocks"] -= (claimWidth * claimLength);
+                    playerData.claimBlocks.amount -= (claimWidth * claimLength);
 
-                    // generate dict for the new claim
-                    claims[name] = Object.assign({}, dbClaimDefault);
-
-                    // save data
-                    claims[name]["start"] = start;
-                    claims[name]["end"] = end;
-                    claims[name]["icon"] = iconPath;
-                    claims[name]["particles"] = showBorderParticles;
+                    // create a new claim
+                    const newClaim = new Claim(name, start, end, iconPath, showBorderParticles);
+                    playerData.claims.push(newClaim);
 
                     sendNotification(owner, "chat.claim:created")
                     owner.playSound("random.levelup");
@@ -323,11 +427,11 @@ class Ui {
         });
     }
 
-    static resizeClaim(owner: Player, claimName: string, start: Vector3, end: Vector3) {
-        var claims: {} = database[owner.name]["claims"];
+    static resizeClaim(owner: Player, claim: Claim, start: Vector3, end: Vector3) {
+        var playerData: PlayerData = getPlayerData(owner.id);
 
-        const oldClaimWidth = Math.abs(claims[claimName]["start"]["x"] - claims[claimName]["end"]["x"]) + 1;
-        const oldClaimLength = Math.abs(claims[claimName]["start"]["z"] - claims[claimName]["end"]["z"]) + 1;
+        const oldClaimWidth = Math.abs(claim.start.x - claim.end.x) + 1;
+        const oldClaimLength = Math.abs(claim.start.z - claim.end.z) + 1;
 
         const newClaimWidth = Math.abs(start.x - end.x) + 1;
         const newClaimLength = Math.abs(start.z - end.z) + 1;
@@ -351,14 +455,14 @@ class Ui {
         form.show(owner).then((response) => {
             // if claim resized
             if (response.selection == 1) {
-                claims[claimName]["start"] = start;
-                claims[claimName]["end"] = end;
+                claim.start = start;
+                claim.end = end;
 
                 sendNotification(owner, "chat.claim:resized")
                 owner.playSound("random.levelup");
 
                 //add/subtract the blocks from players balance
-                database[owner.name]["claim-blocks"] += blockDifference
+                playerData.claimBlocks.amount += blockDifference
 
                 saveDb();
             }
@@ -366,54 +470,53 @@ class Ui {
     }
 
     static managePage(owner: Player) {
-        var claims = database[owner.name]["claims"];
+        var playerData: PlayerData = getPlayerData(owner.id);
 
         const form = new ActionFormData()
             .title("ui.manage:title")
 
-        for (var c of Object.keys(claims)) {
+        for (var c of playerData.claims) {
 
-            var claimWidth = Math.abs(claims[c]["start"]["x"] - claims[c]["end"]["x"]) + 1;
-            var claimLength = Math.abs(claims[c]["start"]["z"] - claims[c]["end"]["z"]) + 1;
+            var claimWidth = Math.abs(c.start.x - c.end.x) + 1;
+            var claimLength = Math.abs(c.start.z - c.end.z) + 1;
 
             form.button(
                 {
                     "rawtext": [
-                        { "text": `${c}§r\n§c${claimWidth}§8x§9${claimLength} ` }
+                        { "text": `${c.name}§r\n§c${claimWidth}§8x§9${claimLength} ` }
                     ]
-                }, claims[c]["icon"]);
+                }, c.icon);
         }
 
         form.button("ui.global.button:back")
 
         form.show(owner).then((response) => {
-            if (response.selection == Object.keys(claims).length) {
+            if (response.selection == playerData.claims.length) {
                 // return to previous menu
                 this.main(owner);
             }
             else {
-                this.manageClaim(owner, Object.keys(claims)[response.selection].toString());
+                this.manageClaim(owner, playerData.claims[response.selection]);
             }
         });
     }
 
-    static manageClaim(owner: Player, claimName: string) {
-        var claims = database[owner.name]["claims"];
+    static manageClaim(owner: Player, claim: Claim) {
 
         const form = new ActionFormData()
             .title({
                 "rawtext": [
                     { "translate": "ui.manage:title" },
-                    { "text": `: ${claimName}` }
+                    { "text": `: ${claim.name}` }
                 ]
             })
             .body({
                 "rawtext": [
                     { "text": "\n" },
                     { "translate": "ui.manage.body:claim_start" },
-                    { "text": `:  §cX§r=${claims[claimName]["start"]["x"]} §9Z§r=${claims[claimName]["start"]["z"]}\n\n` },
+                    { "text": `:  §cX§r=${claim.start.x} §9Z§r=${claim.start.z}\n\n` },
                     { "translate": "ui.manage.body:claim_end" },
-                    { "text": `: §cX§r=${claims[claimName]["end"]["x"]} §9Z§r=${claims[claimName]["end"]["z"]}\n ` }
+                    { "text": `: §cX§r=${claim.end.x} §9Z§r=${claim.end.z}\n ` }
                 ]
             })
             .button("ui.manage.button:config", "textures/ui/debug_glyph_color.png")
@@ -425,19 +528,19 @@ class Ui {
 
         form.show(owner).then((response) => {
             if (response.selection == 0) {
-                this.claimConfig(owner, claimName);
+                this.claimConfig(owner, claim);
             }
             else if (response.selection == 1) {
-                this.managePermissions(owner, claimName);
+                this.managePermissions(owner, claim);
             }
             else if (response.selection == 2) {
-                this.playerPermissionsList(owner, claimName);
+                this.playerPermissionsList(owner, claim);
             }
             else if (response.selection == 3) {
-                this.viewClaim(owner, claimName);
+                this.viewClaim(owner, claim);
             }
             else if (response.selection == 4) {
-                this.removeClaim(owner, claimName);
+                this.removeClaim(owner, claim);
             }
             else if (response.selection == 5) {
                 // return to previous menu
@@ -446,21 +549,19 @@ class Ui {
         });
     }
 
-    static playerPermissionsList(owner: Player, claimName: string) {
-        var claims = database[owner.name]["claims"];
-        var players = Object.keys(claims[claimName]["permissions"]["players"])
+    static playerPermissionsList(owner: Player, claim: Claim) {
 
         const form = new ActionFormData()
             .title({
                 "rawtext": [
                     { "translate": "ui.manage.permissions.player.selection:title" },
-                    { "text": `: ${claimName}` }
+                    { "text": `: ${claim.name}` }
                 ]
             })
             .body("ui.manage.permissions.player.selection:body");
 
-        for (var pName of players) {
-            form.button(pName, "textures/ui/profile_glyph_color.png");
+        for (var playerPermissions of claim.playerPermissionsList) {
+            form.button(playerPermissions.name, "textures/ui/profile_glyph_color.png");
         }
 
         form.button("ui.manage.permissions.player.selection:add_player", "textures/ui/realms_slot_check.png");
@@ -468,42 +569,61 @@ class Ui {
         form.button("ui.global.button:back");
 
         form.show(owner).then((response) => {
-            if (response.selection == players.length) {
+            if (response.selection == claim.playerPermissionsList.length) {
                 // open add player menu
-                this.playerPermissionsListModify(owner, claimName, true);
+                this.playerPermissionsListModify(owner, claim, true);
             }
-            else if (response.selection == players.length + 1) {
+            else if (response.selection == claim.playerPermissionsList.length + 1) {
                 // open remove player menu
-                this.playerPermissionsListModify(owner, claimName, false);
+                this.playerPermissionsListModify(owner, claim, false);
             }
-            else if (response.selection == players.length + 2) {
+            else if (response.selection == claim.playerPermissionsList.length + 2) {
                 // return to previous menu
-                this.manageClaim(owner, claimName);
+                this.manageClaim(owner, claim);
             }
             else {
                 // open player permissions menu
-                this.managePermissions(owner, claimName, players[response.selection]);
+                this.managePermissions(owner, claim, claim.playerPermissionsList[response.selection].name);
             }
         });
     }
     /**
-     * creates a prompt to specify what player to add or remove from permissions list
+     * Creates a prompt to specify what player to add or remove from permissions list
+     * 
+     * @param owner - The player that ownes the claim
+     * 
+     * @param claim - The claim that is being updated
+     * 
+     * @param add - Wether to add or remove the selected player from the specific player permissions list
      */
-    static playerPermissionsListModify(owner: Player, claimName: string, add: boolean) {
-        var claims = database[owner.name]["claims"];
+    static playerPermissionsListModify(owner: Player, claim: Claim, add: boolean) {
+
+        var players = []
 
         // if adding player, only show players not in list
         if (add) {
 
-            // filter players from list
-            var players = Object.keys(database).filter(el => !Object.keys(claims[claimName]["permissions"]["players"]).includes(el));
+            // get the entire list of players that have ever joined the world
+            for (var playerData of database) {
+                players.push(playerData.name)
+            }
 
-            // make sure to remove owner from list
+            // filter players from the list, we don't want to add people who are already in it
+            for (var playerPermissions of claim.playerPermissionsList) {
+
+                var index = players.indexOf(playerPermissions.name);
+                players.splice(index, 1);
+            }
+
+            // make sure to remove owner from list as well
             players.splice(players.indexOf(owner.name), 1);
         }
         // if removing player, only show players in list
         else {
-            var players = Object.keys(claims[claimName]["permissions"]["players"]);
+
+            for (var playerPermissions of claim.playerPermissionsList) {
+                players.push(playerPermissions.name);
+            }
         }
 
         const form = new ModalFormData()
@@ -526,16 +646,18 @@ class Ui {
 
             if (add) {
                 // set up default permissions for specified player
-                claims[claimName]["permissions"]["players"][playerName] = { ...claims[claimName]["permissions"]["public"] };
+                const newPlayerPermissions = new PlayerPermissions(owner.id, owner.name);
+                claim.playerPermissionsList.push(newPlayerPermissions);
             }
             else {
                 // remove player from list
-                delete claims[claimName]["permissions"]["players"][playerName];
+                var index = claim.playerPermissionsList.indexOf(playerName);
+                claim.playerPermissionsList.splice(index, 1);
 
                 // if a players permissions have been removed notify them
                 for (var p of world.getAllPlayers()) {
                     if (p.name == playerName) {
-                        p.runCommandAsync(`tellraw @s {"rawtext":[{"translate":"chat.prefix"}, {"text":" ${owner.name} "}, {"translate":"chat.claim:player_permissions_reset_notif"}, {"translate":"claim:name_color"}, {"text":" ${claimName}"}]}`);
+                        p.runCommandAsync(`tellraw @s {"rawtext":[{"translate":"chat.prefix"}, {"text":" ${owner.name} "}, {"translate":"chat.claim:player_permissions_reset_notif"}, {"translate":"claim:name_color"}, {"text":" ${claim.name}"}]}`);
                         p.playSound("random.levelup");
                     }
                 }
@@ -545,7 +667,7 @@ class Ui {
             saveDb();
 
             // return to previous menu
-            this.playerPermissionsList(owner, claimName)
+            this.playerPermissionsList(owner, claim)
 
         });
 
@@ -555,10 +677,18 @@ class Ui {
     *A page for editing a claims permissions.
     *If the player parameter is not specified the form will edit the claims global permissions.
     */
-    static managePermissions(owner: Player, claimName: string, playerName?: string) {
-        var permissions = playerName ?
-            database[owner.name]["claims"][claimName]["permissions"]["players"][playerName]
-            : database[owner.name]["claims"][claimName]["permissions"]["public"];
+    static managePermissions(owner: Player, claim: Claim, playerName?: string) {
+
+        if (playerName) {
+            for (var playerPermissions of claim.playerPermissionsList) {
+                if (playerPermissions.name == playerName) {
+                    var permissions = playerPermissions.permissions;
+                }
+            }
+        }
+        else {
+            permissions = claim.publicPermissions;
+        }
 
         const form = new ModalFormData()
             .title(playerName ? {
@@ -617,7 +747,7 @@ class Ui {
     /*
     Uses the camera command to circle around the specified claim.
     */
-    static viewClaim(owner: Player, claimName: string) {
+    static viewClaim(owner: Player, claim: Claim) {
 
         // only run if player is in overworld
         if (owner.dimension == world.getDimension("overworld")) {
@@ -756,8 +886,8 @@ class Ui {
         }
     }
 
-    static removeClaim(owner: Player, claimName: string) {
-        var claims: {} = database[owner.name]["claims"];
+    static removeClaim(owner: Player, claim: Claim) {
+        var playerData: PlayerData = getPlayerData(owner.id);
 
         var claimWidth = Math.abs(claims[claimName]["start"]["x"] - claims[claimName]["end"]["x"]) + 1;
         var claimLength = Math.abs(claims[claimName]["start"]["z"] - claims[claimName]["end"]["z"]) + 1;
@@ -796,8 +926,8 @@ class Ui {
         });
     }
 
-    static claimConfig(owner: Player, claimName: string) {
-        var claims: {} = database[owner.name]["claims"];
+    static claimConfig(owner: Player, claim: Claim) {
+        var playerData: PlayerData = getPlayerData(owner.id);
 
         const form = new ModalFormData()
             .title({
@@ -898,9 +1028,9 @@ world.beforeEvents.itemUseOn.subscribe((data) => {
     }
 
     if (data.block.dimension == world.getDimension("overworld")) {
-        runInClaims((playerName, claimName, claim) => {
+        runInAllClaims((playerName, claimName, claim) => {
             // check if a block is broken by a player without permissions within the claim
-            if ((doOverlap(claim["start"], claim["end"], data.block, data.block) || doOverlap(claim["start"], claim["end"], placedBlock, placedBlock)) && (playerName != data.source.name) && !hasPermission(claim, "use-items-on-blocks", data.source)) {
+            if ((doOverlap(claim["start"], claim["end"], data.block, data.block) || doOverlap(claim["start"], claim["end"], placedBlock, placedBlock)) && (playerName != data.source.name) && !hasPermission(claim, PlayerPermissions.USE_ITEMS_ON_BLOCKS, data.source)) {
                 data.cancel = true;
 
                 system.run(() => {
@@ -938,7 +1068,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                     firstPoint["y"] = data.block.y;
                     firstPoint["z"] = data.block.z;
 
-                    runInClaims((playerName, claimName, claimData) => {
+                    runInAllClaims((playerName, claimName, claimData) => {
 
                         // user defined start and end points of the claim
                         var start = claimData["start"];
@@ -1031,7 +1161,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         const blockDifference = (newClaimLength * newClaimWidth) - (oldClaimLength * oldClaimWidth)
 
                         // make sure new claim isn't intersecting others not counting itself
-                        runInClaims((playerName, claimName, claim) => {
+                        runInAllClaims((playerName, claimName, claim) => {
                             if (doOverlap(claim["start"], claim["end"], firstPoint, secondPoint) && ((playerName != data.player.name) || (claimName != firstPoint["resizing-claim"]))) {
                                 intersectingClaim = true;
                             }
@@ -1070,7 +1200,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         const claimLength = Math.abs(firstPoint.z - secondPoint.z) + 1;
 
                         // make sure new claim isn't intersecting others
-                        runInClaims((playerName, claimName, claim) => {
+                        runInAllClaims((playerName, claimName, claim) => {
                             if (doOverlap(claim["start"], claim["end"], firstPoint, secondPoint)) {
                                 intersectingClaim = true;
                             }
@@ -1125,7 +1255,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
         }
         //                                                              *added for compatibility with gravestone addon*
         else if (data.dimension == world.getDimension("overworld") && !(data.block.typeId == "darkosto_gravestone:gravestone")) {
-            runInClaims((playerName, claimName, claim) => {
+            runInAllClaims((playerName, claimName, claim) => {
                 // check if a block is broken by a player without permissions within the claim
                 if (doOverlap(claim["start"], claim["end"], data.block, data.block) && (playerName != data.player.name) && !hasPermission(claim, "break-blocks", data.player)) {
                     data.cancel = true;
@@ -1153,7 +1283,7 @@ world.beforeEvents.explosion.subscribe((data) => {
         var sendDisallowedNotification = false;
 
         // check if tnt blast effects a claim
-        runInClaims((playerName, claimName, claim) => {
+        runInAllClaims((playerName, claimName, claim) => {
 
             // if entity is a mob or player doesn't have permissions
             if ((data.source.typeId != "minecraft:tnt") || !hasPermission(claim, "use-tnt")) {
@@ -1220,7 +1350,7 @@ world.afterEvents.pistonActivate.subscribe((data) => {
                 var b = block.offset(directionOffset);
             }
 
-            runInClaims((playerName, claimName, claim) => {
+            runInAllClaims((playerName, claimName, claim) => {
 
                 // if block is in claim but not piston
                 if (doOverlap(claim["start"], claim["end"], b.location, b.location) && !doOverlap(claim["start"], claim["end"], data.piston.block.location, data.piston.block.location)) {
@@ -1261,7 +1391,7 @@ world.beforeEvents.itemUse.subscribe((data) => {
     var disallowedItems = ["minecraft:splash_potion", "minecraft:lingering_potion", "minecraft:bow", "minecraft:crossbow"]
 
     if (disallowedItems.includes(data.itemStack.typeId) && (data.source.dimension == world.getDimension("overworld"))) {
-        runInClaims((playerName, claimName, claim) => {
+        runInAllClaims((playerName, claimName, claim) => {
 
             // if player has used the disallowed item in a claim
             if (doOverlap(claim["start"], claim["end"], data.source.location, data.source.location) && (playerName != data.source.name) && !hasPermission(claim, "hurt-entities", data.source)) {
@@ -1285,7 +1415,7 @@ system.runInterval(() => {
     // make sure fire charges can't fly into claims
     // also make sure withers can't fly into claim
     for (var e of world.getDimension("overworld").getEntities()) {
-        runInClaims((playerName, claimName, claim) => {
+        runInAllClaims((playerName, claimName, claim) => {
             if (doOverlap(claim["start"], claim["end"], e.location, e.location)) {
                 if (e.typeId == "minecraft:small_fireball" || e.typeId == "minecraft:wither") {
                     e.remove();
@@ -1305,7 +1435,7 @@ system.runInterval(() => {
             // set flag to false before for loop updates it
             database[p.name]["in-claim"] = false;
 
-            runInClaims((playerName, claimName, claim) => {
+            runInAllClaims((playerName, claimName, claim) => {
 
                 // apply an offset to the player location to be more accurate with claim bounds
                 const location: Vector3 = { "x": p.location.x - 0.5, "y": p.location.y - 0.5, "z": p.location.z - 0.5 };
@@ -1386,7 +1516,7 @@ system.runInterval(() => {
 
     var dimension = world.getDimension("overworld");
 
-    runInClaims((playerName, claimName, claim) => {
+    runInAllClaims((playerName, claimName, claim) => {
 
         // user defined start and end points of the claim
         var start = claim["start"];
