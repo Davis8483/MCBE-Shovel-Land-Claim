@@ -1274,11 +1274,9 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
 
                         // all 4 points of the claim
                         var points = [
-                            [[s["x"], s["z"]], [s["x"], e["z"]]],
-                            [[e["x"], s["z"]], [e["x"], e["z"]]]
+                            [[s.x, s.z], [s.x, e.z]],
+                            [[e.x, s.z], [e.x, e.z]]
                         ]
-
-                        var brokenPoint = [data.block.x, data.block.z];
 
                         var aIndex = null;
                         var bIndex = null;
@@ -1286,7 +1284,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         // find the index of the broken block
                         for (var a = 0; a < points.length; a++) {
                             for (var b = 0; b < points[a].length; b++) {
-                                if (JSON.stringify(points[a][b]) == JSON.stringify(brokenPoint)) {
+                                if (points[a][b][0] == data.block.x && points[a][b][1] == data.block.z) {
                                     aIndex = a;
                                     bIndex = b;
                                 }
