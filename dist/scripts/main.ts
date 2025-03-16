@@ -1621,108 +1621,108 @@ world.beforeEvents.itemUse.subscribe((data) => {
 })
 
 // player management in claims, runs every 1/20th of a second
-// system.runInterval(() => {
+system.runInterval(() => {
 
-//     // make sure fire charges can't fly into claims
-//     // also make sure withers can't fly into claim
-//     for (var e of world.getDimension("overworld").getEntities()) {
-//         runInAllClaims((playerID, playerName, claim) => {
-//             if (claim.isOverlap(e.location, e.location)) {
-//                 if (e.typeId == "minecraft:small_fireball" || e.typeId == "minecraft:wither") {
-//                     e.remove();
-//                 }
-//             }
-//         });
-//     }
+    // make sure fire charges can't fly into claims
+    // also make sure withers can't fly into claim
+    for (var e of world.getDimension("overworld").getEntities()) {
+        runInAllClaims((playerID, playerName, claim) => {
+            if (claim.isOverlap(e.location, e.location)) {
+                if (e.typeId == "minecraft:small_fireball" || e.typeId == "minecraft:wither") {
+                    e.remove();
+                }
+            }
+        });
+    }
 
-//     for (var p of world.getAllPlayers()) {
+    for (var p of world.getAllPlayers()) {
 
-//         var playerData = getPlayerData(p.id);
+        var playerData = getPlayerData(p.id);
 
-//         // only run if player is in overworld
-//         if (p.dimension == world.getDimension("overworld")) {
+        // only run if player is in overworld
+        if (p.dimension == world.getDimension("overworld")) {
 
-//             // capture the state of player attribute "in-claim" before it is updated
-//             var inClaimOld: boolean = playerData.inClaim;
+            // capture the state of player attribute "in-claim" before it is updated
+            var inClaimOld: boolean = playerData.inClaim;
 
-//             // set flag to false before for loop updates it
-//             playerData.inClaim = false;
+            // set flag to false before for loop updates it
+            playerData.inClaim = false;
 
-//             runInAllClaims((playerID, playerName, claim) => {
+            runInAllClaims((playerID, playerName, claim) => {
 
-//                 // apply an offset to the player location to be more accurate with claim bounds
-//                 const location: Vector3 = { "x": p.location.x - 0.5, "y": p.location.y - 0.5, "z": p.location.z - 0.5 };
+                // apply an offset to the player location to be more accurate with claim bounds
+                const location: Vector3 = { "x": p.location.x - 0.5, "y": p.location.y - 0.5, "z": p.location.z - 0.5 };
 
-//                 // if player is in the claim
-//                 if (claim.isOverlap(location, location)) {
+                // if player is in the claim
+                if (claim.isOverlap(location, location)) {
 
-//                     playerData.inClaim = true
+                    playerData.inClaim = true
 
-//                     // make sure player can't hurt entities if they don't have permission
-//                     if ((playerID != p.id) && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, p)) {
-//                         p.addEffect("weakness", 40, { "amplifier": 255, "showParticles": false });
-//                     }
+                    // make sure player can't hurt entities if they don't have permission
+                    if ((playerID != p.id) && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, p)) {
+                        p.addEffect("weakness", 40, { "amplifier": 255, "showParticles": false });
+                    }
 
-//                     if (!playerData.viewingClaim) {
-//                         // show claim name and owner onscreen
-//                         p.onScreenDisplay.setActionBar(
-//                             {
-//                                 "rawtext": [
-//                                     { "translate": "claim:name_color" },
-//                                     { "text": `${claim.name}§r - ${playerName}` },
-//                                 ]
-//                             });
-//                     }
+                    if (!playerData.viewingClaim) {
+                        // show claim name and owner onscreen
+                        p.onScreenDisplay.setActionBar(
+                            {
+                                "rawtext": [
+                                    { "translate": "claim:name_color" },
+                                    { "text": `${claim.name}§r - ${playerName}` },
+                                ]
+                            });
+                    }
 
-//                     // if player is not allowed in claim, apply knockback to remove them
-//                     if ((playerID != p.id) && !claim.hasPermission(PermissionTypes.ENTER_CLAIM, p)) {
-//                         // player has entered claim
-//                         if (!inClaimOld && playerData.inClaim) {
+                    // if player is not allowed in claim, apply knockback to remove them
+                    if ((playerID != p.id) && !claim.hasPermission(PermissionTypes.ENTER_CLAIM, p)) {
+                        // player has entered claim
+                        if (!inClaimOld && playerData.inClaim) {
 
-//                             // send player a notification
-//                             sendNotification(p, "chat.claim.permission:enter_claim");
-//                             p.playSound("note.didgeridoo");
+                            // send player a notification
+                            sendNotification(p, "chat.claim.permission:enter_claim");
+                            p.playSound("note.didgeridoo");
 
-//                             // save entrance velocity
-//                             playerData.entranceVelocity = p.getVelocity();
-//                         }
+                            // save entrance velocity
+                            playerData.entranceVelocity = p.getVelocity();
+                        }
 
-//                         const velocity: Vector3 = playerData.entranceVelocity;
+                        const velocity: Vector3 = playerData.entranceVelocity;
 
-//                         // if player is riding an entity eject them
-//                         if (p.hasComponent(EntityRidingComponent.componentId)) {
-//                             const ridingComponent = p.getComponent(EntityRidingComponent.componentId) as EntityRidingComponent;
-//                             const riddenComponent = ridingComponent.entityRidingOn.getComponent(EntityRideableComponent.componentId) as EntityRideableComponent;
+                        // if player is riding an entity eject them
+                        if (p.hasComponent(EntityRidingComponent.componentId)) {
+                            const ridingComponent = p.getComponent(EntityRidingComponent.componentId) as EntityRidingComponent;
+                            const riddenComponent = ridingComponent.entityRidingOn.getComponent(EntityRideableComponent.componentId) as EntityRideableComponent;
 
-//                             riddenComponent.ejectRider(p);
-//                         }
+                            riddenComponent.ejectRider(p);
+                        }
 
-//                         p.applyKnockback(-velocity.x, -velocity.z, 3, 0.5);
-//                         p.addEffect("wither", 40)
+                        p.applyKnockback(-velocity.x, -velocity.z, 3, 0.5);
+                        p.addEffect("wither", 40)
 
-//                     }
-//                 }
-//             });
+                    }
+                }
+            });
 
 
 
-//             // player has entered claim
-//             if (!inClaimOld && playerData.inClaim) {
-//                 // play entrance sound
-//                 p.playSound("random.door_open")
-//             }
-//             // player has exited the claim
-//             else if (inClaimOld && !playerData.inClaim) {
-//                 // play exit sound
-//                 p.playSound("random.door_close")
-//             }
-//         }
-//         // player is not in overworld
-//         else {
-//             playerData.inClaim = false;
-//         }
-//     }
-// }, 1);
+            // player has entered claim
+            if (!inClaimOld && playerData.inClaim) {
+                // play entrance sound
+                p.playSound("random.door_open")
+            }
+            // player has exited the claim
+            else if (inClaimOld && !playerData.inClaim) {
+                // play exit sound
+                p.playSound("random.door_close")
+            }
+        }
+        // player is not in overworld
+        else {
+            playerData.inClaim = false;
+        }
+    }
+}, 1);
 
 // renders claim particles every 1 second
 system.runInterval(() => {
