@@ -13,27 +13,56 @@ const claimIcons = {
     "ui.claim.icons:flowers": "textures/ui/icon_spring.png"
 };
 
-// load settings ----------------------------------------------------------------------------------------------------------
-const settingsDefault = {
-    "claim-block-hourly-payment": 100,
-    "starting-claim-blocks": 200,
-    "claim-minimum-width": 10
+// MARK: load settings ----------------------------------------------------------------------------------------------------------
+
+/**
+ * An object containing global settings for the addon
+ */
+class Settings{
+    claimBlockHourlyPayment: number;
+    startingClaimBlocks: number;
+    claimMinimumWidth: number;
+
+    /**
+     * Creates a new Settings object with default values
+     */
+    constructor(){
+        this.claimBlockHourlyPayment = 100;
+        this.startingClaimBlocks = 200;
+        this.claimMinimumWidth = 10;
+    }
+    
+    /**
+     * Returns a Settings object loaded from JSON, if a key is missing it will be replaced with the default value.
+     * 
+     * @param data - The JSON object to load the Settings object from
+     * 
+     * @return - The Settings object loaded from the JSON object
+     */
+    static fromJSON(data: any): Settings {
+        const defaultSettings = new Settings();
+        var settings = new Settings();
+        settings.claimBlockHourlyPayment = data.claimBlockHourlyPayment || defaultSettings.claimBlockHourlyPayment;
+        settings.startingClaimBlocks = data.startingClaimBlocks || defaultSettings.startingClaimBlocks;
+        settings.claimMinimumWidth = data.claimMinimumWidth || defaultSettings.claimMinimumWidth;
+        return settings;
+    }
 }
 
 // make sure settings exist
 if (!world.getDynamicPropertyIds().includes("settings")) {
-    world.setDynamicProperty("settings", JSON.stringify(settingsDefault));
+    world.setDynamicProperty("settings", JSON.stringify(new Settings()));
 }
 
 // load settings and make sure it contains necessary keys
-var settings = { ...settingsDefault, ...JSON.parse(world.getDynamicProperty("settings").toString()) }
+var settings = Settings.fromJSON(JSON.parse(world.getDynamicProperty("settings").toString()));
 
 // provide a function for saving the setttings
 function saveSettings() {
     world.setDynamicProperty("settings", JSON.stringify(settings));
 }
 
-// load database ----------------------------------------------------------------------------------------------------------
+// MARK: load database ----------------------------------------------------------------------------------------------------------
 enum PermissionTypes {
     ENTER_CLAIM = "enterClaim",
     BREAK_BLOCKS = "breakBlocks",
@@ -346,8 +375,8 @@ class PlayerData {
         this.oppositeCorner = { "x": 0, "y": 0, "z": 0 };
         this.entranceVelocity = { "x": 0, "y": 0, "z": 0 };
         this.claimBlocks = {
-            amount: settings["starting-claim-blocks"],
-            paymentTimeRemaining: settings["claim-block-hourly-payment"]
+            amount: settings.startingClaimBlocks,
+            paymentTimeRemaining: settings.claimBlockHourlyPayment
         };
         this.claims = [];
     }
@@ -517,7 +546,7 @@ class Ui {
                     { "text": "\n\n" },
                     { "translate": "ui.main:body.paragraph:4" }, { "text": ` §e${playerData.claimBlocks.amount}§r ` },
                     { "text": "\n\n" },
-                    { "translate": "ui.main:body.paragraph:5-1" }, { "text": ` §a+${settings["claim-block-hourly-payment"]}§r ` }, { "translate": "ui.main:body.paragraph:5-2" }, { "text": ` §9${playerData.claimBlocks.paymentTimeRemaining}§r ` }, { "translate": "ui.main:body.paragraph:5-3" }
+                    { "translate": "ui.main:body.paragraph:5-1" }, { "text": ` §a+${settings.claimBlockHourlyPayment}§r ` }, { "translate": "ui.main:body.paragraph:5-2" }, { "text": ` §9${playerData.claimBlocks.paymentTimeRemaining}§r ` }, { "translate": "ui.main:body.paragraph:5-3" }
                 ]
             })
             .button("ui.main.button:manage", "textures/ui/icon_setting.png")
@@ -1378,8 +1407,8 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                             });
                         }
                         // claim isn't wide enough warning message, cancel resize
-                        else if (newClaimWidth < settings["claim-minimum-width"] || newClaimLength < settings["claim-minimum-width"]) {
-                            sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:width1" }, { "text": ` ${settings["claim-minimum-width"]} ` }, { "translate": "chat.claim:width2" }] });
+                        else if (newClaimWidth < settings.claimMinimumWidth || newClaimLength < settings.claimMinimumWidth) {
+                            sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:width1" }, { "text": ` ${settings.claimMinimumWidth} ` }, { "translate": "chat.claim:width2" }] });
                             system.run(() => {
                                 data.player.playSound("note.didgeridoo")
                             });
@@ -1421,8 +1450,8 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                             });
                         }
                         // claim is not wide enough warning message, cancel creation
-                        else if (claimWidth < settings["claim-minimum-width"] || claimLength < settings["claim-minimum-width"]) {
-                            sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:width1" }, { "text": ` ${settings["claim-minimum-width"]} ` }, { "translate": "chat.claim:width2" }] });
+                        else if (claimWidth < settings.claimMinimumWidth || claimLength < settings.claimMinimumWidth) {
+                            sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:width1" }, { "text": ` ${settings.claimMinimumWidth} ` }, { "translate": "chat.claim:width2" }] });
                             system.run(() => {
                                 data.player.playSound("note.didgeridoo")
                             });
@@ -1802,11 +1831,11 @@ system.runInterval(() => {
 
         // if time is up reward blocks and reset timer
         if (playerData.claimBlocks.paymentTimeRemaining <= 0) {
-            playerData.claimBlocks.amount += settings["claim-block-hourly-payment"];
+            playerData.claimBlocks.amount += settings.claimBlockHourlyPayment;
             sendNotification(p, {
                 "rawtext": [
                     { "translate": "chat.blocks:payment1" },
-                    { "text": ` ${settings["claim-block-hourly-payment"]} ` },
+                    { "text": ` ${settings.claimBlockHourlyPayment} ` },
                     { "translate": "chat.blocks:payment2" }]
             })
             p.playSound("random.levelup");
