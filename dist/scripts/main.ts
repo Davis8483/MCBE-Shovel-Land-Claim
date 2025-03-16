@@ -1104,8 +1104,7 @@ class Ui {
             else if (response.selection == 1) {
 
                 // delete claim
-                playerData.claims = playerData.claims.splice(playerData.claims.indexOf(claim), 1);
-
+                playerData.claims = playerData.claims.filter(c => c !== claim);
 
                 sendNotification(owner, "chat.claim:removed")
                 owner.playSound("mob.creeper.say");
