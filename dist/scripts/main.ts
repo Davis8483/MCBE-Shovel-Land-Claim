@@ -500,8 +500,6 @@ function getClosestPlayer(blockLocation: Vector3): Player {
  */
 function getPlayerData(playerId: string): PlayerData {
 
-    world.sendMessage("db: " + JSON.stringify(database));
-
     for (var player of database) {
         if (playerId == player.id) {
             return player;
@@ -522,8 +520,6 @@ class Ui {
 
     static main(owner: Player) {
         var playerData: PlayerData = getPlayerData(owner.id);
-
-        world.sendMessage(JSON.stringify(database));
 
         const form = new ActionFormData()
             .title("ui.main:title")
