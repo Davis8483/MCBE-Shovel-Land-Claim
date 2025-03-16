@@ -34,6 +34,14 @@ function saveSettings() {
 }
 
 // load database ----------------------------------------------------------------------------------------------------------
+enum PermissionTypes {
+    ENTER_CLAIM = "enterClaim",
+    BREAK_BLOCKS = "breakBlocks",
+    USE_ITEMS_ON_BLOCKS = "useItemsOnBlocks",
+    HURT_ENTITIES = "hurtEntities",
+    USE_TNT = "useTNT"
+}
+
 class PlayerPermissions {
     id: string; // player entity id
     name: string; // player name, not used for identification
@@ -85,22 +93,20 @@ class Claim {
     /**
      * returns if a visitor has specified permissions
      * 
-     * @param permission - Name of the permission to check for
-     * Allowed values: enterClaim, breakBlocks, useItemsOnBlocks, useTNT
+     * @param permission - The type of permission to check for
      * 
      * @param player - Optional; The player you would like to check the permission for
     */
-    hasPermission(permission: string, player: Player = undefined): boolean {
+    hasPermission(permission: PermissionTypes, player: Player = undefined): boolean {
 
         // check if player is in specific permissions list
         if (player != undefined) {
 
-            var playerPermissions: PlayerPermissions = undefined;
-
-            // attempt to find the players permissions
+            // find the players permissions
             for (var p of this.playerPermissionsList) {
                 if (p.id == player.id) {
-                    playerPermissions = p;
+                    var playerPermissions = p;
+                    break;
                 }
             }
 
@@ -159,6 +165,15 @@ class PlayerData {
         paymentTimeRemaining: number;
     }
     claims: Claim[]
+
+    constructor(playerID: string, playerName: string) {
+        this.id = playerID;
+        this.name = playerName;
+        this.inClaim = false;
+        this.viewingClaim = false;
+        this.claimBlocks.amount = settings["starting-claim-blocks"];
+        this.claimBlocks.paymentTimeRemaining = settings["claim-block-hourly-payment"];
+    }
 
     /**
      * Returns the requested claim
@@ -237,7 +252,7 @@ for (var id of world.getDynamicPropertyIds()) {
     const property = world.getDynamicProperty(id);
 
     if (id.includes("db.")) {
-        database.push = JSON.parse(property.toString());
+        database.push(JSON.parse(property.toString()) as PlayerData);
     }
 }
 
@@ -275,7 +290,11 @@ function sendNotification(player: Player, langEntry: string | RawMessage) {
 function runInAllClaims(callback: (playerId: string, playerName: string, claimData: Claim) => void) {
 
     for (var player of database) {
-        for (var claim of player.claims) {
+        world.sendMessage("test")
+
+        var claims = player.claims;
+        for (var claim of claims) {
+            world.sendMessage("test2")
             callback(player.id, player.name, claim);
         }
     }
@@ -659,6 +678,7 @@ class Ui {
                     if (p.name == playerName) {
                         p.runCommandAsync(`tellraw @s {"rawtext":[{"translate":"chat.prefix"}, {"text":" ${owner.name} "}, {"translate":"chat.claim:player_permissions_reset_notif"}, {"translate":"claim:name_color"}, {"text":" ${claim.name}"}]}`);
                         p.playSound("random.levelup");
+                        break;
                     }
                 }
             }
@@ -674,44 +694,48 @@ class Ui {
     }
 
     /**
-    *A page for editing a claims permissions.
-    *If the player parameter is not specified the form will edit the claims global permissions.
+    * A page for editing a claims permissions.
+    * If the player parameter is not specified the form will edit the claims global permissions.
+    * 
+    * @param owner - The player that ownes the claim
+    * 
+    * @param claim - The claim that is being updated
+    * 
+    * @param playerID - The entity id of the player to manage permissions for.
     */
-    static managePermissions(owner: Player, claim: Claim, playerName?: string) {
+    static managePermissions(owner: Player, claim: Claim, playerID?: string) {
 
-        if (playerName) {
-            for (var playerPermissions of claim.playerPermissionsList) {
-                if (playerPermissions.name == playerName) {
-                    var permissions = playerPermissions.permissions;
+        if (playerID) {
+            for (var p of claim.playerPermissionsList) {
+                if (p.id == playerID) {
+                    var playerPermissions = p;
+                    break;
                 }
             }
         }
-        else {
-            permissions = claim.publicPermissions;
-        }
 
         const form = new ModalFormData()
-            .title(playerName ? {
+            .title(playerID ? {
                 "rawtext": [
-                    { "text": `${playerName}` },
+                    { "text": `${playerPermissions.name}` },
                     { "translate": "ui.manage.permissions.player:title" },
-                    { "text": `: ${claimName}` }
+                    { "text": `: ${claim.name}` }
                 ]
             } :
                 {
                     "rawtext": [
                         { "translate": "ui.manage.permissions.public:title" },
-                        { "text": `: ${claimName}` }
+                        { "text": `: ${claim.name}` }
                     ]
                 }
             )
-            .toggle("ui.manage.permissions:enter_claim", permissions["enter-claim"])
-            .toggle("ui.manage.permissions:break_blocks", permissions["break-blocks"])
-            .toggle("ui.manage.permissions:use_items_on_blocks", permissions["use-items-on-blocks"])
-            .toggle("ui.manage.permissions:hurt_entities", permissions["hurt-entities"]);
+            .toggle("ui.manage.permissions:enter_claim", playerID ? playerPermissions.permissions.enterClaim : claim.publicPermissions.enterClaim)
+            .toggle("ui.manage.permissions:break_blocks", playerID ? playerPermissions.permissions.breakBlocks : claim.publicPermissions.breakBlocks)
+            .toggle("ui.manage.permissions:use_items_on_blocks", playerID ? playerPermissions.permissions.useItemsOnBlocks : claim.publicPermissions.useItemsOnBlocks)
+            .toggle("ui.manage.permissions:hurt_entities", playerID ? playerPermissions.permissions.hurtEntities : claim.publicPermissions.hurtEntities);
 
-        if (!playerName) {
-            form.toggle("ui.manage.permissions:use_tnt", permissions["use-tnt"])
+        if (!playerID) {
+            form.toggle("ui.manage.permissions:use_tnt", claim.publicPermissions.useTNT);
         }
 
         form.show(owner).then((response) => {
@@ -719,13 +743,18 @@ class Ui {
             if (!response.canceled) {
 
                 // save data
-                permissions["enter-claim"] = response.formValues[0];
-                permissions["break-blocks"] = response.formValues[1];
-                permissions["use-items-on-blocks"] = response.formValues[2];
-                permissions["hurt-entities"] = response.formValues[3];
-
-                if (!playerName) {
-                    permissions["use-tnt"] = response.formValues[4];
+                if (playerID) {
+                    playerPermissions.permissions.enterClaim = response.formValues[0] as boolean;
+                    playerPermissions.permissions.breakBlocks = response.formValues[1] as boolean;
+                    playerPermissions.permissions.useItemsOnBlocks = response.formValues[2] as boolean;
+                    playerPermissions.permissions.hurtEntities = response.formValues[3] as boolean;
+                }
+                else {
+                    claim.publicPermissions.enterClaim = response.formValues[0] as boolean;
+                    claim.publicPermissions.breakBlocks = response.formValues[1] as boolean;
+                    claim.publicPermissions.useItemsOnBlocks = response.formValues[2] as boolean;
+                    claim.publicPermissions.hurtEntities = response.formValues[3] as boolean;
+                    claim.publicPermissions.useTNT = response.formValues[4] as boolean;
                 }
 
                 sendNotification(owner, "chat.claim:permissions_updated");
@@ -733,9 +762,10 @@ class Ui {
 
                 // if a players permissions have been updated notify them
                 for (var p of world.getAllPlayers()) {
-                    if (p.name == playerName) {
-                        p.runCommandAsync(`tellraw @s {"rawtext":[{"translate":"chat.prefix"}, {"text":" ${owner.name} "}, {"translate":"chat.claim:player_permissions_updated_notif"}, {"translate":"claim:name_color"}, {"text":" ${claimName}"}]}`);
+                    if (p.id == playerID) {
+                        p.runCommandAsync(`tellraw @s {"rawtext":[{"translate":"chat.prefix"}, {"text":" ${owner.name} "}, {"translate":"chat.claim:player_permissions_updated_notif"}, {"translate":"claim:name_color"}, {"text":" ${claim.name}"}]}`);
                         p.playSound("random.levelup");
+                        break;
                     }
                 }
             }
@@ -752,8 +782,10 @@ class Ui {
         // only run if player is in overworld
         if (owner.dimension == world.getDimension("overworld")) {
 
+            var playerData = getPlayerData(owner.id);
+
             // set flag
-            database[owner.name]["viewing-claim"] = true;
+            playerData.viewingClaim = true;
 
             // disable player movement
             owner.runCommandAsync("inputpermission set @s camera disabled");
@@ -776,31 +808,27 @@ class Ui {
                 }
             }
 
-            // user defined start and end points of the claim
-            var start = database[owner.name]["claims"][claimName]["start"];
-            var end = database[owner.name]["claims"][claimName]["end"];
-
             // load the claim
-            owner.runCommandAsync(`tickingarea add ${start["x"]} ${start["y"]} ${start["z"]} ${end["x"]} ${end["y"]} ${end["z"]} claimView`);
+            owner.runCommandAsync(`tickingarea add ${claim.start.x} ${claim.start.y} ${claim.start.z} ${claim.end.x} ${claim.end.y} ${claim.end.z} claimView`);
 
             // all 4 points of the claim
             var points = [
-                [start["x"], start["z"]],
-                [start["x"], end["z"]],
-                [end["x"], end["z"]],
-                [end["x"], start["z"]]
+                [claim.start.x, claim.start.z],
+                [claim.start.x, claim.end.z],
+                [claim.end.x, claim.end.z],
+                [claim.end.x, claim.start.z]
             ];
 
             // get the center most block of the claim to look at
             var centerBlock: Vector3 = {
-                "x": (start["x"] + end["x"]) / 2,
-                "y": (start["y"] + end["y"]) / 2,
-                "z": (start["z"] + end["z"]) / 2
+                "x": (claim.start.x + claim.end.x) / 2,
+                "y": (claim.start.y + claim.end.y) / 2,
+                "z": (claim.start.z + claim.end.z) / 2
             }
 
             // find a reasonable height to position the camera at
-            var width = Math.abs(start["x"] - end["x"]);
-            var length = Math.abs(start["z"] - end["z"]);
+            var width = Math.abs(claim.start.x - claim.end.x);
+            var length = Math.abs(claim.start.z - claim.end.z);
             var height = Math.sqrt((width ** 2) + (length ** 2)) / 2;
 
             // camera parameters
@@ -808,7 +836,7 @@ class Ui {
                 "facingLocation": centerBlock,
                 "location": {
                     "x": points[3][0],
-                    "y": centerBlock["y"] + height,
+                    "y": centerBlock.y + height,
                     "z": points[3][1]
                 }
             }
@@ -849,7 +877,7 @@ class Ui {
                                 owner.runCommandAsync("tickingarea remove claimView");
 
                                 // set flag back to false
-                                database[owner.name]["viewing-claim"] = false;
+                                playerData.viewingClaim = false;
 
                                 // enable player movement again
                                 owner.runCommandAsync("inputpermission set @s camera enabled");
@@ -889,8 +917,10 @@ class Ui {
     static removeClaim(owner: Player, claim: Claim) {
         var playerData: PlayerData = getPlayerData(owner.id);
 
-        var claimWidth = Math.abs(claims[claimName]["start"]["x"] - claims[claimName]["end"]["x"]) + 1;
-        var claimLength = Math.abs(claims[claimName]["start"]["z"] - claims[claimName]["end"]["z"]) + 1;
+        var claimWidth = Math.abs(claim.start.x - claim.end.x) + 1;
+        var claimLength = Math.abs(claim.start.z - claim.end.z) + 1;
+
+        var playerData = getPlayerData(owner.id);
 
         const form = new MessageFormData()
             .title("ui.manage.remove:title")
@@ -909,17 +939,19 @@ class Ui {
             if (response.selection == 0) {
 
                 // return to previous page on menu
-                this.manageClaim(owner, claimName);
+                this.manageClaim(owner, claim);
             }
             else if (response.selection == 1) {
 
                 // delete claim
-                delete claims[claimName];
+                playerData.claims = playerData.claims.splice(playerData.claims.indexOf(claim), 1);
+
+
                 sendNotification(owner, "chat.claim:removed")
                 owner.playSound("mob.creeper.say");
 
                 // add the claim blocks to the players balance
-                database[owner.name]["claim-blocks"] += claimWidth * claimLength
+                playerData.claimBlocks.amount += claimWidth * claimLength
 
                 saveDb();
             }
@@ -927,18 +959,17 @@ class Ui {
     }
 
     static claimConfig(owner: Player, claim: Claim) {
-        var playerData: PlayerData = getPlayerData(owner.id);
 
         const form = new ModalFormData()
             .title({
                 "rawtext": [
                     { "translate": "ui.manage.config:title" },
-                    { "text": `: ${claimName}` }
+                    { "text": `: ${claim.name}` }
                 ]
             })
-            .textField("ui.claim.config.textbox:name", "ui.claim.config:name_placeholder", claimName)
-            .dropdown("ui.claim.config.dropdown:icon", Object.keys(claimIcons), Object.values(claimIcons).indexOf(claims[claimName]["icon"]))
-            .toggle("ui.claim.config.toggle:border_particles", claims[claimName]["particles"])
+            .textField("ui.claim.config.textbox:name", "ui.claim.config:name_placeholder", claim.name)
+            .dropdown("ui.claim.config.dropdown:icon", Object.keys(claimIcons), Object.values(claimIcons).indexOf(claim.icon))
+            .toggle("ui.claim.config.toggle:border_particles", claim.particlesEnabled)
 
         form.show(owner).then((response) => {
 
@@ -946,7 +977,7 @@ class Ui {
 
                 var name = response.formValues[0].toString();
                 var iconPath = claimIcons[Object.keys(claimIcons)[response.formValues[1].toString()]];
-                var showBorderParticles = response.formValues[2];
+                var showBorderParticles = response.formValues[2] as boolean;
 
                 if (name.length == 0) {
                     sendNotification(owner, "chat.claim:name_required")
@@ -954,16 +985,10 @@ class Ui {
                 }
                 else {
 
-                    if (claimName != name) {
-                        // copy the claim over to the new name key
-                        claims[name] = Object.assign({}, claims[claimName]);
-
-                        // delete the old name key
-                        delete claims[claimName];
-                    }
-
-                    claims[name]["icon"] = iconPath;
-                    claims[name]["particles"] = showBorderParticles;
+                    // update data
+                    claim.name = name;
+                    claim.icon = iconPath;
+                    claim.particlesEnabled = showBorderParticles;
 
                     sendNotification(owner, "chat.claim:updated")
                     owner.playSound("note.cow_bell");
@@ -976,12 +1001,21 @@ class Ui {
 }
 
 world.afterEvents.playerJoin.subscribe((data) => {
+
     // verify player data is on file
+    var playerFound = false;
 
-    // set up player database
-    if (!(data.playerName in database)) {
+    for (var p of database) {
+        if (p.id == data.playerId) {
+            playerFound = true;
+            break;
+        }
+    }
 
-        database[data.playerName] = Object.assign({}, dbPlayerDefault);
+    // player is not saved in db
+    if (!playerFound) {
+        // create new player in db
+        database.push(new PlayerData(data.playerId, data.playerName))
     }
 
     // save changes to the database
@@ -994,7 +1028,7 @@ world.afterEvents.playerSpawn.subscribe((data) => {
     data.player.runCommandAsync(`execute if entity @s[hasitem = { item=${shovelID}, quantity = 0}] run give @s ${shovelID} 1 0 { "keep_on_death": { }, "item_lock": { "mode": "lock_in_inventory" } } `);
 
     // set flag to false since all camera positions will be reset upon rejoining
-    database[data.player.name]["viewing-claim"] = false;
+    getPlayerData(data.player.id).viewingClaim = false;
 });
 
 // open menu when claim shovel is used
@@ -1006,12 +1040,14 @@ world.afterEvents.itemUse.subscribe((data) => {
 
 // disallow players from using items when viewing a claim
 world.beforeEvents.itemUse.subscribe((data) => {
-    if (database[data.source.name]["viewing-claim"]) {
+    if (getPlayerData(data.source.id).viewingClaim) {
         data.cancel = true;
     }
 });
 
 world.beforeEvents.itemUseOn.subscribe((data) => {
+
+    // we can't detect where a block is placed so we must figure that out based on the face of the used on block
     const faces = {
         "North": data.block.north(1),
         "East": data.block.east(1),
@@ -1020,17 +1056,18 @@ world.beforeEvents.itemUseOn.subscribe((data) => {
         "Up": data.block.above(1),
         "Down": data.block.below(1)
     };
-    const placedBlock = faces[data.blockFace];
+    const placedBlock = faces[data.blockFace] as Vector3;
 
     // disable input when viewing a claim
-    if (database[data.source.name]["viewing-claim"]) {
+    if (getPlayerData(data.source.id).viewingClaim) {
         data.cancel = true;
     }
 
     if (data.block.dimension == world.getDimension("overworld")) {
-        runInAllClaims((playerName, claimName, claim) => {
-            // check if a block is broken by a player without permissions within the claim
-            if ((doOverlap(claim["start"], claim["end"], data.block, data.block) || doOverlap(claim["start"], claim["end"], placedBlock, placedBlock)) && (playerName != data.source.name) && !hasPermission(claim, PlayerPermissions.USE_ITEMS_ON_BLOCKS, data.source)) {
+        runInAllClaims((playerID, playerName, claim) => {
+            // checks if the used on block or calculated placed block is within a claim and if the player has permission
+            if (
+                ((claim.isOverlap(data.block, data.block) || claim.isOverlap(placedBlock, placedBlock))) && (playerID != data.source.id) && !claim.hasPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data.source)) {
                 data.cancel = true;
 
                 system.run(() => {
@@ -1044,6 +1081,9 @@ world.beforeEvents.itemUseOn.subscribe((data) => {
 
 // Set/adjust claim points if player is sneaking
 world.beforeEvents.playerBreakBlock.subscribe((data) => {
+
+    var playerData = getPlayerData(data.player.id);
+
     // handle creating claims by setting first and second point
     if ((data.itemStack != undefined) && (data.itemStack.typeId == shovelID)) {
         // stop the shovel from breaking the block
@@ -1059,25 +1099,24 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                     data.player.startItemCooldown("land_shovel_use", 20);
                 });
 
-                var firstPoint = database[data.player.name]["first-point"];
                 var isResize = false;
 
                 if (!data.player.isSneaking) {
-                    firstPoint["resizing-claim"] = "";
-                    firstPoint["x"] = data.block.x;
-                    firstPoint["y"] = data.block.y;
-                    firstPoint["z"] = data.block.z;
+                    playerData.resizingClaimName = "";
+                    playerData.firstPoint.x = data.block.x;
+                    playerData.firstPoint.y = data.block.y;
+                    playerData.firstPoint.z = data.block.z;
 
-                    runInAllClaims((playerName, claimName, claimData) => {
+                    runInAllClaims((playerID, playerName, claim) => {
 
                         // user defined start and end points of the claim
-                        var start = claimData["start"];
-                        var end = claimData["end"];
+                        var s = claim.start;
+                        var e = claim.end;
 
                         // all 4 points of the claim
                         var points = [
-                            [[start["x"], start["z"]], [start["x"], end["z"]]],
-                            [[end["x"], start["z"]], [end["x"], end["z"]]]
+                            [[s["x"], s["z"]], [s["x"], e["z"]]],
+                            [[e["x"], s["z"]], [e["x"], e["z"]]]
                         ]
 
                         var brokenPoint = [data.block.x, data.block.z];
@@ -1098,9 +1137,9 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         // if broken block is on a claim corner
                         if (aIndex != null) {
                             isResize = true;
-                            if (playerName == data.player.name) {
-                                firstPoint["opposite-corner"] = { "x": points[aIndex ^ 1][bIndex ^ 1][0], "y": data.block.y, "z": points[aIndex ^ 1][bIndex ^ 1][1] }
-                                firstPoint["resizing-claim"] = claimName;
+                            if (playerID == data.player.id) {
+                                playerData.oppositeCorner = { "x": points[aIndex ^ 1][bIndex ^ 1][0], "y": data.block.y, "z": points[aIndex ^ 1][bIndex ^ 1][1] }
+                                playerData.resizingClaimName = claim.name;
 
                                 data.player.sendMessage({
                                     "rawtext": [
@@ -1148,25 +1187,32 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                     var intersectingClaim = false;
 
                     // if claim is resized
-                    if (firstPoint["resizing-claim"].length > 0) {
+                    if (playerData.resizingClaimName.length > 0) {
 
-                        var claims: {} = database[data.player.name]["claims"];
+                        // get the claim object that is being resized
+                        for (var c of playerData.claims) {
+                            if (c.name == playerData.resizingClaimName) {
+                                var claim = c;
+                                break;
+                            }
+                        }
 
-                        const oldClaimWidth = Math.abs(claims[firstPoint["resizing-claim"]]["start"]["x"] - claims[firstPoint["resizing-claim"]]["end"]["x"]) + 1;
-                        const oldClaimLength = Math.abs(claims[firstPoint["resizing-claim"]]["start"]["z"] - claims[firstPoint["resizing-claim"]]["end"]["z"]) + 1;
+                        const oldClaimWidth = Math.abs(claim.start.x - claim.end.x) + 1;
+                        const oldClaimLength = Math.abs(claim.start.z - claim.end.z) + 1;
 
-                        const newClaimWidth = Math.abs(firstPoint["opposite-corner"]["x"] - secondPoint.x) + 1;
-                        const newClaimLength = Math.abs(firstPoint["opposite-corner"]["z"] - secondPoint.z) + 1;
+                        const newClaimWidth = Math.abs(playerData.oppositeCorner.x - secondPoint.x) + 1;
+                        const newClaimLength = Math.abs(playerData.oppositeCorner.z - secondPoint.z) + 1;
 
                         const blockDifference = (newClaimLength * newClaimWidth) - (oldClaimLength * oldClaimWidth)
 
                         // make sure new claim isn't intersecting others not counting itself
-                        runInAllClaims((playerName, claimName, claim) => {
-                            if (doOverlap(claim["start"], claim["end"], firstPoint, secondPoint) && ((playerName != data.player.name) || (claimName != firstPoint["resizing-claim"]))) {
+                        runInAllClaims((playerID, playerName, claim) => {
+                            if (claim.isOverlap(playerData.firstPoint, secondPoint) && ((playerID != data.player.id) || (claim.name != playerData.resizingClaimName))) {
                                 intersectingClaim = true;
                             }
                         });
 
+                        // intersecting claim warning message, cancel resize
                         if (intersectingClaim) {
                             sendNotification(data.player, "chat.claim:intersecting")
 
@@ -1174,38 +1220,42 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                                 data.player.playSound("note.didgeridoo")
                             });
                         }
+                        // claim isn't wide enough warning message, cancel resize
                         else if (newClaimWidth < settings["claim-minimum-width"] || newClaimLength < settings["claim-minimum-width"]) {
                             sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:width1" }, { "text": ` ${settings["claim-minimum-width"]} ` }, { "translate": "chat.claim:width2" }] });
                             system.run(() => {
                                 data.player.playSound("note.didgeridoo")
                             });
                         }
-                        else if (database[data.player.name]["claim-blocks"] < blockDifference) {
-                            sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:blocks1" }, { "text": ` ${(blockDifference) - database[data.player.name]["claim-blocks"]} ` }, { "translate": "chat.claim:blocks3" }] });
+                        // not enough claim blocks warning message, cancel resize
+                        else if (playerData.claimBlocks.amount < blockDifference) {
+                            sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:blocks1" }, { "text": ` ${(blockDifference) - playerData.claimBlocks.amount} ` }, { "translate": "chat.claim:blocks3" }] });
                             system.run(() => {
                                 data.player.playSound("note.didgeridoo")
                             });
                         }
+                        // all requirements met, open the claim resizing ui
                         else {
                             system.run(() => {
                                 data.player.playSound("note.cow_bell");
 
-                                Ui.resizeClaim(data.player, firstPoint["resizing-claim"], firstPoint["opposite-corner"], secondPoint);
+                                Ui.resizeClaim(data.player, claim, playerData.oppositeCorner, secondPoint);
                             });
                         }
                     }
+                    // not resizing, create a new claim
                     else {
 
-                        const claimWidth = Math.abs(firstPoint.x - secondPoint.x) + 1;
-                        const claimLength = Math.abs(firstPoint.z - secondPoint.z) + 1;
+                        const claimWidth = Math.abs(playerData.firstPoint.x - secondPoint.x) + 1;
+                        const claimLength = Math.abs(playerData.firstPoint.z - secondPoint.z) + 1;
 
                         // make sure new claim isn't intersecting others
-                        runInAllClaims((playerName, claimName, claim) => {
-                            if (doOverlap(claim["start"], claim["end"], firstPoint, secondPoint)) {
+                        runInAllClaims((playerID, playerName, claim) => {
+                            if (claim.isOverlap(playerData.firstPoint, secondPoint)) {
                                 intersectingClaim = true;
                             }
                         });
-
+                        // intersecting claim warning message, cancel creation
                         if (intersectingClaim) {
                             sendNotification(data.player, "chat.claim:intersecting")
 
@@ -1213,23 +1263,26 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                                 data.player.playSound("note.didgeridoo")
                             });
                         }
+                        // claim is not wide enough warning message, cancel creation
                         else if (claimWidth < settings["claim-minimum-width"] || claimLength < settings["claim-minimum-width"]) {
                             sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:width1" }, { "text": ` ${settings["claim-minimum-width"]} ` }, { "translate": "chat.claim:width2" }] });
                             system.run(() => {
                                 data.player.playSound("note.didgeridoo")
                             });
                         }
-                        else if (database[data.player.name]["claim-blocks"] < (claimWidth * claimLength)) {
-                            sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:blocks1" }, { "text": ` ${(claimWidth * claimLength) - database[data.player.name]["claim-blocks"]} ` }, { "translate": "chat.claim:blocks2" }] });
+                        // not enough claim blocks warning message, cancel creation
+                        else if (playerData.claimBlocks.amount < (claimWidth * claimLength)) {
+                            sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:blocks1" }, { "text": ` ${(claimWidth * claimLength) - playerData.claimBlocks.amount} ` }, { "translate": "chat.claim:blocks2" }] });
                             system.run(() => {
                                 data.player.playSound("note.didgeridoo")
                             });
                         }
+                        // all requirements are met, open the claim creation ui
                         else {
                             system.run(() => {
                                 data.player.playSound("note.cow_bell");
 
-                                Ui.newClaim(data.player, { ...firstPoint }, secondPoint);
+                                Ui.newClaim(data.player, playerData.firstPoint, secondPoint);
                             });
                         }
                     }
@@ -1241,6 +1294,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
             saveDb();
 
         }
+        // player is not in the overworld, warn them that they are not allowed to create a claim here
         else {
             sendNotification(data.player, "chat.shovel:dimension_warning");
             system.run(() => {
@@ -1250,14 +1304,14 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
 
     }
     else {
-        if (database[data.player.name]["viewing-claim"]) {
+        if (playerData.viewingClaim) {
             data.cancel = true;
         }
         //                                                              *added for compatibility with gravestone addon*
         else if (data.dimension == world.getDimension("overworld") && !(data.block.typeId == "darkosto_gravestone:gravestone")) {
-            runInAllClaims((playerName, claimName, claim) => {
+            runInAllClaims((playerID, playerName, claim) => {
                 // check if a block is broken by a player without permissions within the claim
-                if (doOverlap(claim["start"], claim["end"], data.block, data.block) && (playerName != data.player.name) && !hasPermission(claim, "break-blocks", data.player)) {
+                if (claim.isOverlap(data.block, data.block) && (playerID != data.player.id) && !claim.hasPermission(PermissionTypes.BREAK_BLOCKS, data.player)) {
                     data.cancel = true;
 
                     system.run(() => {
@@ -1283,15 +1337,15 @@ world.beforeEvents.explosion.subscribe((data) => {
         var sendDisallowedNotification = false;
 
         // check if tnt blast effects a claim
-        runInAllClaims((playerName, claimName, claim) => {
+        runInAllClaims((playerID, playerName, claim) => {
 
-            // if entity is a mob or player doesn't have permissions
-            if ((data.source.typeId != "minecraft:tnt") || !hasPermission(claim, "use-tnt")) {
-                // remove all impacted blocks that lie within a claim
+            // if entity is a mob or player that doesn't have permissions
+            if ((data.source.typeId != "minecraft:tnt") || claim.hasPermission(PermissionTypes.USE_TNT)) {
+                // remove all impacted blocks that lie within the claim
                 for (var i = 0; i < impactedBlocks.length; i++) {
                     var block = impactedBlocks[i]
 
-                    if (doOverlap(claim["start"], claim["end"], block, block)) {
+                    if (claim.isOverlap(block, block)) {
                         // remove the block
                         impactedBlocks.splice(impactedBlocks.indexOf(block), 1);
 
@@ -1350,10 +1404,10 @@ world.afterEvents.pistonActivate.subscribe((data) => {
                 var b = block.offset(directionOffset);
             }
 
-            runInAllClaims((playerName, claimName, claim) => {
+            runInAllClaims((playerID, claimName, claim) => {
 
                 // if block is in claim but not piston
-                if (doOverlap(claim["start"], claim["end"], b.location, b.location) && !doOverlap(claim["start"], claim["end"], data.piston.block.location, data.piston.block.location)) {
+                if (claim.isOverlap(b.location, b.location) && !claim.isOverlap(data.piston.block.location, data.piston.block.location)) {
                     allowed = false;
                 }
             });
@@ -1391,10 +1445,10 @@ world.beforeEvents.itemUse.subscribe((data) => {
     var disallowedItems = ["minecraft:splash_potion", "minecraft:lingering_potion", "minecraft:bow", "minecraft:crossbow"]
 
     if (disallowedItems.includes(data.itemStack.typeId) && (data.source.dimension == world.getDimension("overworld"))) {
-        runInAllClaims((playerName, claimName, claim) => {
+        runInAllClaims((playerID, playerName, claim) => {
 
             // if player has used the disallowed item in a claim
-            if (doOverlap(claim["start"], claim["end"], data.source.location, data.source.location) && (playerName != data.source.name) && !hasPermission(claim, "hurt-entities", data.source)) {
+            if (claim.isOverlap(data.source.location, data.source.location) && (playerID != data.source.id) && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, data.source)) {
 
                 // cancel the action
                 data.cancel = true;
@@ -1410,131 +1464,133 @@ world.beforeEvents.itemUse.subscribe((data) => {
 })
 
 // player management in claims, runs every 1/20th of a second
-system.runInterval(() => {
+// system.runInterval(() => {
 
-    // make sure fire charges can't fly into claims
-    // also make sure withers can't fly into claim
-    for (var e of world.getDimension("overworld").getEntities()) {
-        runInAllClaims((playerName, claimName, claim) => {
-            if (doOverlap(claim["start"], claim["end"], e.location, e.location)) {
-                if (e.typeId == "minecraft:small_fireball" || e.typeId == "minecraft:wither") {
-                    e.remove();
-                }
-            }
-        });
-    }
+//     // make sure fire charges can't fly into claims
+//     // also make sure withers can't fly into claim
+//     for (var e of world.getDimension("overworld").getEntities()) {
+//         runInAllClaims((playerID, playerName, claim) => {
+//             if (claim.isOverlap(e.location, e.location)) {
+//                 if (e.typeId == "minecraft:small_fireball" || e.typeId == "minecraft:wither") {
+//                     e.remove();
+//                 }
+//             }
+//         });
+//     }
 
-    for (var p of world.getAllPlayers()) {
+//     for (var p of world.getAllPlayers()) {
 
-        // only run if player is in overworld
-        if (p.dimension == world.getDimension("overworld")) {
+//         var playerData = getPlayerData(p.id);
 
-            // capture the state of player attribute "in-claim" before it is updated
-            var inClaimOld: boolean = database[p.name]["in-claim"];
+//         // only run if player is in overworld
+//         if (p.dimension == world.getDimension("overworld")) {
 
-            // set flag to false before for loop updates it
-            database[p.name]["in-claim"] = false;
+//             // capture the state of player attribute "in-claim" before it is updated
+//             var inClaimOld: boolean = playerData.inClaim;
 
-            runInAllClaims((playerName, claimName, claim) => {
+//             // set flag to false before for loop updates it
+//             playerData.inClaim = false;
 
-                // apply an offset to the player location to be more accurate with claim bounds
-                const location: Vector3 = { "x": p.location.x - 0.5, "y": p.location.y - 0.5, "z": p.location.z - 0.5 };
+//             runInAllClaims((playerID, playerName, claim) => {
 
-                // if player is in the claim
-                if (doOverlap(claim["start"], claim["end"], location, location)) {
+//                 // apply an offset to the player location to be more accurate with claim bounds
+//                 const location: Vector3 = { "x": p.location.x - 0.5, "y": p.location.y - 0.5, "z": p.location.z - 0.5 };
 
-                    database[p.name]["in-claim"] = true
+//                 // if player is in the claim
+//                 if (claim.isOverlap(location, location)) {
 
-                    // make sure player can't hurt entities if they don't have permission
-                    if ((playerName != p.name) && !hasPermission(claim, "hurt-entities", p)) {
-                        p.addEffect("weakness", 40, { "amplifier": 255, "showParticles": false });
-                    }
+//                     playerData.inClaim = true
 
-                    if (!database[p.name]["viewing-claim"]) {
-                        // show claim name and owner onscreen
-                        p.onScreenDisplay.setActionBar(
-                            {
-                                "rawtext": [
-                                    { "translate": "claim:name_color" },
-                                    { "text": `${claimName}§r - ${playerName}` },
-                                ]
-                            });
-                    }
+//                     // make sure player can't hurt entities if they don't have permission
+//                     if ((playerID != p.id) && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, p)) {
+//                         p.addEffect("weakness", 40, { "amplifier": 255, "showParticles": false });
+//                     }
 
-                    // if player is not allowed in claim, apply knockback to remove them
-                    if ((playerName != p.name) && (!hasPermission(claim, "enter-claim"))) {
-                        // player has entered claim
-                        if (!inClaimOld && database[p.name]["in-claim"]) {
+//                     if (!playerData.viewingClaim) {
+//                         // show claim name and owner onscreen
+//                         p.onScreenDisplay.setActionBar(
+//                             {
+//                                 "rawtext": [
+//                                     { "translate": "claim:name_color" },
+//                                     { "text": `${claim.name}§r - ${playerName}` },
+//                                 ]
+//                             });
+//                     }
 
-                            // send player a notification
-                            sendNotification(p, "chat.claim.permission:enter_claim");
-                            p.playSound("note.didgeridoo");
+//                     // if player is not allowed in claim, apply knockback to remove them
+//                     if ((playerID != p.id) && !claim.hasPermission(PermissionTypes.ENTER_CLAIM, p)) {
+//                         // player has entered claim
+//                         if (!inClaimOld && playerData.inClaim) {
 
-                            // save entrance velocity
-                            database[p.name]["entrance-velocity"] = p.getVelocity();
-                        }
+//                             // send player a notification
+//                             sendNotification(p, "chat.claim.permission:enter_claim");
+//                             p.playSound("note.didgeridoo");
 
-                        const velocity: Vector3 = database[p.name]["entrance-velocity"];
+//                             // save entrance velocity
+//                             playerData.entranceVelocity = p.getVelocity();
+//                         }
 
-                        // if player is riding an entity eject them
-                        if (p.hasComponent(EntityRidingComponent.componentId)) {
-                            const ridingComponent = p.getComponent(EntityRidingComponent.componentId) as EntityRidingComponent;
-                            const riddenComponent = ridingComponent.entityRidingOn.getComponent(EntityRideableComponent.componentId) as EntityRideableComponent;
+//                         const velocity: Vector3 = playerData.entranceVelocity;
 
-                            riddenComponent.ejectRider(p);
-                        }
+//                         // if player is riding an entity eject them
+//                         if (p.hasComponent(EntityRidingComponent.componentId)) {
+//                             const ridingComponent = p.getComponent(EntityRidingComponent.componentId) as EntityRidingComponent;
+//                             const riddenComponent = ridingComponent.entityRidingOn.getComponent(EntityRideableComponent.componentId) as EntityRideableComponent;
 
-                        p.applyKnockback(-velocity.x, -velocity.z, 3, 0.5);
-                        p.addEffect("wither", 40)
+//                             riddenComponent.ejectRider(p);
+//                         }
 
-                    }
-                }
-            });
+//                         p.applyKnockback(-velocity.x, -velocity.z, 3, 0.5);
+//                         p.addEffect("wither", 40)
+
+//                     }
+//                 }
+//             });
 
 
 
-            // player has entered claim
-            if (!inClaimOld && database[p.name]["in-claim"]) {
-                // play entrance sound
-                p.playSound("random.door_open")
-            }
-            // player has exited the claim
-            else if (inClaimOld && !database[p.name]["in-claim"]) {
-                // play exit sound
-                p.playSound("random.door_close")
-            }
-        }
-        // player is not in overworld
-        else {
-            database[p.name]["in-claim"] = false;
-        }
-    }
-}, 1);
+//             // player has entered claim
+//             if (!inClaimOld && playerData.inClaim) {
+//                 // play entrance sound
+//                 p.playSound("random.door_open")
+//             }
+//             // player has exited the claim
+//             else if (inClaimOld && !playerData.inClaim) {
+//                 // play exit sound
+//                 p.playSound("random.door_close")
+//             }
+//         }
+//         // player is not in overworld
+//         else {
+//             playerData.inClaim = false;
+//         }
+//     }
+// }, 1);
 
 // renders claim particles every 1 second
 system.runInterval(() => {
 
     var dimension = world.getDimension("overworld");
 
-    runInAllClaims((playerName, claimName, claim) => {
+    runInAllClaims((playerID, playerName, claim) => {
 
         // user defined start and end points of the claim
-        var start = claim["start"];
-        var end = claim["end"];
+        var s = claim.start;
+        var e = claim.end;
 
         // all 4 points of the claim
         var points = [
-            [[start["x"], start["z"]], [start["x"], end["z"]]],
-            [[end["x"], start["z"]], [end["x"], end["z"]]]
+            [[s.x, s.z], [s.x, e.z]],
+            [[e.x, s.z], [e.x, e.z]]
         ]
 
-        var averageY = (start["y"] + end["y"]) / 2
+        var averageY = (s.y + e.y) / 2
         var numSegments = 3 // the number of border particle segments to generate above and below the average y level
         var segmentHeight = 10
         var averageOffset = (segmentHeight * numSegments)
 
         // only render if particles are enabled
-        if (claim["particles"]) {
+        if (claim.particlesEnabled) {
             // loop through all claim points to determine particle type
             for (var a = 0; a < points.length; a++) {
                 for (var b = 0; b < points[a].length; b++) {
@@ -1581,12 +1637,15 @@ system.runInterval(() => {
 // every minute decrement each online players time remaining until they recieve more claim blocks
 system.runInterval(() => {
     for (var p of world.getAllPlayers()) {
-        // decrement by 1
-        database[p.name]["claim-block-payment-time-remaining"] -= 1;
+
+        var playerData = getPlayerData(p.id);
+
+        // decrement timer by 1
+        playerData.claimBlocks.paymentTimeRemaining -= 1;
 
         // if time is up reward blocks and reset timer
-        if (database[p.name]["claim-block-payment-time-remaining"] <= 0) {
-            database[p.name]["claim-blocks"] += settings["claim-block-hourly-payment"];
+        if (playerData.claimBlocks.paymentTimeRemaining <= 0) {
+            playerData.claimBlocks.amount += settings["claim-block-hourly-payment"];
             sendNotification(p, {
                 "rawtext": [
                     { "translate": "chat.blocks:payment1" },
@@ -1595,7 +1654,7 @@ system.runInterval(() => {
             })
             p.playSound("random.levelup");
 
-            database[p.name]["claim-block-payment-time-remaining"] = 60;
+            playerData.claimBlocks.paymentTimeRemaining = 60;
         }
     }
     saveDb();
