@@ -60,16 +60,60 @@ class PlayerPermissions {
         this.permissions.useItemsOnBlocks = false;
         this.permissions.hurtEntities = false;
     }
+
+    static fromData(data: any): PlayerPermissions {
+        const defaultPermissions = new PlayerPermissions(data.id, data.name);
+        return {
+            id: data.id || defaultPermissions.id,
+            name: data.name || defaultPermissions.name,
+            permissions: {
+                enterClaim: data.permissions?.enterClaim !== undefined ? data.permissions.enterClaim : defaultPermissions.permissions.enterClaim,
+                breakBlocks: data.permissions?.breakBlocks !== undefined ? data.permissions.breakBlocks : defaultPermissions.permissions.breakBlocks,
+                useItemsOnBlocks: data.permissions?.useItemsOnBlocks !== undefined ? data.permissions.useItemsOnBlocks : defaultPermissions.permissions.useItemsOnBlocks,
+                hurtEntities: data.permissions?.hurtEntities !== undefined ? data.permissions.hurtEntities : defaultPermissions.permissions.hurtEntities,
+            }
+        };
+    }
 }
 
+/**
+ * Represents a land claim in the world.
+ */
 class Claim {
+    /**
+     * The name of the claim. This is used to identify the claim and should be unique.
+     */
     name: string;
-    start: Vector3; // the start x and z position of the claim
-    end: Vector3; // the end x and z position of the claim
-    icon: string; // icon path to be displayed in the ui
+
+    /**
+     * The start x and z position of the claim. The y value is still included for particle rendering/camera movement.
+     */
+    start: Vector3;
+
+    /**
+     * The end x and z position of the claim. The y value is still included for particle rendering/camera movement.
+     */
+    end: Vector3;
+
+    /**
+     * The mincraft icon path to be displayed in the ui.
+     */
+    icon: string;
+
+    /**
+     * If particles should be rendered for the claim.
+     */
     particlesEnabled: boolean;
-    playerPermissionsList: PlayerPermissions[]; // an array containing what permissions each individual player has
-    publicPermissions: { // default permissions for all players
+
+    /**
+     * An array containing what permissions each individual player has
+     */
+    playerPermissionsList: PlayerPermissions[];
+
+    /**
+     * The default permissions for all players
+     */
+    publicPermissions: {
         enterClaim: boolean;
         breakBlocks: boolean;
         useItemsOnBlocks: boolean;
@@ -77,17 +121,52 @@ class Claim {
         useTNT: boolean;
     }
 
+    /**
+     * Creates a new Claim object
+     * 
+     * @param name - The name of the claim
+     * 
+     * @param start - The block representing the first corner of the claim
+     * 
+     * @param end - The block representing the opposite second corner of the claim
+     * 
+     * @param icon - The mincraft icon path to be displayed in the ui
+     * 
+     * @param particlesEnabled - If particles should be rendered for the claim; default is true
+     */
     constructor(name: string, start: Vector3, end: Vector3, icon: string, particlesEnabled: boolean = true) {
         this.name = name;
         this.start = start;
         this.end = end;
         this.icon = icon;
         this.particlesEnabled = particlesEnabled;
-        this.publicPermissions.enterClaim = true;
-        this.publicPermissions.breakBlocks = false;
-        this.publicPermissions.useItemsOnBlocks = false;
-        this.publicPermissions.hurtEntities = false;
-        this.publicPermissions.useTNT = false;
+        this.publicPermissions = {
+            enterClaim: true,
+            breakBlocks: false,
+            useItemsOnBlocks: false,
+            hurtEntities: false,
+            useTNT: false
+        };
+    }
+
+    /**
+     * Returns a Claim object loaded from JSON, if a key is missing it will be replaced with the default value.
+     * ### Important!
+     * Name is a required attribute! If it is missing, repairing the object will not be possible. Therfore this function will return `undefined`, it is recomended to then delete the claim object.
+     * 
+     * @param data - The JSON object to load the Claim object from
+     * 
+     * @return - The Claim object loaded from the JSON object
+     */
+    static fromJSON(data: any): Claim {
+        const defaultClaim = new Claim("", { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, "");
+        return new Claim(
+            data.name || defaultClaim.name,
+            data.start || defaultClaim.start,
+            data.end || defaultClaim.end,
+            data.icon || defaultClaim.icon,
+            data.particlesEnabled !== undefined ? data.particlesEnabled : defaultClaim.particlesEnabled
+        );
     }
 
     /**
@@ -152,27 +231,111 @@ class Claim {
 }
 
 class PlayerData {
-    id: string; // entity id of the player
-    name: string; // name of the player; do not use for identification as it can change
+    schemaVersion: string = "1.0.0";
+
+    /**
+     * The entity id of the player.
+     */
+    id: string;
+
+    /**
+     * The name of the player; do not use for identification as it can change.
+     */
+    name: string;
+
+    /**
+     * If the player is currently in a claim.
+     */
     inClaim: boolean;
+
+    /**
+     * If the player is currently viewing a claim.
+     */
     viewingClaim: boolean;
+
+    /** 
+     * The name of the claim the player is currently resizing.
+     */
     resizingClaimName: string;
-    firstPoint: Vector3; // used to store the first corner when creating a claim
-    oppositeCorner: Vector3; // used to store the opposite corner of a claim when resizing it
-    entranceVelocity: Vector3; // the reverse velocity is applied to a player when they are not allowed in a claim to kick them out. 
+
+    /**
+     * The first corner of the claim the player is creating.
+     */
+    firstPoint: Vector3;
+
+    /**
+     * The opposite corner of the claim the player is resizing.
+     */
+    oppositeCorner: Vector3;
+
+    /**
+     * The reverse velocity is applied to a player when they are not allowed in a claim to kick them out.
+     */
+    entranceVelocity: Vector3;
+
     claimBlocks: {
+        /**
+         * The amount of claim blocks the player has.
+         */
         amount: number;
+
+        /**
+         * The time remaining until the player will recive more claim blocks.
+         */
         paymentTimeRemaining: number;
     }
+
+    /**
+     * The claims the player has created.
+     */
     claims: Claim[]
 
+    /**
+     * Creates a new PlayerData object
+     * 
+     * @param playerID - The entity id of the player
+     * 
+     * @param playerName - The name of the player
+     */
     constructor(playerID: string, playerName: string) {
         this.id = playerID;
         this.name = playerName;
         this.inClaim = false;
         this.viewingClaim = false;
-        this.claimBlocks.amount = settings["starting-claim-blocks"];
-        this.claimBlocks.paymentTimeRemaining = settings["claim-block-hourly-payment"];
+        this.resizingClaimName = "";
+        this.firstPoint = { "x": 0, "y": 0, "z": 0 };
+        this.oppositeCorner = { "x": 0, "y": 0, "z": 0 };
+        this.entranceVelocity = { "x": 0, "y": 0, "z": 0 };
+        this.claimBlocks = {
+            amount: settings["starting-claim-blocks"],
+            paymentTimeRemaining: settings["claim-block-hourly-payment"]
+        };
+        this.claims = [];
+    }
+
+    /**
+    * Returns a PlayerData object loaded from JSON, if a key is missing it will be replaced with the default value
+    *
+    * @param data - The JSON object to load the PlayerData object from
+    * 
+    * @return - The PlayerData object loaded from the JSON object
+    */
+    static fromJSON(data: any): PlayerData {
+        const defaultPlayerData = new PlayerData(data.id, data.name);
+        const playerData = new PlayerData(data.id, data.name);
+        playerData.schemaVersion = data.schemaVersion || defaultPlayerData.schemaVersion;
+        playerData.inClaim = data.inClaim !== undefined ? data.inClaim : defaultPlayerData.inClaim;
+        playerData.viewingClaim = data.viewingClaim !== undefined ? data.viewingClaim : defaultPlayerData.viewingClaim;
+        playerData.resizingClaimName = data.resizingClaimName || defaultPlayerData.resizingClaimName;
+        playerData.firstPoint = data.firstPoint || defaultPlayerData.firstPoint;
+        playerData.oppositeCorner = data.oppositeCorner || defaultPlayerData.oppositeCorner;
+        playerData.entranceVelocity = data.entranceVelocity || defaultPlayerData.entranceVelocity;
+        playerData.claimBlocks = {
+            amount: data.claimBlocks?.amount || defaultPlayerData.claimBlocks.amount,
+            paymentTimeRemaining: data.claimBlocks?.paymentTimeRemaining || defaultPlayerData.claimBlocks.paymentTimeRemaining,
+        };
+        playerData.claims = data.claims ? data.claims.map(Claim.fromJSON) : defaultPlayerData.claims;
+        return playerData;
     }
 
     /**
@@ -252,7 +415,9 @@ for (var id of world.getDynamicPropertyIds()) {
     const property = world.getDynamicProperty(id);
 
     if (id.includes("db.")) {
-        database.push(JSON.parse(property.toString()) as PlayerData);
+        const parsedData = JSON.parse(property.toString());
+        const validatedData = PlayerData.fromJSON(parsedData);
+        database.push(validatedData);
     }
 }
 
@@ -290,11 +455,9 @@ function sendNotification(player: Player, langEntry: string | RawMessage) {
 function runInAllClaims(callback: (playerId: string, playerName: string, claimData: Claim) => void) {
 
     for (var player of database) {
-        world.sendMessage("test")
 
         var claims = player.claims;
         for (var claim of claims) {
-            world.sendMessage("test2")
             callback(player.id, player.name, claim);
         }
     }
@@ -336,6 +499,8 @@ function getClosestPlayer(blockLocation: Vector3): Player {
  * @param playerId - The entity id of the player
  */
 function getPlayerData(playerId: string): PlayerData {
+
+    world.sendMessage("db: " + JSON.stringify(database));
 
     for (var player of database) {
         if (playerId == player.id) {
@@ -434,8 +599,7 @@ class Ui {
                     playerData.claimBlocks.amount -= (claimWidth * claimLength);
 
                     // create a new claim
-                    const newClaim = new Claim(name, start, end, iconPath, showBorderParticles);
-                    playerData.claims.push(newClaim);
+                    playerData.claims.push(new Claim(name, start, end, iconPath, showBorderParticles));
 
                     sendNotification(owner, "chat.claim:created")
                     owner.playSound("random.levelup");
@@ -842,7 +1006,7 @@ class Ui {
             }
 
             // called recursively to cycle through all points
-            function nextCorner(index) {
+            const nextCorner = function(index) {
 
                 // the very first point should be set without a delay
                 if (index == 0) {
@@ -1015,7 +1179,7 @@ world.afterEvents.playerJoin.subscribe((data) => {
     // player is not saved in db
     if (!playerFound) {
         // create new player in db
-        database.push(new PlayerData(data.playerId, data.playerName))
+        database.push(new PlayerData(data.playerId, data.playerName));
     }
 
     // save changes to the database
