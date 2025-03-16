@@ -42,9 +42,23 @@ enum PermissionTypes {
     USE_TNT = "useTNT"
 }
 
+/**
+ * Represents a player's permissions in a claim.
+ */
 class PlayerPermissions {
-    id: string; // player entity id
-    name: string; // player name, not used for identification
+    /**
+     * The entity id of the player
+     */
+    id: string;
+
+    /**
+     * The name of the player; do not use for identification as it can change.
+     */
+    name: string;
+
+    /**
+     * The permissions the player has for the claim
+     */
     permissions: {
         enterClaim: boolean;
         breakBlocks: boolean;
@@ -52,6 +66,13 @@ class PlayerPermissions {
         hurtEntities: boolean;
     }
 
+    /**
+     * Creates a new PlayerPermissions object
+     * 
+     * @param id - The entity id of the player
+     * 
+     * @param name - The name of the player
+     */
     constructor(id: string, name: string) {
         this.id = id;
         this.name = name;
@@ -61,7 +82,14 @@ class PlayerPermissions {
         this.permissions.hurtEntities = false;
     }
 
-    static fromData(data: any): PlayerPermissions {
+    /**
+     * Returns a PlayerPermissions object loaded from JSON, if a key is missing it will be replaced with the default value.
+     * 
+     * @param data - The JSON object to load the PlayerPermissions object from
+     * 
+     * @return - The PlayerPermissions object loaded from the JSON object
+     */
+    static fromJSON(data: any): PlayerPermissions {
         const defaultPermissions = new PlayerPermissions(data.id, data.name);
         return {
             id: data.id || defaultPermissions.id,
@@ -140,6 +168,7 @@ class Claim {
         this.end = end;
         this.icon = icon;
         this.particlesEnabled = particlesEnabled;
+        this.playerPermissionsList = [];
         this.publicPermissions = {
             enterClaim: true,
             breakBlocks: false,
@@ -151,22 +180,32 @@ class Claim {
 
     /**
      * Returns a Claim object loaded from JSON, if a key is missing it will be replaced with the default value.
-     * ### Important!
-     * Name is a required attribute! If it is missing, repairing the object will not be possible. Therfore this function will return `undefined`, it is recomended to then delete the claim object.
      * 
      * @param data - The JSON object to load the Claim object from
      * 
      * @return - The Claim object loaded from the JSON object
      */
     static fromJSON(data: any): Claim {
-        const defaultClaim = new Claim("", { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, "");
-        return new Claim(
+        const defaultClaim = new Claim("Undefined", { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, "textures/ui/icon_recipe_nature.png");
+        const claim = new Claim(
             data.name || defaultClaim.name,
             data.start || defaultClaim.start,
             data.end || defaultClaim.end,
             data.icon || defaultClaim.icon,
             data.particlesEnabled !== undefined ? data.particlesEnabled : defaultClaim.particlesEnabled
         );
+
+        claim.publicPermissions = {
+            enterClaim: data.publicPermissions?.enterClaim !== undefined ? data.publicPermissions.enterClaim : defaultClaim.publicPermissions.enterClaim,
+            breakBlocks: data.publicPermissions?.breakBlocks !== undefined ? data.publicPermissions.breakBlocks : defaultClaim.publicPermissions.breakBlocks,
+            useItemsOnBlocks: data.publicPermissions?.useItemsOnBlocks !== undefined ? data.publicPermissions.useItemsOnBlocks : defaultClaim.publicPermissions.useItemsOnBlocks,
+            hurtEntities: data.publicPermissions?.hurtEntities !== undefined ? data.publicPermissions.hurtEntities : defaultClaim.publicPermissions.hurtEntities,
+            useTNT: data.publicPermissions?.useTNT !== undefined ? data.publicPermissions.useTNT : defaultClaim.publicPermissions.useTNT
+        };
+
+        claim.playerPermissionsList = data.playerPermissionsList ? data.playerPermissionsList.map(PlayerPermissions.fromJSON) : defaultClaim.playerPermissionsList;
+
+        return claim;
     }
 
     /**
