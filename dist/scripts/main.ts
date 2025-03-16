@@ -843,6 +843,13 @@ class Ui {
                 players.push(playerPermissions.name);
             }
         }
+        
+        // if no players are available to add or remove, notify the owner
+        if (players.length == 0) {
+            sendNotification(owner, "chat.claim:no_players");
+            owner.playSound("note.didgeridoo");
+            return;
+        }
 
         const form = new ModalFormData()
             .title(add ? {
