@@ -1,0 +1,17 @@
+{
+    "version": "0.3.0",
+    "configurations": [
+      {
+        "type": "minecraft-js",
+        "request": "attach",
+        "name": "Debug with Minecraft",
+        "mode": "listen",
+        "preLaunchTask": "build",
+        "targetModuleUuid": "94fccda8-68ac-4a5b-bbb6-9140158eeb15",
+        "localRoot": "${workspaceFolder}/",
+        "sourceMapRoot": "${workspaceFolder}/scripts",
+        "generatedSourceRoot": "C:/Users/davis/AppData/Local/Packages/Microsoft.MinecraftUWP_8wekyb3d8bbwe/LocalState/games/com.mojang/development_behavior_packs/Shovel Land Claim BP/scripts",
+        "port": 19144
+     }
+    ]
+}
