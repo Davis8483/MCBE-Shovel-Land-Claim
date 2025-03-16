@@ -392,61 +392,6 @@ class PlayerData {
     }
 }
 
-const dbPlayerDefault = {
-    "in-claim": false,
-    "viewing-claim": false,
-    "first-point": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "resizing-claim": "",
-        "opposite-corner": {
-            "x": 0,
-            "y": 0,
-            "z": 0
-        }
-    },
-    "entrance-velocity": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-    },
-    "claim-blocks": settings["starting-claim-blocks"],
-    "claim-block-payment-time-remaining": 60,
-    "claims": {}
-}
-
-// player specific permissions
-const dbPlayerPermissionsDefault = {
-    "enter-claim": true,
-    "break-blocks": false,
-    "use-items-on-blocks": false,
-    "hurt-entities": false
-}
-
-// global claim permissions
-const dbPermissionsDefault = {
-    "enter-claim": true,
-    "break-blocks": false,
-    "use-items-on-blocks": false,
-    "use-tnt": false,
-    "hurt-entities": false
-}
-
-const dbClaimDefault = {
-    "start": { "x": 0, "y": 0, "z": 0 },
-    "end": { "x": 0, "y": 0, "z": 0 },
-
-    "icon": "",
-
-    "particles": true,
-
-    "permissions": {
-        "public": { ...dbPermissionsDefault },
-        "players": {}
-    }
-}
-
 var database: PlayerData[] = [];
 
 // compile database into a dict
@@ -1251,6 +1196,15 @@ world.beforeEvents.itemUse.subscribe((data) => {
 });
 
 world.beforeEvents.itemUseOn.subscribe((data) => {
+
+    // disable placing sculk catelyst
+    if (data.itemStack.typeId == "minecraft:sculk_catalyst") {
+        // notify player
+        sendNotification(data.source, "chat.world:disabled_item");
+        data.source.playSound("note.didgeridoo");
+
+        data.cancel = true;
+    }
 
     // we can't detect where a block is placed so we must figure that out based on the face of the used on block
     const faces = {
