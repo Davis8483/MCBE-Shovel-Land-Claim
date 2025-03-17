@@ -1247,6 +1247,10 @@ world.afterEvents.playerJoin.subscribe((data) => {
 
     for (var p of database) {
         if (p.id == data.playerId) {
+
+            // update player name in db to current; in case they changed it
+            p.name = data.playerName
+
             playerFound = true;
             break;
         }
