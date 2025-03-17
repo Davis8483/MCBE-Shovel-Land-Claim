@@ -1590,7 +1590,7 @@ world.beforeEvents.explosion.subscribe((data) => {
         runInAllClaims((playerID, playerName, claim) => {
 
             // if entity is a mob or player that doesn't have permissions
-            if ((data.source.typeId != "minecraft:tnt") || claim.hasPermission(PermissionTypes.USE_TNT)) {
+            if ((data.source.typeId != "minecraft:tnt") || !claim.hasPermission(PermissionTypes.USE_TNT)) {
                 // remove all impacted blocks that lie within the claim
                 for (var i = 0; i < impactedBlocks.length; i++) {
                     var block = impactedBlocks[i]
