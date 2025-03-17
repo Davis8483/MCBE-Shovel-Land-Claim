@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, ItemStack, CameraFadeOptions, CameraSetPosOptions, EasingType, EntityRidingComponent, EntityRideableComponent, RawMessage } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, CameraFadeOptions, CameraSetPosOptions, EasingType, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockType, BlockComponentTypes, BlockPermutation } from '@minecraft/server';
 import { ActionFormData, MessageFormData, ModalFormData } from '@minecraft/server-ui';
 
 const shovelID = "lca:claim_shovel"
@@ -84,10 +84,10 @@ enum PermissionTypes {
     HURT_ENTITIES = "hurtEntities",
     USE_TNT = "useTNT",
     INTERACT_WITH_ENTITIES = "interactWithEntities",
-    INTERACT_WITH_BLOCKS = "interactWithBlocks",
     USE_DOORS = "useDoors",
     USE_SWITCHES = "useSwitches",
-    OPEN_CONTAINERS = "openContainers"
+    OPEN_CONTAINERS = "openContainers",
+    EDIT_SIGNS = "editSigns"
 }
 
 /**
@@ -113,10 +113,10 @@ class PlayerPermissions {
         useItemsOnBlocks: boolean;
         hurtEntities: boolean;
         interactWithEntities: boolean;
-        interactWithBlocks: boolean;
         useDoors: boolean;
         useSwitches: boolean;
         openContainers: boolean;
+        editSigns: boolean;
     }
 
     /**
@@ -134,10 +134,10 @@ class PlayerPermissions {
         this.permissions.useItemsOnBlocks = false;
         this.permissions.hurtEntities = false;
         this.permissions.interactWithEntities = false;
-        this.permissions.interactWithBlocks = false;
         this.permissions.useDoors = true;
         this.permissions.useSwitches = true;
         this.permissions.openContainers = false;
+        this.permissions.editSigns = false;
     }
 
     /**
@@ -158,10 +158,10 @@ class PlayerPermissions {
                 useItemsOnBlocks: data.permissions?.useItemsOnBlocks !== undefined ? data.permissions.useItemsOnBlocks : defaultPermissions.permissions.useItemsOnBlocks,
                 hurtEntities: data.permissions?.hurtEntities !== undefined ? data.permissions.hurtEntities : defaultPermissions.permissions.hurtEntities,
                 interactWithEntities: data.permissions?.interactWithEntities !== undefined ? data.permissions.interactWithEntities : defaultPermissions.permissions.interactWithEntities,
-                interactWithBlocks: data.permissions?.interactWithBlocks !== undefined ? data.permissions.interactWithBlocks : defaultPermissions.permissions.interactWithBlocks,
                 useDoors: data.permissions?.useDoors !== undefined ? data.permissions.useDoors : defaultPermissions.permissions.useDoors,
                 useSwitches: data.permissions?.useSwitches !== undefined ? data.permissions.useSwitches : defaultPermissions.permissions.useSwitches,
-                openContainers: data.permissions?.openContainers !== undefined ? data.permissions.openContainers : defaultPermissions.permissions.openContainers
+                openContainers: data.permissions?.openContainers !== undefined ? data.permissions.openContainers : defaultPermissions.permissions.openContainers,
+                editSigns: data.permissions?.editSigns !== undefined ? data.permissions.editSigns : defaultPermissions.permissions.editSigns
             }
         };
     }
@@ -211,10 +211,10 @@ class Claim {
         hurtEntities: boolean;
         useTNT: boolean;
         interactWithEntities: boolean;
-        interactWithBlocks: boolean;
         useDoors: boolean;
         useSwitches: boolean;
         openContainers: boolean;
+        editSigns: boolean;
     }
 
     /**
@@ -244,10 +244,10 @@ class Claim {
             hurtEntities: false,
             useTNT: false,
             interactWithEntities: false,
-            interactWithBlocks: false,
             useDoors: true,
             useSwitches: true,
-            openContainers: false
+            openContainers: false,
+            editSigns: false
         };
     }
 
@@ -275,10 +275,10 @@ class Claim {
             hurtEntities: data.publicPermissions?.hurtEntities !== undefined ? data.publicPermissions.hurtEntities : defaultClaim.publicPermissions.hurtEntities,
             useTNT: data.publicPermissions?.useTNT !== undefined ? data.publicPermissions.useTNT : defaultClaim.publicPermissions.useTNT,
             interactWithEntities: data.publicPermissions?.interactWithEntities !== undefined ? data.publicPermissions.interactWithEntities : defaultClaim.publicPermissions.interactWithEntities,
-            interactWithBlocks: data.publicPermissions?.interactWithBlocks !== undefined ? data.publicPermissions.interactWithBlocks : defaultClaim.publicPermissions.interactWithBlocks,
             useDoors: data.publicPermissions?.useDoors !== undefined ? data.publicPermissions.useDoors : defaultClaim.publicPermissions.useDoors,
             useSwitches: data.publicPermissions?.useSwitches !== undefined ? data.publicPermissions.useSwitches : defaultClaim.publicPermissions.useSwitches,
-            openContainers: data.publicPermissions?.openContainers !== undefined ? data.publicPermissions.openContainers : defaultClaim.publicPermissions.openContainers
+            openContainers: data.publicPermissions?.openContainers !== undefined ? data.publicPermissions.openContainers : defaultClaim.publicPermissions.openContainers,
+            editSigns: data.publicPermissions?.editSigns !== undefined ? data.publicPermissions.editSigns : defaultClaim.publicPermissions.editSigns
         };
 
         claim.playerPermissionsList = data.playerPermissionsList ? data.playerPermissionsList.map(PlayerPermissions.fromJSON) : defaultClaim.playerPermissionsList;
@@ -960,10 +960,10 @@ class Ui {
             .toggle("ui.manage.permissions:use_items_on_blocks", playerID ? playerPermissions.permissions.useItemsOnBlocks : claim.publicPermissions.useItemsOnBlocks)
             .toggle("ui.manage.permissions:hurt_entities", playerID ? playerPermissions.permissions.hurtEntities : claim.publicPermissions.hurtEntities)
             .toggle("ui.manage.permissions:interact_with_entities", playerID ? playerPermissions.permissions.interactWithEntities : claim.publicPermissions.interactWithEntities)
-            .toggle("ui.manage.permissions:interact_with_blocks", playerID ? playerPermissions.permissions.interactWithBlocks : claim.publicPermissions.interactWithBlocks)
             .toggle("ui.manage.permissions:use_doors", playerID ? playerPermissions.permissions.useDoors : claim.publicPermissions.useDoors)
             .toggle("ui.manage.permissions:use_switches", playerID ? playerPermissions.permissions.useSwitches : claim.publicPermissions.useSwitches)
-            .toggle("ui.manage.permissions:open_containers", playerID ? playerPermissions.permissions.openContainers : claim.publicPermissions.openContainers);
+            .toggle("ui.manage.permissions:open_containers", playerID ? playerPermissions.permissions.openContainers : claim.publicPermissions.openContainers)
+            .toggle("ui.manage.permissions:edit_signs", playerID ? playerPermissions.permissions.editSigns : claim.publicPermissions.editSigns)
 
         if (!playerID) {
             form.toggle("ui.manage.permissions:use_tnt", claim.publicPermissions.useTNT);
@@ -980,9 +980,9 @@ class Ui {
                     playerPermissions.permissions.useItemsOnBlocks = response.formValues[2] as boolean;
                     playerPermissions.permissions.hurtEntities = response.formValues[3] as boolean;
                     playerPermissions.permissions.interactWithEntities = response.formValues[4] as boolean;
-                    playerPermissions.permissions.interactWithBlocks = response.formValues[5] as boolean;
-                    playerPermissions.permissions.useDoors = response.formValues[6] as boolean;
-                    playerPermissions.permissions.useSwitches = response.formValues[7] as boolean;
+                    playerPermissions.permissions.useDoors = response.formValues[5] as boolean;
+                    playerPermissions.permissions.useSwitches = response.formValues[6] as boolean;
+                    playerPermissions.permissions.editSigns = response.formValues[7] as boolean;
                     playerPermissions.permissions.openContainers = response.formValues[8] as boolean;
                 }
                 else {
@@ -991,10 +991,10 @@ class Ui {
                     claim.publicPermissions.useItemsOnBlocks = response.formValues[2] as boolean;
                     claim.publicPermissions.hurtEntities = response.formValues[3] as boolean;
                     claim.publicPermissions.interactWithEntities = response.formValues[4] as boolean;
-                    claim.publicPermissions.interactWithBlocks = response.formValues[5] as boolean;
-                    claim.publicPermissions.useDoors = response.formValues[6] as boolean;
-                    claim.publicPermissions.useSwitches = response.formValues[7] as boolean;
-                    claim.publicPermissions.openContainers = response.formValues[8] as boolean;
+                    claim.publicPermissions.useDoors = response.formValues[5] as boolean;
+                    claim.publicPermissions.useSwitches = response.formValues[6] as boolean;
+                    claim.publicPermissions.openContainers = response.formValues[7] as boolean;
+                    claim.publicPermissions.editSigns = response.formValues[8] as boolean;
                     claim.publicPermissions.useTNT = response.formValues[9] as boolean;
                 }
 
@@ -1286,52 +1286,6 @@ world.afterEvents.itemUse.subscribe((data) => {
 world.beforeEvents.itemUse.subscribe((data) => {
     if (getPlayerData(data.source.id).viewingClaim) {
         data.cancel = true;
-    }
-});
-
-world.beforeEvents.itemUseOn.subscribe((data) => {
-
-    // blocks disabled by admin
-    if (settings.disallowedBlocks.includes(data.itemStack.typeId)) {
-        // notify player
-        sendNotification(data.source, "chat.world:disabled_item");
-
-        system.run(() => {
-            data.source.playSound("note.didgeridoo");
-        });
-
-        data.cancel = true;
-    }
-
-    // we can't detect where a block is placed so we must figure that out based on the face of the used on block
-    const faces = {
-        "North": data.block.north(1),
-        "East": data.block.east(1),
-        "South": data.block.south(1),
-        "West": data.block.west(1),
-        "Up": data.block.above(1),
-        "Down": data.block.below(1)
-    };
-    const placedBlock = faces[data.blockFace] as Vector3;
-
-    // disable input when viewing a claim
-    if (getPlayerData(data.source.id).viewingClaim) {
-        data.cancel = true;
-    }
-
-    if (data.block.dimension == world.getDimension("overworld")) {
-        runInAllClaims((playerID, playerName, claim) => {
-            // checks if the used on block or calculated placed block is within a claim and if the player has permission
-            if (
-                ((claim.isOverlap(data.block, data.block) || claim.isOverlap(placedBlock, placedBlock))) && (playerID != data.source.id) && !claim.hasPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data.source)) {
-                data.cancel = true;
-
-                system.run(() => {
-                    sendNotification(data.source, "chat.claim.permission:use_item_on_block");
-                    data.source.playSound("note.didgeridoo");
-                })
-            }
-        });
     }
 });
 
@@ -1716,6 +1670,133 @@ world.beforeEvents.itemUse.subscribe((data) => {
         });
     }
 })
+
+world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
+    
+    if (data.target.dimension == world.getDimension("overworld")) {
+        runInAllClaims((playerID, playerName, claim) => {
+
+            // if player has interacted with an entity in a claim
+            if (claim.isOverlap(data.target.location, data.target.location) && (playerID != data.player.id) && !claim.hasPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data.player)) {
+
+                // cancel the action
+                data.cancel = true;
+
+                // notify player they don't have permissions
+                system.run(() => {
+                    sendNotification(data.player, "chat.claim.permission:interact_with_entities");
+                    data.player.playSound("note.didgeridoo");
+                })
+            }
+        });
+    }
+});
+
+world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
+    
+    // blocks that are disabled by admin; can't be placed
+    if (data.itemStack && settings.disallowedBlocks.includes(data.itemStack.typeId)) {
+        // notify player
+        sendNotification(data.player, "chat.world:disabled_item");
+
+        system.run(() => {
+            data.player.playSound("note.didgeridoo");
+        });
+
+        data.cancel = true;
+    }
+
+    // we can't detect where a block is placed so we must figure that out based on the face of the used on block
+    const faces = {
+        "North": data.block.north(1),
+        "East": data.block.east(1),
+        "South": data.block.south(1),
+        "West": data.block.west(1),
+        "Up": data.block.above(1),
+        "Down": data.block.below(1)
+    };
+    const placedBlock = faces[data.blockFace] as Vector3;
+
+    // disable input when viewing a claim
+    if (getPlayerData(data.player.id).viewingClaim) {
+        data.cancel = true;
+    }
+
+    if (data.block.dimension == world.getDimension("overworld")){
+        runInAllClaims((playerID, playerName, claim) => {
+        
+            // only check for permissions if player is not the owner
+            if (playerID != data.player.id){
+                
+                // door interaction permissions
+                if (claim.isOverlap(data.block.location, data.block.location) && data.block.typeId.includes("door") && !data.player.isSneaking) {
+                    if (!claim.hasPermission(PermissionTypes.USE_DOORS, data.player)){
+                        // cancel the action
+                        data.cancel = true;
+
+                        // notify player they don't have permissions
+                        system.run(() => {
+                            sendNotification(data.player, "chat.claim.permission:use_doors");
+                            data.player.playSound("note.didgeridoo");
+                        })
+                    }
+                }
+                // lever/button interaction permissions
+                else if (claim.isOverlap(data.block.location, data.block.location) && (data.block.matches("minecraft:lever") || data.block.typeId.includes("button")) && !data.player.isSneaking) {
+                    if (!claim.hasPermission(PermissionTypes.USE_SWITCHES, data.player)){
+                        // cancel the action
+                        data.cancel = true;
+
+                        // notify player they don't have permissions
+                        system.run(() => {
+                            sendNotification(data.player, "chat.claim.permission:use_switches");
+                            data.player.playSound("note.didgeridoo");
+                        })
+                    }
+                }
+                // opening chests/container permissions
+                else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Inventory) && !data.player.isSneaking) {
+                    if (!claim.hasPermission(PermissionTypes.OPEN_CONTAINERS, data.player)){
+                        // cancel the action
+                        data.cancel = true;
+
+                        // notify player they don't have permissions
+                        system.run(() => {
+                            sendNotification(data.player, "chat.claim.permission:open_containers");
+                            data.player.playSound("note.didgeridoo");
+                        })
+                    }
+                }
+                // editing signs permissions
+                else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Sign) && !data.player.isSneaking && !data.itemStack?.matches("minecraft:honeycomb")) {
+                    if (!claim.hasPermission(PermissionTypes.EDIT_SIGNS, data.player)){
+                        // cancel the action
+                        data.cancel = true;
+
+                        // notify player they don't have permissions
+                        system.run(() => {
+                            sendNotification(data.player, "chat.claim.permission:edit_signs");
+                            data.player.playSound("note.didgeridoo");
+                        })
+                    }
+                }
+                // block placing/using items on blocks permissions
+                else if ((claim.isOverlap(data.block, data.block) || claim.isOverlap(placedBlock, placedBlock)) && data.itemStack && !data.itemStack.matches(shovelID)) {
+                    if (!claim.hasPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data.player)){
+                        // cancel the action
+                        data.cancel = true;
+
+                        // notify player they don't have permissions
+                        system.run(() => {
+                            sendNotification(data.player, "chat.claim.permission:use_item_on_block");
+                            data.player.playSound("note.didgeridoo");
+                        });
+                    }
+                }
+            }
+        });
+    }
+});
 
 // player management in claims, runs every 1/20th of a second
 system.runInterval(() => {
