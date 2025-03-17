@@ -82,7 +82,12 @@ enum PermissionTypes {
     BREAK_BLOCKS = "breakBlocks",
     USE_ITEMS_ON_BLOCKS = "useItemsOnBlocks",
     HURT_ENTITIES = "hurtEntities",
-    USE_TNT = "useTNT"
+    USE_TNT = "useTNT",
+    INTERACT_WITH_ENTITIES = "interactWithEntities",
+    INTERACT_WITH_BLOCKS = "interactWithBlocks",
+    USE_DOORS = "useDoors",
+    USE_SWITCHES = "useSwitches",
+    OPEN_CONTAINERS = "openContainers"
 }
 
 /**
@@ -107,6 +112,11 @@ class PlayerPermissions {
         breakBlocks: boolean;
         useItemsOnBlocks: boolean;
         hurtEntities: boolean;
+        interactWithEntities: boolean;
+        interactWithBlocks: boolean;
+        useDoors: boolean;
+        useSwitches: boolean;
+        openContainers: boolean;
     }
 
     /**
@@ -123,6 +133,11 @@ class PlayerPermissions {
         this.permissions.breakBlocks = false;
         this.permissions.useItemsOnBlocks = false;
         this.permissions.hurtEntities = false;
+        this.permissions.interactWithEntities = false;
+        this.permissions.interactWithBlocks = false;
+        this.permissions.useDoors = true;
+        this.permissions.useSwitches = true;
+        this.permissions.openContainers = false;
     }
 
     /**
@@ -142,6 +157,11 @@ class PlayerPermissions {
                 breakBlocks: data.permissions?.breakBlocks !== undefined ? data.permissions.breakBlocks : defaultPermissions.permissions.breakBlocks,
                 useItemsOnBlocks: data.permissions?.useItemsOnBlocks !== undefined ? data.permissions.useItemsOnBlocks : defaultPermissions.permissions.useItemsOnBlocks,
                 hurtEntities: data.permissions?.hurtEntities !== undefined ? data.permissions.hurtEntities : defaultPermissions.permissions.hurtEntities,
+                interactWithEntities: data.permissions?.interactWithEntities !== undefined ? data.permissions.interactWithEntities : defaultPermissions.permissions.interactWithEntities,
+                interactWithBlocks: data.permissions?.interactWithBlocks !== undefined ? data.permissions.interactWithBlocks : defaultPermissions.permissions.interactWithBlocks,
+                useDoors: data.permissions?.useDoors !== undefined ? data.permissions.useDoors : defaultPermissions.permissions.useDoors,
+                useSwitches: data.permissions?.useSwitches !== undefined ? data.permissions.useSwitches : defaultPermissions.permissions.useSwitches,
+                openContainers: data.permissions?.openContainers !== undefined ? data.permissions.openContainers : defaultPermissions.permissions.openContainers
             }
         };
     }
@@ -190,6 +210,11 @@ class Claim {
         useItemsOnBlocks: boolean;
         hurtEntities: boolean;
         useTNT: boolean;
+        interactWithEntities: boolean;
+        interactWithBlocks: boolean;
+        useDoors: boolean;
+        useSwitches: boolean;
+        openContainers: boolean;
     }
 
     /**
@@ -217,7 +242,12 @@ class Claim {
             breakBlocks: false,
             useItemsOnBlocks: false,
             hurtEntities: false,
-            useTNT: false
+            useTNT: false,
+            interactWithEntities: false,
+            interactWithBlocks: false,
+            useDoors: true,
+            useSwitches: true,
+            openContainers: false
         };
     }
 
@@ -243,7 +273,12 @@ class Claim {
             breakBlocks: data.publicPermissions?.breakBlocks !== undefined ? data.publicPermissions.breakBlocks : defaultClaim.publicPermissions.breakBlocks,
             useItemsOnBlocks: data.publicPermissions?.useItemsOnBlocks !== undefined ? data.publicPermissions.useItemsOnBlocks : defaultClaim.publicPermissions.useItemsOnBlocks,
             hurtEntities: data.publicPermissions?.hurtEntities !== undefined ? data.publicPermissions.hurtEntities : defaultClaim.publicPermissions.hurtEntities,
-            useTNT: data.publicPermissions?.useTNT !== undefined ? data.publicPermissions.useTNT : defaultClaim.publicPermissions.useTNT
+            useTNT: data.publicPermissions?.useTNT !== undefined ? data.publicPermissions.useTNT : defaultClaim.publicPermissions.useTNT,
+            interactWithEntities: data.publicPermissions?.interactWithEntities !== undefined ? data.publicPermissions.interactWithEntities : defaultClaim.publicPermissions.interactWithEntities,
+            interactWithBlocks: data.publicPermissions?.interactWithBlocks !== undefined ? data.publicPermissions.interactWithBlocks : defaultClaim.publicPermissions.interactWithBlocks,
+            useDoors: data.publicPermissions?.useDoors !== undefined ? data.publicPermissions.useDoors : defaultClaim.publicPermissions.useDoors,
+            useSwitches: data.publicPermissions?.useSwitches !== undefined ? data.publicPermissions.useSwitches : defaultClaim.publicPermissions.useSwitches,
+            openContainers: data.publicPermissions?.openContainers !== undefined ? data.publicPermissions.openContainers : defaultClaim.publicPermissions.openContainers
         };
 
         claim.playerPermissionsList = data.playerPermissionsList ? data.playerPermissionsList.map(PlayerPermissions.fromJSON) : defaultClaim.playerPermissionsList;
@@ -926,7 +961,12 @@ class Ui {
             .toggle("ui.manage.permissions:enter_claim", playerID ? playerPermissions.permissions.enterClaim : claim.publicPermissions.enterClaim)
             .toggle("ui.manage.permissions:break_blocks", playerID ? playerPermissions.permissions.breakBlocks : claim.publicPermissions.breakBlocks)
             .toggle("ui.manage.permissions:use_items_on_blocks", playerID ? playerPermissions.permissions.useItemsOnBlocks : claim.publicPermissions.useItemsOnBlocks)
-            .toggle("ui.manage.permissions:hurt_entities", playerID ? playerPermissions.permissions.hurtEntities : claim.publicPermissions.hurtEntities);
+            .toggle("ui.manage.permissions:hurt_entities", playerID ? playerPermissions.permissions.hurtEntities : claim.publicPermissions.hurtEntities)
+            .toggle("ui.manage.permissions:interact_with_entities", playerID ? playerPermissions.permissions.interactWithEntities : claim.publicPermissions.interactWithEntities)
+            .toggle("ui.manage.permissions:interact_with_blocks", playerID ? playerPermissions.permissions.interactWithBlocks : claim.publicPermissions.interactWithBlocks)
+            .toggle("ui.manage.permissions:use_doors", playerID ? playerPermissions.permissions.useDoors : claim.publicPermissions.useDoors)
+            .toggle("ui.manage.permissions:use_switches", playerID ? playerPermissions.permissions.useSwitches : claim.publicPermissions.useSwitches)
+            .toggle("ui.manage.permissions:open_containers", playerID ? playerPermissions.permissions.openContainers : claim.publicPermissions.openContainers);
 
         if (!playerID) {
             form.toggle("ui.manage.permissions:use_tnt", claim.publicPermissions.useTNT);
@@ -942,13 +982,23 @@ class Ui {
                     playerPermissions.permissions.breakBlocks = response.formValues[1] as boolean;
                     playerPermissions.permissions.useItemsOnBlocks = response.formValues[2] as boolean;
                     playerPermissions.permissions.hurtEntities = response.formValues[3] as boolean;
+                    playerPermissions.permissions.interactWithEntities = response.formValues[4] as boolean;
+                    playerPermissions.permissions.interactWithBlocks = response.formValues[5] as boolean;
+                    playerPermissions.permissions.useDoors = response.formValues[6] as boolean;
+                    playerPermissions.permissions.useSwitches = response.formValues[7] as boolean;
+                    playerPermissions.permissions.openContainers = response.formValues[8] as boolean;
                 }
                 else {
                     claim.publicPermissions.enterClaim = response.formValues[0] as boolean;
                     claim.publicPermissions.breakBlocks = response.formValues[1] as boolean;
                     claim.publicPermissions.useItemsOnBlocks = response.formValues[2] as boolean;
                     claim.publicPermissions.hurtEntities = response.formValues[3] as boolean;
-                    claim.publicPermissions.useTNT = response.formValues[4] as boolean;
+                    claim.publicPermissions.interactWithEntities = response.formValues[4] as boolean;
+                    claim.publicPermissions.interactWithBlocks = response.formValues[5] as boolean;
+                    claim.publicPermissions.useDoors = response.formValues[6] as boolean;
+                    claim.publicPermissions.useSwitches = response.formValues[7] as boolean;
+                    claim.publicPermissions.openContainers = response.formValues[8] as boolean;
+                    claim.publicPermissions.useTNT = response.formValues[9] as boolean;
                 }
 
                 sendNotification(owner, "chat.claim:permissions_updated");
