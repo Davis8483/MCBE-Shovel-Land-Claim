@@ -22,6 +22,7 @@ class Settings{
     claimBlockHourlyPayment: number;
     startingClaimBlocks: number;
     claimMinimumWidth: number;
+    disallowedBlocks: string[];
 
     /**
      * Creates a new Settings object with default values
@@ -30,6 +31,18 @@ class Settings{
         this.claimBlockHourlyPayment = 100;
         this.startingClaimBlocks = 200;
         this.claimMinimumWidth = 10;
+        this.disallowedBlocks = [
+            // "minecraft:bedrock",
+            // "minecraft:barrier",
+            // "minecraft:command_block",
+            // "minecraft:repeating_command_block",
+            // "minecraft:chain_command_block",
+            // "minecraft:structure_block",
+            // "minecraft:jigsaw",
+            // "minecraft:structure_void",
+            // "minecraft:structure_block",
+            "minecraft:sculk_catalyst" // can be used for griefing
+        ];
     }
     
     /**
@@ -45,6 +58,7 @@ class Settings{
         settings.claimBlockHourlyPayment = data.claimBlockHourlyPayment || defaultSettings.claimBlockHourlyPayment;
         settings.startingClaimBlocks = data.startingClaimBlocks || defaultSettings.startingClaimBlocks;
         settings.claimMinimumWidth = data.claimMinimumWidth || defaultSettings.claimMinimumWidth;
+        settings.disallowedBlocks = data.disallowedBlocks || defaultSettings.disallowedBlocks;
         return settings;
     }
 }
@@ -1226,11 +1240,14 @@ world.beforeEvents.itemUse.subscribe((data) => {
 
 world.beforeEvents.itemUseOn.subscribe((data) => {
 
-    // disable placing sculk catelyst
-    if (data.itemStack.typeId == "minecraft:sculk_catalyst") {
+    // blocks disabled by admin
+    if (settings.disallowedBlocks.includes(data.itemStack.typeId)) {
         // notify player
         sendNotification(data.source, "chat.world:disabled_item");
-        data.source.playSound("note.didgeridoo");
+
+        system.run(() => {
+            data.source.playSound("note.didgeridoo");
+        });
 
         data.cancel = true;
     }
