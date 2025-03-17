@@ -6,6 +6,8 @@ chat.prefix=[§5SLC§r]
 
 chat.shovel:dimension_warning=§cYou can only create claims in the overworld§r
 
+chat.world:disabled_item=§cThis item/block has been disabled by your admin!§r
+
 chat.claim:name_required=§cYou must provide a name!§r
 chat.claim:use_unique_name=§cYou can't use the name of an existing claim!§r
 chat.claim:no_players=§cAt least one other player must join your world!§r
