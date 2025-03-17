@@ -297,30 +297,27 @@ class Claim {
 
         // check if player is in specific permissions list
         if (player != undefined) {
+            
+            var playerPermissions: PlayerPermissions = undefined;
 
             // find the players permissions
             for (var p of this.playerPermissionsList) {
                 if (p.id == player.id) {
-                    var playerPermissions = p;
+                    playerPermissions = p;
                     break;
                 }
             }
 
-            if (Object.keys(playerPermissions).includes(permission)) {
+            if ((playerPermissions != undefined) && Object.keys(playerPermissions).includes(permission)) {
 
                 return playerPermissions[permission]
             }
         }
-        // default to claims global permissions list
-        else {
-            if (Object.keys(this.publicPermissions).includes(permission)) {
+        // if player specific permission is not found, default to claims global permissions list
+        if (Object.keys(this.publicPermissions).includes(permission)) {
 
-                return (this.publicPermissions[permission]);
-            }
+            return (this.publicPermissions[permission]);
         }
-
-        // permission not found or something else went wrong ¯\_(ツ)_/¯
-        return (false);
     }
 
     /**
