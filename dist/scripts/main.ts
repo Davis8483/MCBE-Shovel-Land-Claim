@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, ItemStack, CameraFadeOptions, CameraSetPosOptions, EasingType, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockType, BlockComponentTypes, BlockPermutation } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, CameraFadeOptions, CameraSetPosOptions, EasingType, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockType, BlockComponentTypes, BlockPermutation, BlockTypes, EntityComponentTypes } from '@minecraft/server';
 import { ActionFormData, MessageFormData, ModalFormData } from '@minecraft/server-ui';
 
 const shovelID = "lca:claim_shovel"
@@ -1676,17 +1676,36 @@ world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
     if (data.target.dimension == world.getDimension("overworld")) {
         runInAllClaims((playerID, playerName, claim) => {
 
+            const margin = 0.5;
+            var start = { x: data.target.location.x - margin, y: data.target.location.y - margin, z: data.target.location.z - margin };
+            var end = { x: data.target.location.x + margin, y: data.target.location.y + margin, z: data.target.location.z + margin };
+
             // if player has interacted with an entity in a claim
-            if (claim.isOverlap(data.target.location, data.target.location) && (playerID != data.player.id) && !claim.hasPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data.player)) {
+            if (claim.isOverlap(start, end) && (playerID != data.player.id)){
+                // disallow player from interacting with rideable entities if they are not allowed to enter the claim
+                if (!claim.hasPermission(PermissionTypes.ENTER_CLAIM, data.player) && data.target.getComponent(EntityComponentTypes.Rideable)) {
+                    // cancel the action
+                    data.cancel = true;
 
-                // cancel the action
-                data.cancel = true;
+                    // notify player they don't have permissions
+                    system.run(() => {
+                        sendNotification(data.player, "chat.claim.permission:enter_claim");
+                        data.player.playSound("note.didgeridoo");
+                    })
+                }
 
-                // notify player they don't have permissions
-                system.run(() => {
-                    sendNotification(data.player, "chat.claim.permission:interact_with_entities");
-                    data.player.playSound("note.didgeridoo");
-                })
+                // disallow player from interacting with entities based on permissions
+                if(!claim.hasPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data.player)) {
+
+                    // cancel the action
+                    data.cancel = true;
+
+                    // notify player they don't have permissions
+                    system.run(() => {
+                        sendNotification(data.player, "chat.claim.permission:interact_with_entities");
+                        data.player.playSound("note.didgeridoo");
+                    })
+                }
             }
         });
     }
@@ -1869,10 +1888,21 @@ system.runInterval(() => {
 
                         // if player is riding an entity eject them
                         if (p.hasComponent(EntityRidingComponent.componentId)) {
-                            const ridingComponent = p.getComponent(EntityRidingComponent.componentId) as EntityRidingComponent;
-                            const riddenComponent = ridingComponent.entityRidingOn.getComponent(EntityRideableComponent.componentId) as EntityRideableComponent;
+                            const entity = (p.getComponent(EntityRidingComponent.componentId) as EntityRidingComponent).entityRidingOn;
+                            const riddenComponent = entity.getComponent(EntityRideableComponent.componentId) as EntityRideableComponent;
 
                             riddenComponent.ejectRider(p);
+
+                            // teleport the ridden entity to the player 1 second after they are ejected
+                            system.runTimeout(() => {
+                                entity.teleport(p.location);
+                                
+                                // remount the player after a 0.5 second delay
+                                system.runTimeout(() => {
+                                    // const riddenComponent = entity.getComponent(EntityRideableComponent.componentId) as EntityRideableComponent;
+                                    riddenComponent.addRider(p);
+                                }, 10);
+                            }, 20);
                         }
 
                         p.applyKnockback(-velocity.x, -velocity.z, 3, 0.5);
