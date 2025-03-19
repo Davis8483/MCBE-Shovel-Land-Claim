@@ -1,6 +1,4 @@
 item.lca:claim_shovel=Claim Shovel
-item.spawn_egg.entity.lca:first_point.name=Spawn First Land Selection Point
-entity.lca:first_point.name=First Land Selection Point
 
 chat.prefix=[§5SLC§r]
 
@@ -26,11 +24,11 @@ chat.claim:permissions_updated=§aClaim permissions have been updated!§r
 chat.claim:player_permissions_updated_notif=§ahas updated your permissions for§r
 chat.claim:player_permissions_reset_notif=§bhas reset your permissions for§r
 
-chat.point.new:selected=First point selected
+chat.point.new:selected=First block selected
 chat.point.resize:selected=Claim corner selected
 chat.point.resize:disallowed=§cYou must be the owner to resize a claim!§r
-chat.point.new:hint=§bCrouch click a second point to create a claim!§r
-chat.point.resize:hint=§dCrouch click a second point to resize claim!§r
+chat.point.new:hint=§bCrouch click to set the opposite corner of the claim!§r
+chat.point.resize:hint=§dCrouch click a another block to resize the claim!§r
 
 chat.claim.permission:break_blocks=§cYou're not allowed to break blocks!§r
 chat.claim.permission:use_item_on_block=§cYou're not allowed to use items on blocks!§r
