@@ -1817,6 +1817,11 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
     }
 });
 
+world.afterEvents.worldInitialize.subscribe(() => {
+    // disable showing locked item text; the claim shovel is locked in the inventory
+    world.gameRules.showTags = false;
+});
+
 // player management in claims, runs every 1/20th of a second
 system.runInterval(() => {
 
