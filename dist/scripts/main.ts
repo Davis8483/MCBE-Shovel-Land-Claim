@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, ItemStack, CameraFadeOptions, CameraSetPosOptions, EasingType, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockType, BlockComponentTypes, BlockPermutation, BlockTypes, EntityComponentTypes } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, CameraFadeOptions, CameraSetPosOptions, EasingType, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockType, BlockComponentTypes, BlockPermutation, BlockTypes, EntityComponentTypes, InputPermissionCategory, HudElement, HudVisibility } from '@minecraft/server';
 import { ActionFormData, MessageFormData, ModalFormData } from '@minecraft/server-ui';
 
 const shovelID = "lca:claim_shovel"
@@ -1030,12 +1030,12 @@ class Ui {
             // set flag
             playerData.viewingClaim = true;
 
-            // disable player movement
-            owner.runCommandAsync("inputpermission set @s camera disabled");
-            owner.runCommandAsync("inputpermission set @s movement disabled");
+            // disable player movement, besides sneaking which is used to cancel the view
+            owner.inputPermissions.cameraEnabled = false;
+            owner.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement, false);
 
             // hide hud
-            owner.runCommandAsync("hud @s hide");
+            owner.onScreenDisplay.setHudVisibility(HudVisibility.Hide);
 
             // fade parameters
             var transition: CameraFadeOptions = {
@@ -1051,7 +1051,8 @@ class Ui {
                 }
             }
 
-            // load the claim
+            // load the claim, make sure to remove old ticking area if it exsists
+            owner.runCommandAsync("tickingarea remove claimView"); // this will not break other players viewing session, their chunnk will still be rendered until the camera is gone
             owner.runCommandAsync(`tickingarea add ${claim.start.x} ${claim.start.y} ${claim.start.z} ${claim.end.x} ${claim.end.y} ${claim.end.z} claimView`);
 
             // all 4 points of the claim
@@ -1096,41 +1097,29 @@ class Ui {
                 }
 
                 system.runTimeout(() => {
-                    cornerView.easeOptions = {
-                        "easeTime": 3,
-                        "easeType": EasingType.InOutSine
-                    };
-                    cornerView.location.x = points[index][0];
-                    cornerView.location.z = points[index][1];
-                    owner.camera.setCamera("minecraft:free", cornerView);
+                    // check if player has canceled the viewing session
+                    if (playerData.viewingClaim) {
 
-                    // next corner
-                    if (index < 3) {
-                        nextCorner(index + 1);
-                    }
-                    // animation is over, return to first person
-                    else {
-                        system.runTimeout(() => {
-                            transition.fadeTime.holdTime = 1;
-                            owner.camera.fade(transition);
+                        cornerView.easeOptions = {
+                            "easeTime": 3,
+                            "easeType": EasingType.InOutSine
+                        };
+                        cornerView.location.x = points[index][0];
+                        cornerView.location.z = points[index][1];
+                        owner.camera.setCamera("minecraft:free", cornerView);
+
+                        // next corner
+                        if (index < 3) {
+                            nextCorner(index + 1);
+                        }
+                        // animation is over, return to first person
+                        else {
                             system.runTimeout(() => {
-                                owner.camera.clear();
-
-                                // unload the claim
-                                owner.runCommandAsync("tickingarea remove claimView");
-
-                                // set flag back to false
-                                playerData.viewingClaim = false;
-
-                                // enable player movement again
-                                owner.runCommandAsync("inputpermission set @s camera enabled");
-                                owner.runCommandAsync("inputpermission set @s movement enabled");
-
-                                // show hud
-                                owner.runCommandAsync("hud @s reset");
-
-                            }, 30);
-                        }, 60);
+                                if (playerData.viewingClaim) {
+                                    Ui.exitClaimView(owner);
+                                }
+                            }, 60);
+                        }
                     }
                 }, delay);
             };
@@ -1143,6 +1132,7 @@ class Ui {
             system.runTimeout(() => {
                 // show title to player
                 owner.onScreenDisplay.setTitle({ "translate": "ui.manage.view:loading" });
+                owner.onScreenDisplay.updateSubtitle({ "translate": "ui.manage.view:loading_subtitle" });
 
                 owner.camera.setCamera("minecraft:free", cornerView);
                 system.runTimeout(() => {
@@ -1156,6 +1146,44 @@ class Ui {
             sendNotification(owner, "chat.claim:view");
         }
     }
+
+    static exitClaimView(owner: Player) {
+        var playerData = getPlayerData(owner.id);
+
+        // fade parameters
+        var transition: CameraFadeOptions = {
+            "fadeColor": {
+                "red": 0,
+                "green": 0,
+                "blue": 0
+            },
+            "fadeTime": {
+                "fadeInTime": 0.5,
+                "fadeOutTime": 1,
+                "holdTime": 5
+            }
+        }
+
+        // unload the claim
+        owner.runCommandAsync("tickingarea remove claimView");
+                    
+        transition.fadeTime.holdTime = 1;
+        owner.camera.fade(transition);
+        system.runTimeout(() => {
+            owner.camera.clear();
+
+            // set flag back to false
+            playerData.viewingClaim = false;
+
+            // enable player movement again
+            owner.inputPermissions.cameraEnabled = true;
+            owner.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement, true);
+
+            // show hud
+            owner.onScreenDisplay.setHudVisibility(HudVisibility.Reset);
+
+        }, 30);
+    };
 
     static removeClaim(owner: Player, claim: Claim) {
         var playerData: PlayerData = getPlayerData(owner.id);
@@ -1253,6 +1281,10 @@ world.afterEvents.playerJoin.subscribe((data) => {
             // update player name in db to current; in case they changed it
             p.name = data.playerName
 
+            // set other values to default
+            p.viewingClaim = false;
+            p.resizingClaimName = "";
+
             playerFound = true;
             break;
         }
@@ -1267,6 +1299,16 @@ world.afterEvents.playerJoin.subscribe((data) => {
     // save changes to the database
     saveDb();
 
+});
+
+world.afterEvents.playerLeave.subscribe((data) => {
+
+    var playerData = getPlayerData(data.playerId);
+
+    // remove claim view ticking area if player left while viewing a claim
+    if (playerData.viewingClaim) {
+        world.getDimension("overworld").runCommandAsync("tickingarea remove claimView");
+    }
 });
 
 world.afterEvents.playerSpawn.subscribe((data) => {
@@ -1822,6 +1864,9 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
 world.afterEvents.worldInitialize.subscribe(() => {
     // disable showing locked item text; the claim shovel is locked in the inventory
     world.gameRules.showTags = false;
+
+    // remove claim view ticking area if it exists
+    world.getDimension("overworld").runCommandAsync("tickingarea remove claimView")
 });
 
 // player management in claims, runs every 1/20th of a second
@@ -1851,6 +1896,11 @@ system.runInterval(() => {
 
             // set flag to false before for loop updates it
             playerData.inClaim = false;
+
+            // if player is crouching set viewing claim flag to false to cancel it and return to first person
+            if (p.isSneaking && playerData.viewingClaim) {
+                Ui.exitClaimView(p);
+            }
 
             runInAllClaims((playerID, playerName, claim) => {
 
