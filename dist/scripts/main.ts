@@ -129,15 +129,17 @@ class PlayerPermissions {
     constructor(id: string, name: string) {
         this.id = id;
         this.name = name;
-        this.permissions.enterClaim = true;
-        this.permissions.breakBlocks = false;
-        this.permissions.useItemsOnBlocks = false;
-        this.permissions.hurtEntities = false;
-        this.permissions.interactWithEntities = false;
-        this.permissions.useDoors = true;
-        this.permissions.useSwitches = true;
-        this.permissions.openContainers = false;
-        this.permissions.editSigns = false;
+        this.permissions = {
+            enterClaim: true,
+            breakBlocks: false,
+            useItemsOnBlocks: false,
+            hurtEntities: false,
+            interactWithEntities: false,
+            useDoors: true,
+            useSwitches: true,
+            openContainers: false,
+            editSigns: false
+        };
     }
 
     /**
@@ -821,7 +823,7 @@ class Ui {
             }
             else {
                 // open player permissions menu
-                this.managePermissions(owner, claim, claim.playerPermissionsList[response.selection].name);
+                this.managePermissions(owner, claim, claim.playerPermissionsList[response.selection].id);
             }
         });
     }
@@ -836,37 +838,39 @@ class Ui {
      */
     static playerPermissionsListModify(owner: Player, claim: Claim, add: boolean) {
 
-        var players = []
+        // player permissions not found in the claims list
+        var unsavedPlayerPermissions: PlayerPermissions[] = []
 
-        // if adding player, only show players not in list
-        if (add) {
+        // get the entire list of players that have ever joined the world
+        for (var playerData of database) {
+            unsavedPlayerPermissions.push(new PlayerPermissions(playerData.id, playerData.name));
+        }
 
-            // get the entire list of players that have ever joined the world
-            for (var playerData of database) {
-                players.push(playerData.name)
-            }
-
-            // filter players from the list, we don't want to add people who are already in it
+        // filter players from the list, we don't want to add people who are already in it
+        unsavedPlayerPermissions = unsavedPlayerPermissions.filter((p) => {
             for (var playerPermissions of claim.playerPermissionsList) {
-
-                var index = players.indexOf(playerPermissions.name);
-                players.splice(index, 1);
+                if (p.id == playerPermissions.id) {
+                    return false;
+                }
             }
 
             // make sure to remove owner from list as well
-            players.splice(players.indexOf(owner.name), 1);
-        }
-        // if removing player, only show players in list
-        else {
-
-            for (var playerPermissions of claim.playerPermissionsList) {
-                players.push(playerPermissions.name);
+            if (p.id == owner.id) {
+                return false;
             }
-        }
+
+            return true;
+        });
         
-        // if no players are available to add or remove, notify the owner
-        if (players.length == 0) {
-            sendNotification(owner, "chat.claim:no_players");
+        // if no players are available to add notify the owner
+        if ((unsavedPlayerPermissions.length == 0) && add) {
+            sendNotification(owner, "chat.claim:no_players_to_add");
+            owner.playSound("note.didgeridoo");
+            return;
+        }
+        // if no players are available to remove notify the owner
+        else if ((claim.playerPermissionsList.length == 0) && !add) {
+            sendNotification(owner, "chat.claim:no_players_to_remove");
             owner.playSound("note.didgeridoo");
             return;
         }
@@ -883,32 +887,30 @@ class Ui {
                     ]
                 }
             )
-            .dropdown("ui.manage.permissions.player.selection.modify:player_dropdown", players);
+            .dropdown("ui.manage.permissions.player.selection.modify:player_dropdown", add ? unsavedPlayerPermissions.map(p => p.name) : claim.playerPermissionsList.map(p => p.name));
 
         form.show(owner).then((response) => {
 
-            const playerName = players[Number(response.formValues[0])];
+            if (!response.canceled) {
+                if (add) {
+                    // save new player permission to list
+                    claim.playerPermissionsList.push(unsavedPlayerPermissions[response.formValues[0] as number]);
+                }
+                else {
 
-            if (add) {
-                // set up default permissions for specified player
-                const newPlayerPermissions = new PlayerPermissions(owner.id, owner.name);
-                claim.playerPermissionsList.push(newPlayerPermissions);
-            }
-            else {
-                // remove player from list
-                var index = claim.playerPermissionsList.indexOf(playerName);
-                claim.playerPermissionsList.splice(index, 1);
-
-                // if a players permissions have been removed notify them
-                for (var p of world.getAllPlayers()) {
-                    if (p.name == playerName) {
-                        p.runCommandAsync(`tellraw @s {"rawtext":[{"translate":"chat.prefix"}, {"text":" ${owner.name} "}, {"translate":"chat.claim:player_permissions_reset_notif"}, {"translate":"claim:name_color"}, {"text":" ${claim.name}"}]}`);
-                        p.playSound("random.levelup");
-                        break;
+                    // if a players permissions have been removed notify them
+                    for (var p of world.getAllPlayers()) {
+                        if (p.id == claim.playerPermissionsList[response.formValues[0] as number].id) {
+                            p.runCommandAsync(`tellraw @s {"rawtext":[{"translate":"chat.prefix"}, {"text":" ${owner.name} "}, {"translate":"chat.claim:player_permissions_reset_notif"}, {"translate":"claim:name_color"}, {"text":" ${claim.name}"}]}`);
+                            p.playSound("random.levelup");
+                            break;
+                        }
                     }
+
+                    // remove player from list
+                    claim.playerPermissionsList.splice(response.formValues[0] as number, 1);
                 }
             }
-
 
             saveDb();
 
