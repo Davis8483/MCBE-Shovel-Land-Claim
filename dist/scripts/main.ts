@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, ItemStack, CameraFadeOptions, CameraSetPosOptions, EasingType, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockType, BlockComponentTypes, BlockPermutation, BlockTypes, EntityComponentTypes, InputPermissionCategory, HudElement, HudVisibility } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, CameraFadeOptions, CameraSetPosOptions, EasingType, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockType, BlockComponentTypes, BlockPermutation, BlockTypes, EntityComponentTypes, InputPermissionCategory, HudElement, HudVisibility, EntityInventoryComponent } from '@minecraft/server';
 import { ActionFormData, MessageFormData, ModalFormData } from '@minecraft/server-ui';
 
 const shovelID = "lca:claim_shovel"
@@ -1312,7 +1312,8 @@ world.afterEvents.playerLeave.subscribe((data) => {
 });
 
 world.afterEvents.playerSpawn.subscribe((data) => {
-    // make sure player has a claim shovel
+    // make sure player has only 1 claim shovel
+    data.player.runCommandAsync(`execute if entity @s[hasitem = { item=${shovelID}, quantity =! 1}] run clear @s ${shovelID} 0`);
     data.player.runCommandAsync(`execute if entity @s[hasitem = { item=${shovelID}, quantity = 0}] run give @s ${shovelID} 1 0 { "keep_on_death": { }, "item_lock": { "mode": "lock_in_inventory" } } `);
 
     // set flag to false since all camera positions will be reset upon rejoining
