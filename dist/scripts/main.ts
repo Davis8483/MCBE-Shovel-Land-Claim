@@ -156,6 +156,7 @@ class PlayerPermissions {
 
     setPermission(permission: PermissionTypes, value: boolean): void {
         this._permissions[permission] = value;
+        saveDb();
     }
 
     /**
@@ -249,35 +250,43 @@ class Claim {
     // Set a specific public permission
     setPublicPermission(permission: PermissionTypes, value: boolean): void {
         this._publicPermissions[permission] = value;
+        saveDb();
     }
 
     // Setters
     setName(value: string) {
         this._name = value;
+        saveDb();
     }
 
     setStart(value: Vector3) {
         this._start = value;
+        saveDb();
     }
 
     setEnd(value: Vector3) {
         this._end = value;
+        saveDb();
     }
 
     setIcon(value: string) {
         this._icon = value;
+        saveDb();
     }
 
     setParticlesEnabled(value: boolean) {
         this._particlesEnabled = value;
+        saveDb();
     }
 
     addPlayerPermissions(playerPermissions: PlayerPermissions) {
         this._playerPermissionsList.push(playerPermissions);
+        saveDb();
     }
 
     removePlayerPermissions(index: number) {
         this._playerPermissionsList.splice(index, 1);
+        saveDb();
     }
 
     /**
@@ -399,23 +408,28 @@ class PlayerClaimBlocks {
     // Setters
     setAmount(newAmount: number): void {
         this._amount = newAmount;
+        saveDb();
     }
 
     // Utility methods
     incrementAmount(value: number): void {
         this._amount += value;
+        saveDb();
     }
 
     decrementAmount(value: number): void {
         this._amount -= value;
+        saveDb();
     }
 
     decrementPaymentTime(): void {
         this._paymentTimeRemaining -= 1;
+        saveDb();
     }
 
     resetPaymentTime(): void {
         this._paymentTimeRemaining = settings.claimBlockHourlyPayment;
+        saveDb();
     }
 
     static fromJSON(data: any): PlayerClaimBlocks {
@@ -494,38 +508,47 @@ class PlayerData {
     // Setters
     setName(newName: string): void {
         this._name = newName;
+        saveDb();
     }
 
     setInClaim(value: boolean): void {
         this._inClaim = value;
+        saveDb();
     }
 
     setViewingClaim(value: boolean): void {
         this._viewingClaim = value;
+        saveDb();
     }
 
     setResizingClaimName(value: string): void {
         this._resizingClaimName = value;
+        saveDb();
     }
 
     setFirstPoint(value: Vector3): void {
         this._firstPoint = value;
+        saveDb();
     }
 
     setOppositeCorner(value: Vector3): void {
         this._oppositeCorner = value;
+        saveDb();
     }
 
     setEntranceVelocity(value: Vector3): void {
         this._entranceVelocity = value;
+        saveDb();
     }
 
     addClaim(claim: Claim): void {
         this._claims.push(claim);
+        saveDb();
     }
 
     removeClaim(claim: Claim): void {
         this._claims = this._claims.filter((c) => c !== claim);
+        saveDb();
     }
 
     getClaim(claimName: string): Claim | undefined {
@@ -750,8 +773,6 @@ class Ui {
                     playerData.setResizingClaimName("");
                 }
             }
-            saveDb();
-
         });
     }
 
@@ -792,7 +813,6 @@ class Ui {
                 //add/subtract the blocks from players balance
                 playerData.claimBlocks.incrementAmount(blockDifference);
 
-                saveDb();
             }
         });
     }
@@ -1000,8 +1020,6 @@ class Ui {
                 }
             }
 
-            saveDb();
-
             // return to previous menu
             this.playerPermissionsList(owner, claim)
 
@@ -1100,7 +1118,6 @@ class Ui {
                     }
                 }
             }
-            saveDb();
 
         });
     }
@@ -1311,7 +1328,6 @@ class Ui {
                 // add the claim blocks to the players balance
                 playerData.claimBlocks.incrementAmount(claimWidth * claimLength);
 
-                saveDb();
             }
         });
     }
@@ -1352,7 +1368,6 @@ class Ui {
                     owner.playSound("note.cow_bell");
                 }
             }
-            saveDb();
 
         });
     }
@@ -1383,9 +1398,6 @@ world.afterEvents.playerJoin.subscribe((data) => {
         // create new player in db
         database.push(new PlayerData(data.playerId, data.playerName));
     }
-
-    // save changes to the database
-    saveDb();
 
 });
 
@@ -1627,9 +1639,6 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
 
                 }
             }
-
-            // save changes to the database
-            saveDb();
 
         }
         // player is not in the overworld, warn them that they are not allowed to create a claim here
@@ -2165,5 +2174,4 @@ system.runInterval(() => {
             playerData.claimBlocks.resetPaymentTime();
         }
     }
-    saveDb();
 }, 1200)
