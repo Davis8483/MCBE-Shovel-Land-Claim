@@ -660,6 +660,9 @@ class Ui {
 
                     sendNotification(owner, "chat.claim:created")
                     owner.playSound("random.levelup");
+
+                    // Reset resizingClaimName to avoid incorrect resizing behavior
+                    playerData.resizingClaimName = "";
                 }
             }
             saveDb();
@@ -1358,9 +1361,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
 
                 if (!data.player.isSneaking) {
                     playerData.resizingClaimName = "";
-                    playerData.firstPoint.x = data.block.x;
-                    playerData.firstPoint.y = data.block.y;
-                    playerData.firstPoint.z = data.block.z;
+                    playerData.firstPoint = { ...data.block.location }; // Ensure a new object is created
 
                     runInAllClaims((playerID, playerName, claim) => {
 
@@ -1372,7 +1373,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         var points = [
                             [[s.x, s.z], [s.x, e.z]],
                             [[e.x, s.z], [e.x, e.z]]
-                        ]
+                        ];
 
                         var aIndex = null;
                         var bIndex = null;
@@ -1391,7 +1392,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         if (aIndex != null) {
                             isResize = true;
                             if (playerID == data.player.id) {
-                                playerData.oppositeCorner = { "x": points[aIndex ^ 1][bIndex ^ 1][0], "y": data.block.y, "z": points[aIndex ^ 1][bIndex ^ 1][1] }
+                                playerData.oppositeCorner = { "x": points[aIndex ^ 1][bIndex ^ 1][0], "y": data.block.y, "z": points[aIndex ^ 1][bIndex ^ 1][1] };
                                 playerData.resizingClaimName = claim.name;
 
                                 data.player.sendMessage({
@@ -1405,14 +1406,13 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                                 });
 
                                 system.run(() => {
-                                    data.player.playSound("note.banjo")
+                                    data.player.playSound("note.banjo");
                                 });
 
-                            }
-                            else {
+                            } else {
                                 sendNotification(data.player, "chat.point.resize:disallowed");
                                 system.run(() => {
-                                    data.player.playSound("note.didgeridoo")
+                                    data.player.playSound("note.didgeridoo");
                                 });
                             }
                         }
@@ -1430,13 +1430,13 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         });
 
                         system.run(() => {
-                            data.player.playSound("note.cow_bell")
+                            data.player.playSound("note.cow_bell");
                         });
                     }
                 }
                 // if player is crouching
                 else {
-                    var secondPoint = { "x": data.block.x, "y": data.block.y, "z": data.block.z };
+                    var secondPoint = { ...data.block.location }; // Ensure a new object is created
                     var intersectingClaim = false;
 
                     // if claim is resized
@@ -1456,7 +1456,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         const newClaimWidth = Math.abs(playerData.oppositeCorner.x - secondPoint.x) + 1;
                         const newClaimLength = Math.abs(playerData.oppositeCorner.z - secondPoint.z) + 1;
 
-                        const blockDifference = (newClaimLength * newClaimWidth) - (oldClaimLength * oldClaimWidth)
+                        const blockDifference = (newClaimLength * newClaimWidth) - (oldClaimLength * oldClaimWidth);
 
                         // make sure new claim isn't intersecting others not counting itself
                         runInAllClaims((playerID, playerName, claim) => {
@@ -1467,24 +1467,24 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
 
                         // intersecting claim warning message, cancel resize
                         if (intersectingClaim) {
-                            sendNotification(data.player, "chat.claim:intersecting")
+                            sendNotification(data.player, "chat.claim:intersecting");
 
                             system.run(() => {
-                                data.player.playSound("note.didgeridoo")
+                                data.player.playSound("note.didgeridoo");
                             });
                         }
                         // claim isn't wide enough warning message, cancel resize
                         else if (newClaimWidth < settings.claimMinimumWidth || newClaimLength < settings.claimMinimumWidth) {
                             sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:width1" }, { "text": ` ${settings.claimMinimumWidth} ` }, { "translate": "chat.claim:width2" }] });
                             system.run(() => {
-                                data.player.playSound("note.didgeridoo")
+                                data.player.playSound("note.didgeridoo");
                             });
                         }
                         // not enough claim blocks warning message, cancel resize
                         else if (playerData.claimBlocks.amount < blockDifference) {
                             sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:blocks1" }, { "text": ` ${(blockDifference) - playerData.claimBlocks.amount} ` }, { "translate": "chat.claim:blocks3" }] });
                             system.run(() => {
-                                data.player.playSound("note.didgeridoo")
+                                data.player.playSound("note.didgeridoo");
                             });
                         }
                         // all requirements met, open the claim resizing ui
@@ -1510,24 +1510,24 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         });
                         // intersecting claim warning message, cancel creation
                         if (intersectingClaim) {
-                            sendNotification(data.player, "chat.claim:intersecting")
+                            sendNotification(data.player, "chat.claim:intersecting");
 
                             system.run(() => {
-                                data.player.playSound("note.didgeridoo")
+                                data.player.playSound("note.didgeridoo");
                             });
                         }
                         // claim is not wide enough warning message, cancel creation
                         else if (claimWidth < settings.claimMinimumWidth || claimLength < settings.claimMinimumWidth) {
                             sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:width1" }, { "text": ` ${settings.claimMinimumWidth} ` }, { "translate": "chat.claim:width2" }] });
                             system.run(() => {
-                                data.player.playSound("note.didgeridoo")
+                                data.player.playSound("note.didgeridoo");
                             });
                         }
                         // not enough claim blocks warning message, cancel creation
                         else if (playerData.claimBlocks.amount < (claimWidth * claimLength)) {
                             sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:blocks1" }, { "text": ` ${(claimWidth * claimLength) - playerData.claimBlocks.amount} ` }, { "translate": "chat.claim:blocks2" }] });
                             system.run(() => {
-                                data.player.playSound("note.didgeridoo")
+                                data.player.playSound("note.didgeridoo");
                             });
                         }
                         // all requirements are met, open the claim creation ui
@@ -1570,7 +1570,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                     system.run(() => {
                         sendNotification(data.player, "chat.claim.permission:break_blocks");
                         data.player.playSound("note.didgeridoo");
-                    })
+                    });
                 }
             });
         }
