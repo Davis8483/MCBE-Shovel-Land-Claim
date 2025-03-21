@@ -130,15 +130,15 @@ class PlayerPermissions {
         this._id = id;
         this._name = name;
         this._permissions = {
-            enterClaim: true,
-            breakBlocks: false,
-            useItemsOnBlocks: false,
-            hurtEntities: false,
-            interactWithEntities: false,
-            useDoors: true,
-            useSwitches: true,
-            openContainers: false,
-            editSigns: false
+            [PermissionTypes.ENTER_CLAIM]: true,
+            [PermissionTypes.BREAK_BLOCKS]: false,
+            [PermissionTypes.USE_ITEMS_ON_BLOCKS]: false,
+            [PermissionTypes.HURT_ENTITIES]: false,
+            [PermissionTypes.INTERACT_WITH_ENTITIES]: false,
+            [PermissionTypes.USE_DOORS]: true,
+            [PermissionTypes.USE_SWITCHES]: true,
+            [PermissionTypes.OPEN_CONTAINERS]: false,
+            [PermissionTypes.EDIT_SIGNS]: false,
         };
     }
 
@@ -185,88 +185,104 @@ class PlayerPermissions {
  * Represents a land claim in the world.
  */
 class Claim {
-    /**
-     * The name of the claim. This is used to identify the claim and should be unique.
-     */
-    name: string;
+    private _name: string;
+    private _start: Vector3;
+    private _end: Vector3;
+    private _icon: string;
+    private _particlesEnabled: boolean;
+    private _playerPermissionsList: PlayerPermissions[];
+    private _publicPermissions: {
+        [key in PermissionTypes]: boolean;
+    };
 
-    /**
-     * The start x and z position of the claim. The y value is still included for particle rendering/camera movement.
-     */
-    start: Vector3;
-
-    /**
-     * The end x and z position of the claim. The y value is still included for particle rendering/camera movement.
-     */
-    end: Vector3;
-
-    /**
-     * The mincraft icon path to be displayed in the ui.
-     */
-    icon: string;
-
-    /**
-     * If particles should be rendered for the claim.
-     */
-    particlesEnabled: boolean;
-
-    /**
-     * An array containing what permissions each individual player has
-     */
-    playerPermissionsList: PlayerPermissions[];
-
-    /**
-     * The default permissions for all players
-     */
-    publicPermissions: {
-        enterClaim: boolean;
-        breakBlocks: boolean;
-        useItemsOnBlocks: boolean;
-        hurtEntities: boolean;
-        useTNT: boolean;
-        interactWithEntities: boolean;
-        useDoors: boolean;
-        useSwitches: boolean;
-        openContainers: boolean;
-        editSigns: boolean;
+    constructor(name: string, start: Vector3, end: Vector3, icon: string, particlesEnabled: boolean = true) {
+        this._name = name;
+        this._start = start;
+        this._end = end;
+        this._icon = icon;
+        this._particlesEnabled = particlesEnabled;
+        this._playerPermissionsList = [];
+        this._publicPermissions = {
+            [PermissionTypes.ENTER_CLAIM]: true,
+            [PermissionTypes.BREAK_BLOCKS]: false,
+            [PermissionTypes.USE_ITEMS_ON_BLOCKS]: false,
+            [PermissionTypes.HURT_ENTITIES]: false,
+            [PermissionTypes.USE_TNT]: false,
+            [PermissionTypes.INTERACT_WITH_ENTITIES]: false,
+            [PermissionTypes.USE_DOORS]: true,
+            [PermissionTypes.USE_SWITCHES]: true,
+            [PermissionTypes.OPEN_CONTAINERS]: false,
+            [PermissionTypes.EDIT_SIGNS]: false,
+        };
     }
 
-    /**
-     * Creates a new Claim object
-     * 
-     * @param name - The name of the claim
-     * 
-     * @param start - The block representing the first corner of the claim
-     * 
-     * @param end - The block representing the opposite second corner of the claim
-     * 
-     * @param icon - The mincraft icon path to be displayed in the ui
-     * 
-     * @param particlesEnabled - If particles should be rendered for the claim; default is true
-     */
-    constructor(name: string, start: Vector3, end: Vector3, icon: string, particlesEnabled: boolean = true) {
-        this.name = name;
-        this.start = start;
-        this.end = end;
-        this.icon = icon;
-        this.particlesEnabled = particlesEnabled;
-        this.playerPermissionsList = [];
-        this.publicPermissions = {
-            enterClaim: true,
-            breakBlocks: false,
-            useItemsOnBlocks: false,
-            hurtEntities: false,
-            useTNT: false,
-            interactWithEntities: false,
-            useDoors: true,
-            useSwitches: true,
-            openContainers: false,
-            editSigns: false
-        };
+    // Getters
+    get name(): string {
+        return this._name;
+    }
+
+    get start(): Vector3 {
+        return this._start;
+    }
+
+    get end(): Vector3 {
+        return this._end;
+    }
+
+    get icon(): string {
+        return this._icon;
+    }
+
+    get particlesEnabled(): boolean {
+        return this._particlesEnabled;
+    }
+
+    get playerPermissionsList(): PlayerPermissions[] {
+        return this._playerPermissionsList;
+    }
+
+    // Get a specific public permission
+    getPublicPermission(permission: PermissionTypes): boolean {
+        return this._publicPermissions[permission];
+    }
+
+    // Set a specific public permission
+    setPublicPermission(permission: PermissionTypes, value: boolean): void {
+        this._publicPermissions[permission] = value;
+    }
+
+    // Setters
+    setName(value: string) {
+        this._name = value;
+    }
+
+    setStart(value: Vector3) {
+        this._start = value;
+    }
+
+    setEnd(value: Vector3) {
+        this._end = value;
+    }
+
+    setIcon(value: string) {
+        this._icon = value;
+    }
+
+    setParticlesEnabled(value: boolean) {
+        this._particlesEnabled = value;
+    }
+
+    addPlayerPermissions(playerPermissions: PlayerPermissions) {
+        this._playerPermissionsList.push(playerPermissions);
+    }
+
+    removePlayerPermissions(index: number) {
+        this._playerPermissionsList.splice(index, 1);
     }
 
     /**
      * Returns a Claim object loaded from JSON, if a key is missing it will be replaced with the default value.
+     * Claim name is required, if it is not found it will be replaced with "Undefined" and should be removed by the caller.
      * 
      * @param data - The JSON object to load the Claim object from
      * 
@@ -275,27 +291,27 @@ class Claim {
     static fromJSON(data: any): Claim {
         const defaultClaim = new Claim("Undefined", { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, "textures/ui/icon_recipe_nature.png");
         const claim = new Claim(
-            data.name || defaultClaim.name,
-            data.start || defaultClaim.start,
-            data.end || defaultClaim.end,
-            data.icon || defaultClaim.icon,
-            data.particlesEnabled !== undefined ? data.particlesEnabled : defaultClaim.particlesEnabled
+            data._name || defaultClaim.name,
+            data._start || defaultClaim.start,
+            data._end || defaultClaim.end,
+            data._icon || defaultClaim.icon,
+            data._particlesEnabled !== undefined ? data._particlesEnabled : defaultClaim.particlesEnabled
         );
 
-        claim.publicPermissions = {
-            enterClaim: data.publicPermissions?.enterClaim !== undefined ? data.publicPermissions.enterClaim : defaultClaim.publicPermissions.enterClaim,
-            breakBlocks: data.publicPermissions?.breakBlocks !== undefined ? data.publicPermissions.breakBlocks : defaultClaim.publicPermissions.breakBlocks,
-            useItemsOnBlocks: data.publicPermissions?.useItemsOnBlocks !== undefined ? data.publicPermissions.useItemsOnBlocks : defaultClaim.publicPermissions.useItemsOnBlocks,
-            hurtEntities: data.publicPermissions?.hurtEntities !== undefined ? data.publicPermissions.hurtEntities : defaultClaim.publicPermissions.hurtEntities,
-            useTNT: data.publicPermissions?.useTNT !== undefined ? data.publicPermissions.useTNT : defaultClaim.publicPermissions.useTNT,
-            interactWithEntities: data.publicPermissions?.interactWithEntities !== undefined ? data.publicPermissions.interactWithEntities : defaultClaim.publicPermissions.interactWithEntities,
-            useDoors: data.publicPermissions?.useDoors !== undefined ? data.publicPermissions.useDoors : defaultClaim.publicPermissions.useDoors,
-            useSwitches: data.publicPermissions?.useSwitches !== undefined ? data.publicPermissions.useSwitches : defaultClaim.publicPermissions.useSwitches,
-            openContainers: data.publicPermissions?.openContainers !== undefined ? data.publicPermissions.openContainers : defaultClaim.publicPermissions.openContainers,
-            editSigns: data.publicPermissions?.editSigns !== undefined ? data.publicPermissions.editSigns : defaultClaim.publicPermissions.editSigns
+        claim._publicPermissions = {
+            enterClaim: data._publicPermissions?.enterClaim !== undefined ? data._publicPermissions.enterClaim : defaultClaim.getPublicPermission(PermissionTypes.ENTER_CLAIM),
+            breakBlocks: data._publicPermissions?.breakBlocks !== undefined ? data._publicPermissions.breakBlocks : defaultClaim.getPublicPermission(PermissionTypes.BREAK_BLOCKS),
+            useItemsOnBlocks: data._publicPermissions?.useItemsOnBlocks !== undefined ? data._publicPermissions.useItemsOnBlocks : defaultClaim.getPublicPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS),
+            hurtEntities: data._publicPermissions?.hurtEntities !== undefined ? data._publicPermissions.hurtEntities : defaultClaim.getPublicPermission(PermissionTypes.HURT_ENTITIES),
+            useTNT: data._publicPermissions?.useTNT !== undefined ? data._publicPermissions.useTNT : defaultClaim.getPublicPermission(PermissionTypes.USE_TNT),
+            interactWithEntities: data._publicPermissions?.interactWithEntities !== undefined ? data._publicPermissions.interactWithEntities : defaultClaim.getPublicPermission(PermissionTypes.INTERACT_WITH_ENTITIES),
+            useDoors: data._publicPermissions?.useDoors !== undefined ? data._publicPermissions.useDoors : defaultClaim.getPublicPermission(PermissionTypes.USE_DOORS),
+            useSwitches: data._publicPermissions?.useSwitches !== undefined ? data._publicPermissions.useSwitches : defaultClaim.getPublicPermission(PermissionTypes.USE_SWITCHES),
+            openContainers: data._publicPermissions?.openContainers !== undefined ? data._publicPermissions.openContainers : defaultClaim.getPublicPermission(PermissionTypes.OPEN_CONTAINERS),
+            editSigns: data._publicPermissions?.editSigns !== undefined ? data._publicPermissions.editSigns : defaultClaim.getPublicPermission(PermissionTypes.EDIT_SIGNS)
         };
 
-        claim.playerPermissionsList = data.playerPermissionsList ? data.playerPermissionsList.map(PlayerPermissions.fromJSON) : defaultClaim.playerPermissionsList;
+        claim._playerPermissionsList = data._playerPermissionsList ? data._playerPermissionsList.map(PlayerPermissions.fromJSON) : defaultClaim.playerPermissionsList;
 
         return claim;
     }
@@ -315,7 +331,7 @@ class Claim {
             var playerPermissions: PlayerPermissions = undefined;
 
             // find the players permissions
-            for (var p of this.playerPermissionsList) {
+            for (var p of this._playerPermissionsList) {
                 if (p.id == player.id) {
                     playerPermissions = p;
                     break;
@@ -328,9 +344,9 @@ class Claim {
             }
         }
         // if player specific permission is not found, default to claims global permissions list
-        if (Object.keys(this.publicPermissions).includes(permission)) {
+        if (Object.keys(this._publicPermissions).includes(permission)) {
 
-            return (this.publicPermissions[permission]);
+            return (this._publicPermissions[permission]);
         }
     }
 
@@ -343,10 +359,10 @@ class Claim {
     */
     isOverlap(start: Vector3, end: Vector3): boolean {
         // Get the left, right, bottom, and top coordinates of each rectangle
-        const rect1Left = Math.min(this.start.x, this.end.x);
-        const rect1Right = Math.max(this.start.x, this.end.x);
-        const rect1Top = Math.max(this.start.z, this.end.z);
-        const rect1Bottom = Math.min(this.start.z, this.end.z);
+        const rect1Left = Math.min(this._start.x, this._end.x);
+        const rect1Right = Math.max(this._start.x, this._end.x);
+        const rect1Top = Math.max(this._start.z, this._end.z);
+        const rect1Bottom = Math.min(this._start.z, this._end.z);
 
         const rect2Left = Math.min(start.x, end.x);
         const rect2Right = Math.max(start.x, end.x);
@@ -523,7 +539,9 @@ class PlayerData {
         playerData.setOppositeCorner(data._oppositeCorner || defaultPlayerData.oppositeCorner);
         playerData.setEntranceVelocity(data._entranceVelocity || defaultPlayerData.entranceVelocity);
         playerData._claimBlocks = PlayerClaimBlocks.fromJSON(data._claimBlocks || {});
-        playerData._claims = data._claims ? data._claims.map(Claim.fromJSON) : defaultPlayerData.claims;
+        playerData._claims = data._claims 
+            ? data._claims.map(Claim.fromJSON).filter(claim => claim._name != "Undefined") 
+            : defaultPlayerData.claims;
         return playerData;
     }
 }
@@ -719,7 +737,7 @@ class Ui {
                     playerData.claimBlocks.decrementAmount(claimWidth * claimLength);
 
                     // create a new claim
-                    playerData.claims.push(new Claim(name, start, end, iconPath, showBorderParticles));
+                    playerData.addClaim(new Claim(name, start, end, iconPath, showBorderParticles));
 
                     sendNotification(owner, "chat.claim:created")
                     owner.playSound("random.levelup");
@@ -761,8 +779,8 @@ class Ui {
         form.show(owner).then((response) => {
             // if claim resized
             if (response.selection == 1) {
-                claim.start = start;
-                claim.end = end;
+                claim.setStart(start);
+                claim.setEnd(end);
 
                 sendNotification(owner, "chat.claim:resized")
                 owner.playSound("random.levelup");
@@ -960,7 +978,7 @@ class Ui {
             if (!response.canceled) {
                 if (add) {
                     // save new player permission to list
-                    claim.playerPermissionsList.push(unsavedPlayerPermissions[response.formValues[0] as number]);
+                    claim.addPlayerPermissions(unsavedPlayerPermissions[response.formValues[0] as number]);
                 }
                 else {
 
@@ -974,7 +992,7 @@ class Ui {
                     }
 
                     // remove player from list
-                    claim.playerPermissionsList.splice(response.formValues[0] as number, 1);
+                    claim.removePlayerPermissions(response.formValues[0] as number);
                 }
             }
 
@@ -1023,18 +1041,18 @@ class Ui {
                     ]
                 }
             )
-            .toggle("ui.manage.permissions:enter_claim", playerID ? playerPermissions.getPermission(PermissionTypes.ENTER_CLAIM) : claim.publicPermissions.enterClaim)
-            .toggle("ui.manage.permissions:break_blocks", playerID ? playerPermissions.getPermission(PermissionTypes.BREAK_BLOCKS) : claim.publicPermissions.breakBlocks)
-            .toggle("ui.manage.permissions:use_items_on_blocks", playerID ? playerPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS) : claim.publicPermissions.useItemsOnBlocks)
-            .toggle("ui.manage.permissions:hurt_entities", playerID ? playerPermissions.getPermission(PermissionTypes.HURT_ENTITIES) : claim.publicPermissions.hurtEntities)
-            .toggle("ui.manage.permissions:interact_with_entities", playerID ? playerPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES) : claim.publicPermissions.interactWithEntities)
-            .toggle("ui.manage.permissions:use_doors", playerID ? playerPermissions.getPermission(PermissionTypes.USE_DOORS) : claim.publicPermissions.useDoors)
-            .toggle("ui.manage.permissions:use_switches", playerID ? playerPermissions.getPermission(PermissionTypes.USE_SWITCHES) : claim.publicPermissions.useSwitches)
-            .toggle("ui.manage.permissions:open_containers", playerID ? playerPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS) : claim.publicPermissions.openContainers)
-            .toggle("ui.manage.permissions:edit_signs", playerID ? playerPermissions.getPermission(PermissionTypes.EDIT_SIGNS) : claim.publicPermissions.editSigns)
+            .toggle("ui.manage.permissions:enter_claim", playerID ? playerPermissions.getPermission(PermissionTypes.ENTER_CLAIM) : claim.getPublicPermission(PermissionTypes.ENTER_CLAIM))
+            .toggle("ui.manage.permissions:break_blocks", playerID ? playerPermissions.getPermission(PermissionTypes.BREAK_BLOCKS) : claim.getPublicPermission(PermissionTypes.BREAK_BLOCKS))
+            .toggle("ui.manage.permissions:use_items_on_blocks", playerID ? playerPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS) : claim.getPublicPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS))
+            .toggle("ui.manage.permissions:hurt_entities", playerID ? playerPermissions.getPermission(PermissionTypes.HURT_ENTITIES) : claim.getPublicPermission(PermissionTypes.HURT_ENTITIES))
+            .toggle("ui.manage.permissions:interact_with_entities", playerID ? playerPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES) : claim.getPublicPermission(PermissionTypes.INTERACT_WITH_ENTITIES))
+            .toggle("ui.manage.permissions:use_doors", playerID ? playerPermissions.getPermission(PermissionTypes.USE_DOORS) : claim.getPublicPermission(PermissionTypes.USE_DOORS))
+            .toggle("ui.manage.permissions:use_switches", playerID ? playerPermissions.getPermission(PermissionTypes.USE_SWITCHES) : claim.getPublicPermission(PermissionTypes.USE_SWITCHES))
+            .toggle("ui.manage.permissions:open_containers", playerID ? playerPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS) : claim.getPublicPermission(PermissionTypes.OPEN_CONTAINERS))
+            .toggle("ui.manage.permissions:edit_signs", playerID ? playerPermissions.getPermission(PermissionTypes.EDIT_SIGNS) : claim.getPublicPermission(PermissionTypes.EDIT_SIGNS))
 
         if (!playerID) {
-            form.toggle("ui.manage.permissions:use_tnt", claim.publicPermissions.useTNT);
+            form.toggle("ui.manage.permissions:use_tnt", claim.getPublicPermission(PermissionTypes.USE_TNT));
         }
 
         form.show(owner).then((response) => {
@@ -1054,16 +1072,16 @@ class Ui {
                     playerPermissions.setPermission(PermissionTypes.EDIT_SIGNS, response.formValues[8] as boolean);
                 }
                 else {
-                    claim.publicPermissions.enterClaim = response.formValues[0] as boolean;
-                    claim.publicPermissions.breakBlocks = response.formValues[1] as boolean;
-                    claim.publicPermissions.useItemsOnBlocks = response.formValues[2] as boolean;
-                    claim.publicPermissions.hurtEntities = response.formValues[3] as boolean;
-                    claim.publicPermissions.interactWithEntities = response.formValues[4] as boolean;
-                    claim.publicPermissions.useDoors = response.formValues[5] as boolean;
-                    claim.publicPermissions.useSwitches = response.formValues[6] as boolean;
-                    claim.publicPermissions.openContainers = response.formValues[7] as boolean;
-                    claim.publicPermissions.editSigns = response.formValues[8] as boolean;
-                    claim.publicPermissions.useTNT = response.formValues[9] as boolean;
+                    claim.setPublicPermission(PermissionTypes.ENTER_CLAIM, response.formValues[0] as boolean);
+                    claim.setPublicPermission(PermissionTypes.BREAK_BLOCKS, response.formValues[1] as boolean);
+                    claim.setPublicPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, response.formValues[2] as boolean);
+                    claim.setPublicPermission(PermissionTypes.HURT_ENTITIES, response.formValues[3] as boolean);
+                    claim.setPublicPermission(PermissionTypes.INTERACT_WITH_ENTITIES, response.formValues[4] as boolean);
+                    claim.setPublicPermission(PermissionTypes.USE_DOORS, response.formValues[5] as boolean);
+                    claim.setPublicPermission(PermissionTypes.USE_SWITCHES, response.formValues[6] as boolean);
+                    claim.setPublicPermission(PermissionTypes.OPEN_CONTAINERS, response.formValues[7] as boolean);
+                    claim.setPublicPermission(PermissionTypes.EDIT_SIGNS, response.formValues[8] as boolean);
+                    claim.setPublicPermission(PermissionTypes.USE_TNT, response.formValues[9] as boolean);
                 }
 
                 sendNotification(owner, "chat.claim:permissions_updated");
@@ -1322,9 +1340,9 @@ class Ui {
                 else {
 
                     // update data
-                    claim.name = name;
-                    claim.icon = iconPath;
-                    claim.particlesEnabled = showBorderParticles;
+                    claim.setName(name);
+                    claim.setIcon(iconPath);
+                    claim.setParticlesEnabled(showBorderParticles);
 
                     sendNotification(owner, "chat.claim:updated")
                     owner.playSound("note.cow_bell");
