@@ -97,17 +97,17 @@ class PlayerPermissions {
     /**
      * The entity id of the player
      */
-    id: string;
+    private _id: string;
 
     /**
      * The name of the player; do not use for identification as it can change.
      */
-    name: string;
+    private _name: string;
 
     /**
      * The permissions the player has for the claim
      */
-    permissions: {
+    private _permissions: {
         enterClaim: boolean;
         breakBlocks: boolean;
         useItemsOnBlocks: boolean;
@@ -127,9 +127,9 @@ class PlayerPermissions {
      * @param name - The name of the player
      */
     constructor(id: string, name: string) {
-        this.id = id;
-        this.name = name;
-        this.permissions = {
+        this._id = id;
+        this._name = name;
+        this._permissions = {
             enterClaim: true,
             breakBlocks: false,
             useItemsOnBlocks: false,
@@ -142,6 +142,22 @@ class PlayerPermissions {
         };
     }
 
+    get id(): string {
+        return this._id;
+    }
+
+    get name(): string {
+        return this._name;
+    }
+
+    getPermission(permission: PermissionTypes): boolean {
+        return this._permissions[permission];
+    }
+
+    setPermission(permission: PermissionTypes, value: boolean): void {
+        this._permissions[permission] = value;
+    }
+
     /**
      * Returns a PlayerPermissions object loaded from JSON, if a key is missing it will be replaced with the default value.
      * 
@@ -151,21 +167,17 @@ class PlayerPermissions {
      */
     static fromJSON(data: any): PlayerPermissions {
         const defaultPermissions = new PlayerPermissions(data.id, data.name);
-        return {
-            id: data.id || defaultPermissions.id,
-            name: data.name || defaultPermissions.name,
-            permissions: {
-                enterClaim: data.permissions?.enterClaim !== undefined ? data.permissions.enterClaim : defaultPermissions.permissions.enterClaim,
-                breakBlocks: data.permissions?.breakBlocks !== undefined ? data.permissions.breakBlocks : defaultPermissions.permissions.breakBlocks,
-                useItemsOnBlocks: data.permissions?.useItemsOnBlocks !== undefined ? data.permissions.useItemsOnBlocks : defaultPermissions.permissions.useItemsOnBlocks,
-                hurtEntities: data.permissions?.hurtEntities !== undefined ? data.permissions.hurtEntities : defaultPermissions.permissions.hurtEntities,
-                interactWithEntities: data.permissions?.interactWithEntities !== undefined ? data.permissions.interactWithEntities : defaultPermissions.permissions.interactWithEntities,
-                useDoors: data.permissions?.useDoors !== undefined ? data.permissions.useDoors : defaultPermissions.permissions.useDoors,
-                useSwitches: data.permissions?.useSwitches !== undefined ? data.permissions.useSwitches : defaultPermissions.permissions.useSwitches,
-                openContainers: data.permissions?.openContainers !== undefined ? data.permissions.openContainers : defaultPermissions.permissions.openContainers,
-                editSigns: data.permissions?.editSigns !== undefined ? data.permissions.editSigns : defaultPermissions.permissions.editSigns
-            }
-        };
+        const permissions = new PlayerPermissions(data.id, data.name);
+        permissions.setPermission(PermissionTypes.ENTER_CLAIM, data._permissions?.enterClaim !== undefined ? data._permissions.enterClaim : defaultPermissions.getPermission(PermissionTypes.ENTER_CLAIM));
+        permissions.setPermission(PermissionTypes.BREAK_BLOCKS, data._permissions?.breakBlocks !== undefined ? data._permissions.breakBlocks : defaultPermissions.getPermission(PermissionTypes.BREAK_BLOCKS));
+        permissions.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data._permissions?.useItemsOnBlocks !== undefined ? data._permissions.useItemsOnBlocks : defaultPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS));
+        permissions.setPermission(PermissionTypes.HURT_ENTITIES, data._permissions?.hurtEntities !== undefined ? data._permissions.hurtEntities : defaultPermissions.getPermission(PermissionTypes.HURT_ENTITIES));
+        permissions.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data._permissions?.interactWithEntities !== undefined ? data._permissions.interactWithEntities : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES));
+        permissions.setPermission(PermissionTypes.USE_DOORS, data._permissions?.useDoors !== undefined ? data._permissions.useDoors : defaultPermissions.getPermission(PermissionTypes.USE_DOORS));
+        permissions.setPermission(PermissionTypes.USE_SWITCHES, data._permissions?.useSwitches !== undefined ? data._permissions.useSwitches : defaultPermissions.getPermission(PermissionTypes.USE_SWITCHES));
+        permissions.setPermission(PermissionTypes.OPEN_CONTAINERS, data._permissions?.openContainers !== undefined ? data._permissions.openContainers : defaultPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS));
+        permissions.setPermission(PermissionTypes.EDIT_SIGNS, data._permissions?.editSigns !== undefined ? data._permissions.editSigns : defaultPermissions.getPermission(PermissionTypes.EDIT_SIGNS));
+        return permissions;
     }
 }
 
@@ -346,7 +358,7 @@ class Claim {
     }
 }
 
-class ClaimBlocks {
+class PlayerClaimBlocks {
     private _amount: number;
     private _paymentTimeRemaining: number;
 
@@ -386,8 +398,8 @@ class ClaimBlocks {
         this._paymentTimeRemaining = settings.claimBlockHourlyPayment;
     }
 
-    static fromJSON(data: any): ClaimBlocks {
-        return new ClaimBlocks(data.amount || settings.startingClaimBlocks, data.paymentTimeRemaining || settings.claimBlockHourlyPayment);
+    static fromJSON(data: any): PlayerClaimBlocks {
+        return new PlayerClaimBlocks(data._amount || settings.startingClaimBlocks, data._paymentTimeRemaining || settings.claimBlockHourlyPayment);
     }
 }
 
@@ -402,7 +414,7 @@ class PlayerData {
     private _firstPoint: Vector3;
     private _oppositeCorner: Vector3;
     private _entranceVelocity: Vector3;
-    private _claimBlocks: ClaimBlocks;
+    private _claimBlocks: PlayerClaimBlocks;
     private _claims: Claim[];
 
     constructor(playerID: string, playerName: string) {
@@ -414,7 +426,7 @@ class PlayerData {
         this._firstPoint = { x: 0, y: 0, z: 0 };
         this._oppositeCorner = { x: 0, y: 0, z: 0 };
         this._entranceVelocity = { x: 0, y: 0, z: 0 };
-        this._claimBlocks = new ClaimBlocks(settings.startingClaimBlocks, settings.claimBlockHourlyPayment);
+        this._claimBlocks = new PlayerClaimBlocks(settings.startingClaimBlocks, settings.claimBlockHourlyPayment);
         this._claims = [];
     }
 
@@ -451,7 +463,7 @@ class PlayerData {
         return this._entranceVelocity;
     }
 
-    get claimBlocks(): ClaimBlocks {
+    get claimBlocks(): PlayerClaimBlocks {
         return this._claimBlocks;
     }
 
@@ -501,16 +513,17 @@ class PlayerData {
     }
 
     static fromJSON(data: any): PlayerData {
-        const defaultPlayerData = new PlayerData(data.id, data.name);
-        const playerData = new PlayerData(data.id, data.name);
-        playerData.setInClaim(data.inClaim !== undefined ? data.inClaim : defaultPlayerData.inClaim);
-        playerData.setViewingClaim(data.viewingClaim !== undefined ? data.viewingClaim : defaultPlayerData.viewingClaim);
-        playerData.setResizingClaimName(data.resizingClaimName || defaultPlayerData.resizingClaimName);
-        playerData.setFirstPoint(data.firstPoint || defaultPlayerData.firstPoint);
-        playerData.setOppositeCorner(data.oppositeCorner || defaultPlayerData.oppositeCorner);
-        playerData.setEntranceVelocity(data.entranceVelocity || defaultPlayerData.entranceVelocity);
-        playerData._claimBlocks = ClaimBlocks.fromJSON(data.claimBlocks || {});
-        playerData._claims = data.claims ? data.claims.map(Claim.fromJSON) : defaultPlayerData.claims;
+
+        const defaultPlayerData = new PlayerData(data._id, data._name);
+        const playerData = new PlayerData(data._id, data._name);
+        playerData.setInClaim(data._inClaim !== undefined ? data._inClaim : defaultPlayerData.inClaim);
+        playerData.setViewingClaim(data._viewingClaim !== undefined ? data.viewingClaim : defaultPlayerData.viewingClaim);
+        playerData.setResizingClaimName(data._resizingClaimName || defaultPlayerData.resizingClaimName);
+        playerData.setFirstPoint(data._firstPoint || defaultPlayerData.firstPoint);
+        playerData.setOppositeCorner(data._oppositeCorner || defaultPlayerData.oppositeCorner);
+        playerData.setEntranceVelocity(data._entranceVelocity || defaultPlayerData.entranceVelocity);
+        playerData._claimBlocks = PlayerClaimBlocks.fromJSON(data._claimBlocks || {});
+        playerData._claims = data._claims ? data._claims.map(Claim.fromJSON) : defaultPlayerData.claims;
         return playerData;
     }
 }
@@ -523,8 +536,12 @@ for (var id of world.getDynamicPropertyIds()) {
 
     if (id.includes("db.")) {
         const parsedData = JSON.parse(property.toString());
-        const validatedData = PlayerData.fromJSON(parsedData);
-        database.push(validatedData);
+
+        // player id and name is required make sure it exists
+        if (Object.keys(parsedData).includes("_id") && Object.keys(parsedData).includes("_name")) {
+            const validatedData = PlayerData.fromJSON(parsedData);
+            database.push(validatedData);
+        }
     }
 }
 
@@ -1006,15 +1023,15 @@ class Ui {
                     ]
                 }
             )
-            .toggle("ui.manage.permissions:enter_claim", playerID ? playerPermissions.permissions.enterClaim : claim.publicPermissions.enterClaim)
-            .toggle("ui.manage.permissions:break_blocks", playerID ? playerPermissions.permissions.breakBlocks : claim.publicPermissions.breakBlocks)
-            .toggle("ui.manage.permissions:use_items_on_blocks", playerID ? playerPermissions.permissions.useItemsOnBlocks : claim.publicPermissions.useItemsOnBlocks)
-            .toggle("ui.manage.permissions:hurt_entities", playerID ? playerPermissions.permissions.hurtEntities : claim.publicPermissions.hurtEntities)
-            .toggle("ui.manage.permissions:interact_with_entities", playerID ? playerPermissions.permissions.interactWithEntities : claim.publicPermissions.interactWithEntities)
-            .toggle("ui.manage.permissions:use_doors", playerID ? playerPermissions.permissions.useDoors : claim.publicPermissions.useDoors)
-            .toggle("ui.manage.permissions:use_switches", playerID ? playerPermissions.permissions.useSwitches : claim.publicPermissions.useSwitches)
-            .toggle("ui.manage.permissions:open_containers", playerID ? playerPermissions.permissions.openContainers : claim.publicPermissions.openContainers)
-            .toggle("ui.manage.permissions:edit_signs", playerID ? playerPermissions.permissions.editSigns : claim.publicPermissions.editSigns)
+            .toggle("ui.manage.permissions:enter_claim", playerID ? playerPermissions.getPermission(PermissionTypes.ENTER_CLAIM) : claim.publicPermissions.enterClaim)
+            .toggle("ui.manage.permissions:break_blocks", playerID ? playerPermissions.getPermission(PermissionTypes.BREAK_BLOCKS) : claim.publicPermissions.breakBlocks)
+            .toggle("ui.manage.permissions:use_items_on_blocks", playerID ? playerPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS) : claim.publicPermissions.useItemsOnBlocks)
+            .toggle("ui.manage.permissions:hurt_entities", playerID ? playerPermissions.getPermission(PermissionTypes.HURT_ENTITIES) : claim.publicPermissions.hurtEntities)
+            .toggle("ui.manage.permissions:interact_with_entities", playerID ? playerPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES) : claim.publicPermissions.interactWithEntities)
+            .toggle("ui.manage.permissions:use_doors", playerID ? playerPermissions.getPermission(PermissionTypes.USE_DOORS) : claim.publicPermissions.useDoors)
+            .toggle("ui.manage.permissions:use_switches", playerID ? playerPermissions.getPermission(PermissionTypes.USE_SWITCHES) : claim.publicPermissions.useSwitches)
+            .toggle("ui.manage.permissions:open_containers", playerID ? playerPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS) : claim.publicPermissions.openContainers)
+            .toggle("ui.manage.permissions:edit_signs", playerID ? playerPermissions.getPermission(PermissionTypes.EDIT_SIGNS) : claim.publicPermissions.editSigns)
 
         if (!playerID) {
             form.toggle("ui.manage.permissions:use_tnt", claim.publicPermissions.useTNT);
@@ -1026,15 +1043,15 @@ class Ui {
 
                 // save data
                 if (playerID) {
-                    playerPermissions.permissions.enterClaim = response.formValues[0] as boolean;
-                    playerPermissions.permissions.breakBlocks = response.formValues[1] as boolean;
-                    playerPermissions.permissions.useItemsOnBlocks = response.formValues[2] as boolean;
-                    playerPermissions.permissions.hurtEntities = response.formValues[3] as boolean;
-                    playerPermissions.permissions.interactWithEntities = response.formValues[4] as boolean;
-                    playerPermissions.permissions.useDoors = response.formValues[5] as boolean;
-                    playerPermissions.permissions.useSwitches = response.formValues[6] as boolean;
-                    playerPermissions.permissions.editSigns = response.formValues[7] as boolean;
-                    playerPermissions.permissions.openContainers = response.formValues[8] as boolean;
+                    playerPermissions.setPermission(PermissionTypes.ENTER_CLAIM, response.formValues[0] as boolean);
+                    playerPermissions.setPermission(PermissionTypes.BREAK_BLOCKS, response.formValues[1] as boolean);
+                    playerPermissions.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, response.formValues[2] as boolean);
+                    playerPermissions.setPermission(PermissionTypes.HURT_ENTITIES, response.formValues[3] as boolean);
+                    playerPermissions.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, response.formValues[4] as boolean);
+                    playerPermissions.setPermission(PermissionTypes.USE_DOORS, response.formValues[5] as boolean);
+                    playerPermissions.setPermission(PermissionTypes.USE_SWITCHES, response.formValues[6] as boolean);
+                    playerPermissions.setPermission(PermissionTypes.OPEN_CONTAINERS, response.formValues[7] as boolean);
+                    playerPermissions.setPermission(PermissionTypes.EDIT_SIGNS, response.formValues[8] as boolean);
                 }
                 else {
                     claim.publicPermissions.enterClaim = response.formValues[0] as boolean;
