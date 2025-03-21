@@ -346,6 +346,51 @@ class Claim {
     }
 }
 
+class ClaimBlocks {
+    private _amount: number;
+    private _paymentTimeRemaining: number;
+
+    constructor(amount: number, paymentTimeRemaining: number) {
+        this._amount = amount;
+        this._paymentTimeRemaining = paymentTimeRemaining;
+    }
+
+    // Getters
+    get amount(): number {
+        return this._amount;
+    }
+
+    get paymentTimeRemaining(): number {
+        return this._paymentTimeRemaining;
+    }
+
+    // Setters
+    setAmount(newAmount: number): void {
+        this._amount = newAmount;
+    }
+
+    // Utility methods
+    incrementAmount(value: number): void {
+        this._amount += value;
+    }
+
+    decrementAmount(value: number): void {
+        this._amount -= value;
+    }
+
+    decrementPaymentTime(): void {
+        this._paymentTimeRemaining -= 1;
+    }
+
+    resetPaymentTime(): void {
+        this._paymentTimeRemaining = settings.claimBlockHourlyPayment;
+    }
+
+    static fromJSON(data: any): ClaimBlocks {
+        return new ClaimBlocks(data.amount || settings.startingClaimBlocks, data.paymentTimeRemaining || settings.claimBlockHourlyPayment);
+    }
+}
+
 class PlayerData {
     schemaVersion: string = "1.0.0";
 
@@ -389,17 +434,7 @@ class PlayerData {
      */
     entranceVelocity: Vector3;
 
-    claimBlocks: {
-        /**
-         * The amount of claim blocks the player has.
-         */
-        amount: number;
-
-        /**
-         * The time remaining until the player will recive more claim blocks.
-         */
-        paymentTimeRemaining: number;
-    }
+    claimBlocks: ClaimBlocks;
 
     /**
      * The claims the player has created.
@@ -422,10 +457,7 @@ class PlayerData {
         this.firstPoint = { "x": 0, "y": 0, "z": 0 };
         this.oppositeCorner = { "x": 0, "y": 0, "z": 0 };
         this.entranceVelocity = { "x": 0, "y": 0, "z": 0 };
-        this.claimBlocks = {
-            amount: settings.startingClaimBlocks,
-            paymentTimeRemaining: settings.claimBlockHourlyPayment
-        };
+        this.claimBlocks = new ClaimBlocks(settings.startingClaimBlocks, settings.claimBlockHourlyPayment);
         this.claims = [];
     }
 
@@ -446,10 +478,7 @@ class PlayerData {
         playerData.firstPoint = data.firstPoint || defaultPlayerData.firstPoint;
         playerData.oppositeCorner = data.oppositeCorner || defaultPlayerData.oppositeCorner;
         playerData.entranceVelocity = data.entranceVelocity || defaultPlayerData.entranceVelocity;
-        playerData.claimBlocks = {
-            amount: data.claimBlocks?.amount || defaultPlayerData.claimBlocks.amount,
-            paymentTimeRemaining: data.claimBlocks?.paymentTimeRemaining || defaultPlayerData.claimBlocks.paymentTimeRemaining,
-        };
+        playerData.claimBlocks = ClaimBlocks.fromJSON(data.claimBlocks || {});
         playerData.claims = data.claims ? data.claims.map(Claim.fromJSON) : defaultPlayerData.claims;
         return playerData;
     }
@@ -653,7 +682,7 @@ class Ui {
                 else {
 
                     // subtract claim blocks
-                    playerData.claimBlocks.amount -= (claimWidth * claimLength);
+                    playerData.claimBlocks.decrementAmount(claimWidth * claimLength);
 
                     // create a new claim
                     playerData.claims.push(new Claim(name, start, end, iconPath, showBorderParticles));
@@ -705,7 +734,7 @@ class Ui {
                 owner.playSound("random.levelup");
 
                 //add/subtract the blocks from players balance
-                playerData.claimBlocks.amount += blockDifference
+                playerData.claimBlocks.incrementAmount(blockDifference);
 
                 saveDb();
             }
@@ -1224,7 +1253,7 @@ class Ui {
                 owner.playSound("mob.creeper.say");
 
                 // add the claim blocks to the players balance
-                playerData.claimBlocks.amount += claimWidth * claimLength
+                playerData.claimBlocks.incrementAmount(claimWidth * claimLength);
 
                 saveDb();
             }
@@ -2064,11 +2093,11 @@ system.runInterval(() => {
         var playerData = getPlayerData(p.id);
 
         // decrement timer by 1
-        playerData.claimBlocks.paymentTimeRemaining -= 1;
+        playerData.claimBlocks.decrementPaymentTime();
 
         // if time is up reward blocks and reset timer
         if (playerData.claimBlocks.paymentTimeRemaining <= 0) {
-            playerData.claimBlocks.amount += settings.claimBlockHourlyPayment;
+            playerData.claimBlocks.incrementAmount(settings.claimBlockHourlyPayment);
             sendNotification(p, {
                 "rawtext": [
                     { "translate": "chat.blocks:payment1" },
@@ -2077,7 +2106,7 @@ system.runInterval(() => {
             })
             p.playSound("random.levelup");
 
-            playerData.claimBlocks.paymentTimeRemaining = 60;
+            playerData.claimBlocks.resetPaymentTime();
         }
     }
     saveDb();
