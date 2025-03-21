@@ -392,109 +392,126 @@ class ClaimBlocks {
 }
 
 class PlayerData {
-    schemaVersion: string = "1.0.0";
+    readonly schemaVersion: string = "1.0.0";
 
-    /**
-     * The entity id of the player.
-     */
-    id: string;
+    private _id: string;
+    private _name: string;
+    private _inClaim: boolean;
+    private _viewingClaim: boolean;
+    private _resizingClaimName: string;
+    private _firstPoint: Vector3;
+    private _oppositeCorner: Vector3;
+    private _entranceVelocity: Vector3;
+    private _claimBlocks: ClaimBlocks;
+    private _claims: Claim[];
 
-    /**
-     * The name of the player; do not use for identification as it can change.
-     */
-    name: string;
-
-    /**
-     * If the player is currently in a claim.
-     */
-    inClaim: boolean;
-
-    /**
-     * If the player is currently viewing a claim.
-     */
-    viewingClaim: boolean;
-
-    /** 
-     * The name of the claim the player is currently resizing.
-     */
-    resizingClaimName: string;
-
-    /**
-     * The first corner of the claim the player is creating.
-     */
-    firstPoint: Vector3;
-
-    /**
-     * The opposite corner of the claim the player is resizing.
-     */
-    oppositeCorner: Vector3;
-
-    /**
-     * The reverse velocity is applied to a player when they are not allowed in a claim to kick them out.
-     */
-    entranceVelocity: Vector3;
-
-    claimBlocks: ClaimBlocks;
-
-    /**
-     * The claims the player has created.
-     */
-    claims: Claim[]
-
-    /**
-     * Creates a new PlayerData object
-     * 
-     * @param playerID - The entity id of the player
-     * 
-     * @param playerName - The name of the player
-     */
     constructor(playerID: string, playerName: string) {
-        this.id = playerID;
-        this.name = playerName;
-        this.inClaim = false;
-        this.viewingClaim = false;
-        this.resizingClaimName = "";
-        this.firstPoint = { "x": 0, "y": 0, "z": 0 };
-        this.oppositeCorner = { "x": 0, "y": 0, "z": 0 };
-        this.entranceVelocity = { "x": 0, "y": 0, "z": 0 };
-        this.claimBlocks = new ClaimBlocks(settings.startingClaimBlocks, settings.claimBlockHourlyPayment);
-        this.claims = [];
+        this._id = playerID;
+        this._name = playerName;
+        this._inClaim = false;
+        this._viewingClaim = false;
+        this._resizingClaimName = "";
+        this._firstPoint = { x: 0, y: 0, z: 0 };
+        this._oppositeCorner = { x: 0, y: 0, z: 0 };
+        this._entranceVelocity = { x: 0, y: 0, z: 0 };
+        this._claimBlocks = new ClaimBlocks(settings.startingClaimBlocks, settings.claimBlockHourlyPayment);
+        this._claims = [];
     }
 
-    /**
-    * Returns a PlayerData object loaded from JSON, if a key is missing it will be replaced with the default value
-    *
-    * @param data - The JSON object to load the PlayerData object from
-    * 
-    * @return - The PlayerData object loaded from the JSON object
-    */
+    // Getters
+    get id(): string {
+        return this._id;
+    }
+
+    get name(): string {
+        return this._name;
+    }
+
+    get inClaim(): boolean {
+        return this._inClaim;
+    }
+
+    get viewingClaim(): boolean {
+        return this._viewingClaim;
+    }
+
+    get resizingClaimName(): string {
+        return this._resizingClaimName;
+    }
+
+    get firstPoint(): Vector3 {
+        return this._firstPoint;
+    }
+
+    get oppositeCorner(): Vector3 {
+        return this._oppositeCorner;
+    }
+
+    get entranceVelocity(): Vector3 {
+        return this._entranceVelocity;
+    }
+
+    get claimBlocks(): ClaimBlocks {
+        return this._claimBlocks;
+    }
+
+    get claims(): Claim[] {
+        return this._claims;
+    }
+
+    // Setters
+    setName(newName: string): void {
+        this._name = newName;
+    }
+
+    setInClaim(value: boolean): void {
+        this._inClaim = value;
+    }
+
+    setViewingClaim(value: boolean): void {
+        this._viewingClaim = value;
+    }
+
+    setResizingClaimName(value: string): void {
+        this._resizingClaimName = value;
+    }
+
+    setFirstPoint(value: Vector3): void {
+        this._firstPoint = value;
+    }
+
+    setOppositeCorner(value: Vector3): void {
+        this._oppositeCorner = value;
+    }
+
+    setEntranceVelocity(value: Vector3): void {
+        this._entranceVelocity = value;
+    }
+
+    addClaim(claim: Claim): void {
+        this._claims.push(claim);
+    }
+
+    removeClaim(claim: Claim): void {
+        this._claims = this._claims.filter((c) => c !== claim);
+    }
+
+    getClaim(claimName: string): Claim | undefined {
+        return this._claims.find((c) => c.name === claimName);
+    }
+
     static fromJSON(data: any): PlayerData {
         const defaultPlayerData = new PlayerData(data.id, data.name);
         const playerData = new PlayerData(data.id, data.name);
-        playerData.schemaVersion = data.schemaVersion || defaultPlayerData.schemaVersion;
-        playerData.inClaim = data.inClaim !== undefined ? data.inClaim : defaultPlayerData.inClaim;
-        playerData.viewingClaim = data.viewingClaim !== undefined ? data.viewingClaim : defaultPlayerData.viewingClaim;
-        playerData.resizingClaimName = data.resizingClaimName || defaultPlayerData.resizingClaimName;
-        playerData.firstPoint = data.firstPoint || defaultPlayerData.firstPoint;
-        playerData.oppositeCorner = data.oppositeCorner || defaultPlayerData.oppositeCorner;
-        playerData.entranceVelocity = data.entranceVelocity || defaultPlayerData.entranceVelocity;
-        playerData.claimBlocks = ClaimBlocks.fromJSON(data.claimBlocks || {});
-        playerData.claims = data.claims ? data.claims.map(Claim.fromJSON) : defaultPlayerData.claims;
+        playerData.setInClaim(data.inClaim !== undefined ? data.inClaim : defaultPlayerData.inClaim);
+        playerData.setViewingClaim(data.viewingClaim !== undefined ? data.viewingClaim : defaultPlayerData.viewingClaim);
+        playerData.setResizingClaimName(data.resizingClaimName || defaultPlayerData.resizingClaimName);
+        playerData.setFirstPoint(data.firstPoint || defaultPlayerData.firstPoint);
+        playerData.setOppositeCorner(data.oppositeCorner || defaultPlayerData.oppositeCorner);
+        playerData.setEntranceVelocity(data.entranceVelocity || defaultPlayerData.entranceVelocity);
+        playerData._claimBlocks = ClaimBlocks.fromJSON(data.claimBlocks || {});
+        playerData._claims = data.claims ? data.claims.map(Claim.fromJSON) : defaultPlayerData.claims;
         return playerData;
-    }
-
-    /**
-     * Returns the requested claim
-     * 
-     * @param claimName - The name of the claim to retrieve
-     */
-    getClaim(claimName: string): Claim {
-
-        for (var c of this.claims) {
-            if (c.name == claimName) {
-                return c;
-            }
-        }
     }
 }
 
@@ -691,7 +708,7 @@ class Ui {
                     owner.playSound("random.levelup");
 
                     // Reset resizingClaimName to avoid incorrect resizing behavior
-                    playerData.resizingClaimName = "";
+                    playerData.setResizingClaimName("");
                 }
             }
             saveDb();
@@ -1060,7 +1077,7 @@ class Ui {
             var playerData = getPlayerData(owner.id);
 
             // set flag
-            playerData.viewingClaim = true;
+            playerData.setViewingClaim(true);
 
             // disable player movement, besides sneaking which is used to cancel the view
             owner.inputPermissions.cameraEnabled = false;
@@ -1205,7 +1222,7 @@ class Ui {
             owner.camera.clear();
 
             // set flag back to false
-            playerData.viewingClaim = false;
+            playerData.setViewingClaim(false);
 
             // enable player movement again
             owner.inputPermissions.cameraEnabled = true;
@@ -1247,7 +1264,7 @@ class Ui {
             else if (response.selection == 1) {
 
                 // delete claim
-                playerData.claims = playerData.claims.filter(c => c !== claim);
+                playerData.removeClaim(claim);
 
                 sendNotification(owner, "chat.claim:removed")
                 owner.playSound("mob.creeper.say");
@@ -1311,11 +1328,11 @@ world.afterEvents.playerJoin.subscribe((data) => {
         if (p.id == data.playerId) {
 
             // update player name in db to current; in case they changed it
-            p.name = data.playerName
+            p.setName(data.playerName);
 
             // set other values to default
-            p.viewingClaim = false;
-            p.resizingClaimName = "";
+            p.setViewingClaim(false);
+            p.setResizingClaimName("");
 
             playerFound = true;
             break;
@@ -1349,7 +1366,7 @@ world.afterEvents.playerSpawn.subscribe((data) => {
     data.player.runCommandAsync(`execute if entity @s[hasitem = { item=${shovelID}, quantity = 0}] run give @s ${shovelID} 1 0 { "keep_on_death": { }, "item_lock": { "mode": "lock_in_inventory" } } `);
 
     // set flag to false since all camera positions will be reset upon rejoining
-    getPlayerData(data.player.id).viewingClaim = false;
+    getPlayerData(data.player.id).setViewingClaim(false);
 });
 
 // open menu when claim shovel is used
@@ -1389,8 +1406,8 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                 var isResize = false;
 
                 if (!data.player.isSneaking) {
-                    playerData.resizingClaimName = "";
-                    playerData.firstPoint = { ...data.block.location }; // Ensure a new object is created
+                    playerData.setResizingClaimName("");
+                    playerData.setFirstPoint(data.block.location);
 
                     runInAllClaims((playerID, playerName, claim) => {
 
@@ -1421,8 +1438,8 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         if (aIndex != null) {
                             isResize = true;
                             if (playerID == data.player.id) {
-                                playerData.oppositeCorner = { "x": points[aIndex ^ 1][bIndex ^ 1][0], "y": data.block.y, "z": points[aIndex ^ 1][bIndex ^ 1][1] };
-                                playerData.resizingClaimName = claim.name;
+                                playerData.setOppositeCorner({ "x": points[aIndex ^ 1][bIndex ^ 1][0], "y": data.block.y, "z": points[aIndex ^ 1][bIndex ^ 1][1] });
+                                playerData.setResizingClaimName(claim.name);
 
                                 data.player.sendMessage({
                                     "rawtext": [
@@ -1925,7 +1942,7 @@ system.runInterval(() => {
             var inClaimOld: boolean = playerData.inClaim;
 
             // set flag to false before for loop updates it
-            playerData.inClaim = false;
+            playerData.setInClaim(false);
 
             // if player is crouching set viewing claim flag to false to cancel it and return to first person
             if (p.isSneaking && playerData.viewingClaim) {
@@ -1940,7 +1957,7 @@ system.runInterval(() => {
                 // if player is in the claim
                 if (claim.isOverlap(location, location)) {
 
-                    playerData.inClaim = true
+                    playerData.setInClaim(true);
 
                     // make sure player can't hurt entities if they don't have permission
                     if ((playerID != p.id) && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, p)) {
@@ -1968,7 +1985,7 @@ system.runInterval(() => {
                             p.playSound("note.didgeridoo");
 
                             // save entrance velocity
-                            playerData.entranceVelocity = p.getVelocity();
+                            playerData.setEntranceVelocity(p.getVelocity());
                         }
 
                         const velocity: Vector3 = playerData.entranceVelocity;
@@ -2014,7 +2031,7 @@ system.runInterval(() => {
         }
         // player is not in overworld
         else {
-            playerData.inClaim = false;
+            playerData.setInClaim(false);
         }
     }
 }, 1);
