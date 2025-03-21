@@ -166,8 +166,8 @@ class PlayerPermissions {
      * @return - The PlayerPermissions object loaded from the JSON object
      */
     static fromJSON(data: any): PlayerPermissions {
-        const defaultPermissions = new PlayerPermissions(data.id, data.name);
-        const permissions = new PlayerPermissions(data.id, data.name);
+        const defaultPermissions = new PlayerPermissions(data._id, data._name);
+        const permissions = new PlayerPermissions(data._id, data._name);
         permissions.setPermission(PermissionTypes.ENTER_CLAIM, data._permissions?.enterClaim !== undefined ? data._permissions.enterClaim : defaultPermissions.getPermission(PermissionTypes.ENTER_CLAIM));
         permissions.setPermission(PermissionTypes.BREAK_BLOCKS, data._permissions?.breakBlocks !== undefined ? data._permissions.breakBlocks : defaultPermissions.getPermission(PermissionTypes.BREAK_BLOCKS));
         permissions.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data._permissions?.useItemsOnBlocks !== undefined ? data._permissions.useItemsOnBlocks : defaultPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS));
@@ -311,7 +311,11 @@ class Claim {
             editSigns: data._publicPermissions?.editSigns !== undefined ? data._publicPermissions.editSigns : defaultClaim.getPublicPermission(PermissionTypes.EDIT_SIGNS)
         };
 
-        claim._playerPermissionsList = data._playerPermissionsList ? data._playerPermissionsList.map(PlayerPermissions.fromJSON) : defaultClaim.playerPermissionsList;
+        claim._playerPermissionsList = data._playerPermissionsList 
+            ? data._playerPermissionsList
+            .map(PlayerPermissions.fromJSON)
+            .filter(permission => permission.id !== undefined && permission.name !== undefined) 
+            : defaultClaim.playerPermissionsList;
 
         return claim;
     }
