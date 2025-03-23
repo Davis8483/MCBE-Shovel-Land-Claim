@@ -1536,21 +1536,17 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                 // if player is crouching
                 else {
                     var secondPoint = { ...data.block.location }; // Ensure a new object is created
-                    var intersectingClaim = false;
+                    var claimIntersectingClaim = false;
+                    var playerIntersectingClaim = false;
 
                     // if claim is resized
                     if (playerData.resizingClaimName.length > 0) {
 
                         // get the claim object that is being resized
-                        for (var c of playerData.claims) {
-                            if (c.name == playerData.resizingClaimName) {
-                                var claim = c;
-                                break;
-                            }
-                        }
+                        var resizingClaim = playerData.getClaim(playerData.resizingClaimName);
 
-                        const oldClaimWidth = Math.abs(claim.start.x - claim.end.x) + 1;
-                        const oldClaimLength = Math.abs(claim.start.z - claim.end.z) + 1;
+                        const oldClaimWidth = Math.abs(resizingClaim.start.x - resizingClaim.end.x) + 1;
+                        const oldClaimLength = Math.abs(resizingClaim.start.z - resizingClaim.end.z) + 1;
 
                         const newClaimWidth = Math.abs(playerData.oppositeCorner.x - secondPoint.x) + 1;
                         const newClaimLength = Math.abs(playerData.oppositeCorner.z - secondPoint.z) + 1;
@@ -1559,15 +1555,29 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
 
                         // make sure new claim isn't intersecting others not counting itself
                         runInAllClaims((playerID, playerName, claim) => {
-                            if (claim.isOverlap(playerData.firstPoint, secondPoint) && ((playerID != data.player.id) || (claim.name != playerData.resizingClaimName))) {
-                                intersectingClaim = true;
+                            if (claim.isOverlap(playerData.oppositeCorner, secondPoint) && ((playerID != data.player.id) || (claim.name != playerData.resizingClaimName))) {
+                                claimIntersectingClaim = true;
                             }
                         });
 
-                        // intersecting claim warning message, cancel resize
-                        if (intersectingClaim) {
-                            sendNotification(data.player, "chat.claim:intersecting");
+                        // make sure another player isn't in the area
+                        for (var p of world.getAllPlayers()) {
+                            // we are creating a claim object just to use the isOverlap utility, this is not saved to the database
+                            if (new Claim("", playerData.oppositeCorner, secondPoint, "").isOverlap(p.location, p.location) && (p.id != data.player.id)) {
+                                playerIntersectingClaim = true;
+                            }
+                        }
 
+                        // intersecting claim warning message, cancel resize
+                        if (claimIntersectingClaim) {
+                            sendNotification(data.player, "chat.claim:claim_intersecting");
+                            system.run(() => {
+                                data.player.playSound("note.didgeridoo");
+                            });
+                        }
+                        // player is in the way warning message, cancel resize
+                        else if (playerIntersectingClaim) {
+                            sendNotification(data.player, "chat.claim:player_intersecting");
                             system.run(() => {
                                 data.player.playSound("note.didgeridoo");
                             });
@@ -1591,7 +1601,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                             system.run(() => {
                                 data.player.playSound("note.cow_bell");
 
-                                Ui.resizeClaim(data.player, claim, playerData.oppositeCorner, secondPoint);
+                                Ui.resizeClaim(data.player, resizingClaim, playerData.oppositeCorner, secondPoint);
                             });
                         }
                     }
@@ -1601,15 +1611,32 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         const claimWidth = Math.abs(playerData.firstPoint.x - secondPoint.x) + 1;
                         const claimLength = Math.abs(playerData.firstPoint.z - secondPoint.z) + 1;
 
-                        // make sure new claim isn't intersecting others
                         runInAllClaims((playerID, playerName, claim) => {
+                            // make sure new claim isn't intersecting others
                             if (claim.isOverlap(playerData.firstPoint, secondPoint)) {
-                                intersectingClaim = true;
+                                claimIntersectingClaim = true;
                             }
                         });
+
+                        // make sure another player isn't in the area
+                        for (var p of world.getAllPlayers()) {
+                            // we are creating a claim object just to use the isOverlap utility, this is not saved to the database
+                            if (new Claim("", playerData.firstPoint, secondPoint, "").isOverlap(p.location, p.location) && (p.id != data.player.id)) {
+                                playerIntersectingClaim = true;
+                            }
+                        }
+
                         // intersecting claim warning message, cancel creation
-                        if (intersectingClaim) {
-                            sendNotification(data.player, "chat.claim:intersecting");
+                        if (claimIntersectingClaim) {
+                            sendNotification(data.player, "chat.claim:claim_intersecting");
+
+                            system.run(() => {
+                                data.player.playSound("note.didgeridoo");
+                            });
+                        }
+                        // player is in the way warning message, cancel creation
+                        else if (playerIntersectingClaim) {
+                            sendNotification(data.player, "chat.claim:player_intersecting");
 
                             system.run(() => {
                                 data.player.playSound("note.didgeridoo");
