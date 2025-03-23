@@ -336,10 +336,10 @@ class Claim {
      * 
      * @param player - Optional; The player you would like to check the permission for
     */
-    hasPermission(permission: PermissionTypes, player: Player = undefined): boolean {
+    hasPermission(permission: PermissionTypes, player?: Player): boolean {
 
         // check if player is in specific permissions list
-        if (player != undefined) {
+        if (player) {
             
             var playerPermissions: PlayerPermissions = undefined;
 
@@ -350,17 +350,9 @@ class Claim {
                     break;
                 }
             }
-
-            if ((playerPermissions != undefined) && Object.keys(playerPermissions).includes(permission)) {
-
-                return playerPermissions[permission]
-            }
         }
-        // if player specific permission is not found, default to claims global permissions list
-        if (Object.keys(this._publicPermissions).includes(permission)) {
-
-            return (this._publicPermissions[permission]);
-        }
+        // if player is not in the list, use public permissions
+        return playerPermissions ? playerPermissions.getPermission(permission) : this._publicPermissions[permission];
     }
 
     /**
