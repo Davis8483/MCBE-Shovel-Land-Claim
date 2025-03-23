@@ -1989,6 +1989,9 @@ world.afterEvents.worldInitialize.subscribe(() => {
     // disable showing locked item text; the claim shovel is locked in the inventory
     world.gameRules.showTags = false;
 
+    // disable fire spreads
+    world.gameRules.doFireTick = false;
+
     // remove claim view ticking area if it exists
     world.getDimension("overworld").runCommandAsync("tickingarea remove claimView")
 });
