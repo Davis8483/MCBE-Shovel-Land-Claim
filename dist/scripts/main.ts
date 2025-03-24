@@ -151,11 +151,25 @@ class PlayerPermissions {
     }
 
     getPermission(permission: PermissionTypes): boolean {
-        return this._permissions[permission];
+        // check if the permission is valid
+        if (this._permissions[permission] != undefined) {
+            return this._permissions[permission];
+        }
+        else {
+            console.log(`Invalid permission: ${permission} for player: ${this._name}`);
+            return false;
+        }
     }
 
     setPermission(permission: PermissionTypes, value: boolean): void {
-        this._permissions[permission] = value;
+
+        // check if the permission is valid
+        if (this._permissions[permission] != undefined) {
+            this._permissions[permission] = value;
+        }
+        else {
+            console.log(`Invalid permission: ${permission} for player: ${this._name}`);
+        }
         saveDb();
     }
 
@@ -244,12 +258,25 @@ class Claim {
 
     // Get a specific public permission
     getPublicPermission(permission: PermissionTypes): boolean {
-        return this._publicPermissions[permission];
+        // check if the permission is valid
+        if (this._publicPermissions[permission] != undefined) {
+            return this._publicPermissions[permission];
+        }
+        else {
+            console.log(`Invalid permission: ${permission} for claim ${this._name}`);
+            return false;
+        }
     }
 
     // Set a specific public permission
     setPublicPermission(permission: PermissionTypes, value: boolean): void {
-        this._publicPermissions[permission] = value;
+        // check if the permission is valid
+        if (this._publicPermissions[permission] != undefined) {
+            this._publicPermissions[permission] = value;
+        }
+        else {
+            console.log(`Invalid permission: ${permission} for claim ${this._name}`);
+        }
         saveDb();
     }
 
@@ -939,23 +966,23 @@ class Ui {
     static playerPermissionsListModify(owner: Player, claim: Claim, add: boolean) {
 
         // player permissions not found in the claims list
-        var unsavedPlayerPermissions: PlayerPermissions[] = []
+        var unsavedPlayers: string[] = []
 
         // get the entire list of players that have ever joined the world
         for (var playerData of database) {
-            unsavedPlayerPermissions.push(new PlayerPermissions(playerData.id, playerData.name));
+            unsavedPlayers.push(playerData.id);
         }
 
         // filter players from the list, we don't want to add people who are already in it
-        unsavedPlayerPermissions = unsavedPlayerPermissions.filter((p) => {
+        unsavedPlayers = unsavedPlayers.filter((p) => {
             for (var playerPermissions of claim.playerPermissionsList) {
-                if (p.id == playerPermissions.id) {
+                if (p == playerPermissions.id) {
                     return false;
                 }
             }
 
             // make sure to remove owner from list as well
-            if (p.id == owner.id) {
+            if (p == owner.id) {
                 return false;
             }
 
@@ -963,7 +990,7 @@ class Ui {
         });
         
         // if no players are available to add notify the owner
-        if ((unsavedPlayerPermissions.length == 0) && add) {
+        if ((unsavedPlayers.length == 0) && add) {
             sendNotification(owner, "chat.claim:no_players_to_add");
             owner.playSound("note.didgeridoo");
             return;
@@ -987,14 +1014,21 @@ class Ui {
                     ]
                 }
             )
-            .dropdown("ui.manage.permissions.player.selection.modify:player_dropdown", add ? unsavedPlayerPermissions.map(p => p.name) : claim.playerPermissionsList.map(p => p.name));
+            .dropdown("ui.manage.permissions.player.selection.modify:player_dropdown", add ? unsavedPlayers.map(id => database.filter(p => p.id == id)[0].name) : claim.playerPermissionsList.map(p => p.name));
 
         form.show(owner).then((response) => {
 
             if (!response.canceled) {
                 if (add) {
+                    var newPlayerPermissions = new PlayerPermissions(response.formValues[0] as string, database.filter(p => p.id == unsavedPlayers[response.formValues[0] as number])[0].name);
+
+                    // copy public permissions to new player permissions
+                    for (var perm of Object.values(PermissionTypes)) {
+                        newPlayerPermissions.setPermission(perm, claim.getPublicPermission(perm));
+                    }
+
                     // save new player permission to list
-                    claim.addPlayerPermissions(unsavedPlayerPermissions[response.formValues[0] as number]);
+                    claim.addPlayerPermissions(newPlayerPermissions);
                 }
                 else {
 
