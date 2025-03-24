@@ -1401,7 +1401,9 @@ class Ui {
 
 world.afterEvents.playerJoin.subscribe((data) => {
 
-    world.sendMessage("§cWarning: your playing a development build of Shovel Land Claim, bugs and data loss may occur.");
+    system.runTimeout(() => {
+        world.sendMessage("§cWarning: your playing a development build of Shovel Land Claim, bugs and data loss may occur.");
+    }, 200);
 
     // verify player data is on file
     var playerFound = false;
