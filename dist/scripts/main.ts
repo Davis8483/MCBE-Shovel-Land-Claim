@@ -1020,7 +1020,7 @@ class Ui {
 
             if (!response.canceled) {
                 if (add) {
-                    var newPlayerPermissions = new PlayerPermissions(response.formValues[0] as string, database.filter(p => p.id == unsavedPlayers[response.formValues[0] as number])[0].name);
+                    var newPlayerPermissions = new PlayerPermissions(unsavedPlayers[response.formValues[0] as number], database.filter(p => p.id == unsavedPlayers[response.formValues[0] as number])[0].name);
 
                     // copy public permissions to new player permissions
                     for (var perm of Object.values(PermissionTypes)) {
