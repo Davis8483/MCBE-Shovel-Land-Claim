@@ -1954,7 +1954,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
             if (playerID != data.player.id){
                 
                 // door interaction permissions
-                if (claim.isOverlap(data.block.location, data.block.location) && data.block.typeId.includes("door") && !data.player.isSneaking) {
+                if (claim.isOverlap(data.block.location, data.block.location) && (data.block.typeId.includes("door") || data.block.typeId.includes("fence_gate")) && !data.player.isSneaking) {
                     if (!claim.hasPermission(PermissionTypes.USE_DOORS, data.player)){
                         // cancel the action
                         data.cancel = true;
