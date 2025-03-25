@@ -1,4 +1,15 @@
-import { world, system, ItemStack, EasingType, EntityRidingComponent, EntityRideableComponent, BlockComponentTypes } from '@minecraft/server';
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+import { world, system, ItemStack, EasingType, EntityRidingComponent, EntityRideableComponent, BlockComponentTypes, EntityComponentTypes, InputPermissionCategory, HudVisibility } from '@minecraft/server';
 import { ActionFormData, MessageFormData, ModalFormData } from '@minecraft/server-ui';
 var shovelID = "lca:claim_shovel";
 var claimIcons = {
@@ -73,6 +84,7 @@ var PermissionTypes;
     PermissionTypes["INTERACT_WITH_ENTITIES"] = "interactWithEntities";
     PermissionTypes["USE_DOORS"] = "useDoors";
     PermissionTypes["USE_SWITCHES"] = "useSwitches";
+    PermissionTypes["USE_BEDS"] = "useBeds";
     PermissionTypes["OPEN_CONTAINERS"] = "openContainers";
     PermissionTypes["EDIT_SIGNS"] = "editSigns";
 })(PermissionTypes || (PermissionTypes = {}));
@@ -88,18 +100,56 @@ var PlayerPermissions = /** @class */ (function () {
      * @param name - The name of the player
      */
     function PlayerPermissions(id, name) {
-        this.id = id;
-        this.name = name;
-        this.permissions.enterClaim = true;
-        this.permissions.breakBlocks = false;
-        this.permissions.useItemsOnBlocks = false;
-        this.permissions.hurtEntities = false;
-        this.permissions.interactWithEntities = false;
-        this.permissions.useDoors = true;
-        this.permissions.useSwitches = true;
-        this.permissions.openContainers = false;
-        this.permissions.editSigns = false;
+        var _a;
+        this._id = id;
+        this._name = name;
+        this._permissions = (_a = {},
+            _a[PermissionTypes.ENTER_CLAIM] = true,
+            _a[PermissionTypes.BREAK_BLOCKS] = false,
+            _a[PermissionTypes.USE_ITEMS_ON_BLOCKS] = false,
+            _a[PermissionTypes.HURT_ENTITIES] = false,
+            _a[PermissionTypes.INTERACT_WITH_ENTITIES] = false,
+            _a[PermissionTypes.USE_DOORS] = true,
+            _a[PermissionTypes.USE_SWITCHES] = true,
+            _a[PermissionTypes.USE_BEDS] = false,
+            _a[PermissionTypes.OPEN_CONTAINERS] = false,
+            _a[PermissionTypes.EDIT_SIGNS] = false,
+            _a);
     }
+    Object.defineProperty(PlayerPermissions.prototype, "id", {
+        get: function () {
+            return this._id;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(PlayerPermissions.prototype, "name", {
+        get: function () {
+            return this._name;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    PlayerPermissions.prototype.getPermission = function (permission) {
+        // check if the permission is valid
+        if (this._permissions[permission] != undefined) {
+            return this._permissions[permission];
+        }
+        else {
+            console.log("Invalid permission: ".concat(permission, " for player: ").concat(this._name));
+            return false;
+        }
+    };
+    PlayerPermissions.prototype.setPermission = function (permission, value) {
+        // check if the permission is valid
+        if (this._permissions[permission] != undefined) {
+            this._permissions[permission] = value;
+        }
+        else {
+            console.log("Invalid permission: ".concat(permission, " for player: ").concat(this._name));
+        }
+        saveDb();
+    };
     /**
      * Returns a PlayerPermissions object loaded from JSON, if a key is missing it will be replaced with the default value.
      *
@@ -108,23 +158,20 @@ var PlayerPermissions = /** @class */ (function () {
      * @return - The PlayerPermissions object loaded from the JSON object
      */
     PlayerPermissions.fromJSON = function (data) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-        var defaultPermissions = new PlayerPermissions(data.id, data.name);
-        return {
-            id: data.id || defaultPermissions.id,
-            name: data.name || defaultPermissions.name,
-            permissions: {
-                enterClaim: ((_a = data.permissions) === null || _a === void 0 ? void 0 : _a.enterClaim) !== undefined ? data.permissions.enterClaim : defaultPermissions.permissions.enterClaim,
-                breakBlocks: ((_b = data.permissions) === null || _b === void 0 ? void 0 : _b.breakBlocks) !== undefined ? data.permissions.breakBlocks : defaultPermissions.permissions.breakBlocks,
-                useItemsOnBlocks: ((_c = data.permissions) === null || _c === void 0 ? void 0 : _c.useItemsOnBlocks) !== undefined ? data.permissions.useItemsOnBlocks : defaultPermissions.permissions.useItemsOnBlocks,
-                hurtEntities: ((_d = data.permissions) === null || _d === void 0 ? void 0 : _d.hurtEntities) !== undefined ? data.permissions.hurtEntities : defaultPermissions.permissions.hurtEntities,
-                interactWithEntities: ((_e = data.permissions) === null || _e === void 0 ? void 0 : _e.interactWithEntities) !== undefined ? data.permissions.interactWithEntities : defaultPermissions.permissions.interactWithEntities,
-                useDoors: ((_f = data.permissions) === null || _f === void 0 ? void 0 : _f.useDoors) !== undefined ? data.permissions.useDoors : defaultPermissions.permissions.useDoors,
-                useSwitches: ((_g = data.permissions) === null || _g === void 0 ? void 0 : _g.useSwitches) !== undefined ? data.permissions.useSwitches : defaultPermissions.permissions.useSwitches,
-                openContainers: ((_h = data.permissions) === null || _h === void 0 ? void 0 : _h.openContainers) !== undefined ? data.permissions.openContainers : defaultPermissions.permissions.openContainers,
-                editSigns: ((_j = data.permissions) === null || _j === void 0 ? void 0 : _j.editSigns) !== undefined ? data.permissions.editSigns : defaultPermissions.permissions.editSigns
-            }
-        };
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        var defaultPermissions = new PlayerPermissions(data._id, data._name);
+        var permissions = new PlayerPermissions(data._id, data._name);
+        permissions.setPermission(PermissionTypes.ENTER_CLAIM, ((_a = data._permissions) === null || _a === void 0 ? void 0 : _a.enterClaim) !== undefined ? data._permissions.enterClaim : defaultPermissions.getPermission(PermissionTypes.ENTER_CLAIM));
+        permissions.setPermission(PermissionTypes.BREAK_BLOCKS, ((_b = data._permissions) === null || _b === void 0 ? void 0 : _b.breakBlocks) !== undefined ? data._permissions.breakBlocks : defaultPermissions.getPermission(PermissionTypes.BREAK_BLOCKS));
+        permissions.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, ((_c = data._permissions) === null || _c === void 0 ? void 0 : _c.useItemsOnBlocks) !== undefined ? data._permissions.useItemsOnBlocks : defaultPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS));
+        permissions.setPermission(PermissionTypes.HURT_ENTITIES, ((_d = data._permissions) === null || _d === void 0 ? void 0 : _d.hurtEntities) !== undefined ? data._permissions.hurtEntities : defaultPermissions.getPermission(PermissionTypes.HURT_ENTITIES));
+        permissions.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, ((_e = data._permissions) === null || _e === void 0 ? void 0 : _e.interactWithEntities) !== undefined ? data._permissions.interactWithEntities : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES));
+        permissions.setPermission(PermissionTypes.USE_DOORS, ((_f = data._permissions) === null || _f === void 0 ? void 0 : _f.useDoors) !== undefined ? data._permissions.useDoors : defaultPermissions.getPermission(PermissionTypes.USE_DOORS));
+        permissions.setPermission(PermissionTypes.USE_SWITCHES, ((_g = data._permissions) === null || _g === void 0 ? void 0 : _g.useSwitches) !== undefined ? data._permissions.useSwitches : defaultPermissions.getPermission(PermissionTypes.USE_SWITCHES));
+        permissions.setPermission(PermissionTypes.USE_BEDS, ((_h = data._permissions) === null || _h === void 0 ? void 0 : _h.useBeds) !== undefined ? data._permissions.useBeds : defaultPermissions.getPermission(PermissionTypes.USE_BEDS));
+        permissions.setPermission(PermissionTypes.OPEN_CONTAINERS, ((_j = data._permissions) === null || _j === void 0 ? void 0 : _j.openContainers) !== undefined ? data._permissions.openContainers : defaultPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS));
+        permissions.setPermission(PermissionTypes.EDIT_SIGNS, ((_k = data._permissions) === null || _k === void 0 ? void 0 : _k.editSigns) !== undefined ? data._permissions.editSigns : defaultPermissions.getPermission(PermissionTypes.EDIT_SIGNS));
+        return permissions;
     };
     return PlayerPermissions;
 }());
@@ -132,64 +179,153 @@ var PlayerPermissions = /** @class */ (function () {
  * Represents a land claim in the world.
  */
 var Claim = /** @class */ (function () {
-    /**
-     * Creates a new Claim object
-     *
-     * @param name - The name of the claim
-     *
-     * @param start - The block representing the first corner of the claim
-     *
-     * @param end - The block representing the opposite second corner of the claim
-     *
-     * @param icon - The mincraft icon path to be displayed in the ui
-     *
-     * @param particlesEnabled - If particles should be rendered for the claim; default is true
-     */
     function Claim(name, start, end, icon, particlesEnabled) {
+        var _a;
         if (particlesEnabled === void 0) { particlesEnabled = true; }
-        this.name = name;
-        this.start = start;
-        this.end = end;
-        this.icon = icon;
-        this.particlesEnabled = particlesEnabled;
-        this.playerPermissionsList = [];
-        this.publicPermissions = {
-            enterClaim: true,
-            breakBlocks: false,
-            useItemsOnBlocks: false,
-            hurtEntities: false,
-            useTNT: false,
-            interactWithEntities: false,
-            useDoors: true,
-            useSwitches: true,
-            openContainers: false,
-            editSigns: false
-        };
+        this._name = name;
+        this._start = start;
+        this._end = end;
+        this._icon = icon;
+        this._particlesEnabled = particlesEnabled;
+        this._playerPermissionsList = [];
+        this._publicPermissions = (_a = {},
+            _a[PermissionTypes.ENTER_CLAIM] = true,
+            _a[PermissionTypes.BREAK_BLOCKS] = false,
+            _a[PermissionTypes.USE_ITEMS_ON_BLOCKS] = false,
+            _a[PermissionTypes.HURT_ENTITIES] = false,
+            _a[PermissionTypes.USE_TNT] = false,
+            _a[PermissionTypes.INTERACT_WITH_ENTITIES] = false,
+            _a[PermissionTypes.USE_DOORS] = true,
+            _a[PermissionTypes.USE_SWITCHES] = true,
+            _a[PermissionTypes.USE_BEDS] = false,
+            _a[PermissionTypes.OPEN_CONTAINERS] = false,
+            _a[PermissionTypes.EDIT_SIGNS] = false,
+            _a);
     }
+    Object.defineProperty(Claim.prototype, "name", {
+        // Getters
+        get: function () {
+            return this._name;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Claim.prototype, "start", {
+        get: function () {
+            return this._start;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Claim.prototype, "end", {
+        get: function () {
+            return this._end;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Claim.prototype, "icon", {
+        get: function () {
+            return this._icon;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Claim.prototype, "particlesEnabled", {
+        get: function () {
+            return this._particlesEnabled;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Claim.prototype, "playerPermissionsList", {
+        get: function () {
+            return this._playerPermissionsList;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    // Get a specific public permission
+    Claim.prototype.getPublicPermission = function (permission) {
+        // check if the permission is valid
+        if (this._publicPermissions[permission] != undefined) {
+            return this._publicPermissions[permission];
+        }
+        else {
+            console.log("Invalid permission: ".concat(permission, " for claim ").concat(this._name));
+            return false;
+        }
+    };
+    // Set a specific public permission
+    Claim.prototype.setPublicPermission = function (permission, value) {
+        // check if the permission is valid
+        if (this._publicPermissions[permission] != undefined) {
+            this._publicPermissions[permission] = value;
+        }
+        else {
+            console.log("Invalid permission: ".concat(permission, " for claim ").concat(this._name));
+        }
+        saveDb();
+    };
+    // Setters
+    Claim.prototype.setName = function (value) {
+        this._name = value;
+        saveDb();
+    };
+    Claim.prototype.setStart = function (value) {
+        this._start = value;
+        saveDb();
+    };
+    Claim.prototype.setEnd = function (value) {
+        this._end = value;
+        saveDb();
+    };
+    Claim.prototype.setIcon = function (value) {
+        this._icon = value;
+        saveDb();
+    };
+    Claim.prototype.setParticlesEnabled = function (value) {
+        this._particlesEnabled = value;
+        saveDb();
+    };
+    Claim.prototype.addPlayerPermissions = function (playerPermissions) {
+        this._playerPermissionsList.push(playerPermissions);
+        saveDb();
+    };
+    Claim.prototype.removePlayerPermissions = function (index) {
+        this._playerPermissionsList.splice(index, 1);
+        saveDb();
+    };
     /**
      * Returns a Claim object loaded from JSON, if a key is missing it will be replaced with the default value.
+     * Claim name is required, if it is not found it will be replaced with "Undefined" and should be removed by the caller.
      *
      * @param data - The JSON object to load the Claim object from
      *
      * @return - The Claim object loaded from the JSON object
      */
     Claim.fromJSON = function (data) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
         var defaultClaim = new Claim("Undefined", { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, "textures/ui/icon_recipe_nature.png");
-        var claim = new Claim(data.name || defaultClaim.name, data.start || defaultClaim.start, data.end || defaultClaim.end, data.icon || defaultClaim.icon, data.particlesEnabled !== undefined ? data.particlesEnabled : defaultClaim.particlesEnabled);
-        claim.publicPermissions = {
-            enterClaim: ((_a = data.publicPermissions) === null || _a === void 0 ? void 0 : _a.enterClaim) !== undefined ? data.publicPermissions.enterClaim : defaultClaim.publicPermissions.enterClaim,
-            breakBlocks: ((_b = data.publicPermissions) === null || _b === void 0 ? void 0 : _b.breakBlocks) !== undefined ? data.publicPermissions.breakBlocks : defaultClaim.publicPermissions.breakBlocks,
-            useItemsOnBlocks: ((_c = data.publicPermissions) === null || _c === void 0 ? void 0 : _c.useItemsOnBlocks) !== undefined ? data.publicPermissions.useItemsOnBlocks : defaultClaim.publicPermissions.useItemsOnBlocks,
-            hurtEntities: ((_d = data.publicPermissions) === null || _d === void 0 ? void 0 : _d.hurtEntities) !== undefined ? data.publicPermissions.hurtEntities : defaultClaim.publicPermissions.hurtEntities,
-            useTNT: ((_e = data.publicPermissions) === null || _e === void 0 ? void 0 : _e.useTNT) !== undefined ? data.publicPermissions.useTNT : defaultClaim.publicPermissions.useTNT,
-            interactWithEntities: ((_f = data.publicPermissions) === null || _f === void 0 ? void 0 : _f.interactWithEntities) !== undefined ? data.publicPermissions.interactWithEntities : defaultClaim.publicPermissions.interactWithEntities,
-            useDoors: ((_g = data.publicPermissions) === null || _g === void 0 ? void 0 : _g.useDoors) !== undefined ? data.publicPermissions.useDoors : defaultClaim.publicPermissions.useDoors,
-            useSwitches: ((_h = data.publicPermissions) === null || _h === void 0 ? void 0 : _h.useSwitches) !== undefined ? data.publicPermissions.useSwitches : defaultClaim.publicPermissions.useSwitches,
-            openContainers: ((_j = data.publicPermissions) === null || _j === void 0 ? void 0 : _j.openContainers) !== undefined ? data.publicPermissions.openContainers : defaultClaim.publicPermissions.openContainers,
-            editSigns: ((_k = data.publicPermissions) === null || _k === void 0 ? void 0 : _k.editSigns) !== undefined ? data.publicPermissions.editSigns : defaultClaim.publicPermissions.editSigns
+        var claim = new Claim(data._name || defaultClaim.name, data._start || defaultClaim.start, data._end || defaultClaim.end, data._icon || defaultClaim.icon, data._particlesEnabled !== undefined ? data._particlesEnabled : defaultClaim.particlesEnabled);
+        claim._publicPermissions = {
+            enterClaim: ((_a = data._publicPermissions) === null || _a === void 0 ? void 0 : _a.enterClaim) !== undefined ? data._publicPermissions.enterClaim : defaultClaim.getPublicPermission(PermissionTypes.ENTER_CLAIM),
+            breakBlocks: ((_b = data._publicPermissions) === null || _b === void 0 ? void 0 : _b.breakBlocks) !== undefined ? data._publicPermissions.breakBlocks : defaultClaim.getPublicPermission(PermissionTypes.BREAK_BLOCKS),
+            useItemsOnBlocks: ((_c = data._publicPermissions) === null || _c === void 0 ? void 0 : _c.useItemsOnBlocks) !== undefined ? data._publicPermissions.useItemsOnBlocks : defaultClaim.getPublicPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS),
+            hurtEntities: ((_d = data._publicPermissions) === null || _d === void 0 ? void 0 : _d.hurtEntities) !== undefined ? data._publicPermissions.hurtEntities : defaultClaim.getPublicPermission(PermissionTypes.HURT_ENTITIES),
+            useTNT: ((_e = data._publicPermissions) === null || _e === void 0 ? void 0 : _e.useTNT) !== undefined ? data._publicPermissions.useTNT : defaultClaim.getPublicPermission(PermissionTypes.USE_TNT),
+            interactWithEntities: ((_f = data._publicPermissions) === null || _f === void 0 ? void 0 : _f.interactWithEntities) !== undefined ? data._publicPermissions.interactWithEntities : defaultClaim.getPublicPermission(PermissionTypes.INTERACT_WITH_ENTITIES),
+            useDoors: ((_g = data._publicPermissions) === null || _g === void 0 ? void 0 : _g.useDoors) !== undefined ? data._publicPermissions.useDoors : defaultClaim.getPublicPermission(PermissionTypes.USE_DOORS),
+            useSwitches: ((_h = data._publicPermissions) === null || _h === void 0 ? void 0 : _h.useSwitches) !== undefined ? data._publicPermissions.useSwitches : defaultClaim.getPublicPermission(PermissionTypes.USE_SWITCHES),
+            useBeds: ((_j = data._publicPermissions) === null || _j === void 0 ? void 0 : _j.useBeds) !== undefined ? data._publicPermissions.useBeds : defaultClaim.getPublicPermission(PermissionTypes.USE_BEDS),
+            openContainers: ((_k = data._publicPermissions) === null || _k === void 0 ? void 0 : _k.openContainers) !== undefined ? data._publicPermissions.openContainers : defaultClaim.getPublicPermission(PermissionTypes.OPEN_CONTAINERS),
+            editSigns: ((_l = data._publicPermissions) === null || _l === void 0 ? void 0 : _l.editSigns) !== undefined ? data._publicPermissions.editSigns : defaultClaim.getPublicPermission(PermissionTypes.EDIT_SIGNS)
         };
-        claim.playerPermissionsList = data.playerPermissionsList ? data.playerPermissionsList.map(PlayerPermissions.fromJSON) : defaultClaim.playerPermissionsList;
+        claim._playerPermissionsList = data._playerPermissionsList
+            ? data._playerPermissionsList
+                .map(PlayerPermissions.fromJSON)
+                .filter(function (permission) { return permission.id !== undefined && permission.name !== undefined; })
+            : defaultClaim.playerPermissionsList;
         return claim;
     };
     /**
@@ -200,26 +336,20 @@ var Claim = /** @class */ (function () {
      * @param player - Optional; The player you would like to check the permission for
     */
     Claim.prototype.hasPermission = function (permission, player) {
-        if (player === void 0) { player = undefined; }
         // check if player is in specific permissions list
-        if (player != undefined) {
+        if (player) {
             var playerPermissions = undefined;
             // find the players permissions
-            for (var _i = 0, _a = this.playerPermissionsList; _i < _a.length; _i++) {
+            for (var _i = 0, _a = this._playerPermissionsList; _i < _a.length; _i++) {
                 var p = _a[_i];
                 if (p.id == player.id) {
                     playerPermissions = p;
                     break;
                 }
             }
-            if ((playerPermissions != undefined) && Object.keys(playerPermissions).includes(permission)) {
-                return playerPermissions[permission];
-            }
         }
-        // if player specific permission is not found, default to claims global permissions list
-        if (Object.keys(this.publicPermissions).includes(permission)) {
-            return (this.publicPermissions[permission]);
-        }
+        // if player is not in the list, use public permissions
+        return playerPermissions ? playerPermissions.getPermission(permission) : this._publicPermissions[permission];
     };
     /**
      * returns if the specified area overlaps with the claim
@@ -230,10 +360,10 @@ var Claim = /** @class */ (function () {
     */
     Claim.prototype.isOverlap = function (start, end) {
         // Get the left, right, bottom, and top coordinates of each rectangle
-        var rect1Left = Math.min(this.start.x, this.end.x);
-        var rect1Right = Math.max(this.start.x, this.end.x);
-        var rect1Top = Math.max(this.start.z, this.end.z);
-        var rect1Bottom = Math.min(this.start.z, this.end.z);
+        var rect1Left = Math.min(this._start.x, this._end.x);
+        var rect1Right = Math.max(this._start.x, this._end.x);
+        var rect1Top = Math.max(this._start.z, this._end.z);
+        var rect1Bottom = Math.min(this._start.z, this._end.z);
         var rect2Left = Math.min(start.x, end.x);
         var rect2Right = Math.max(start.x, end.x);
         var rect2Top = Math.max(start.z, end.z);
@@ -243,67 +373,192 @@ var Claim = /** @class */ (function () {
     };
     return Claim;
 }());
+var PlayerClaimBlocks = /** @class */ (function () {
+    function PlayerClaimBlocks(amount, paymentTimeRemaining) {
+        this._amount = amount;
+        this._paymentTimeRemaining = paymentTimeRemaining;
+    }
+    Object.defineProperty(PlayerClaimBlocks.prototype, "amount", {
+        // Getters
+        get: function () {
+            return this._amount;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(PlayerClaimBlocks.prototype, "paymentTimeRemaining", {
+        get: function () {
+            return this._paymentTimeRemaining;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    // Setters
+    PlayerClaimBlocks.prototype.setAmount = function (newAmount) {
+        this._amount = newAmount;
+        saveDb();
+    };
+    // Utility methods
+    PlayerClaimBlocks.prototype.incrementAmount = function (value) {
+        this._amount += value;
+        saveDb();
+    };
+    PlayerClaimBlocks.prototype.decrementAmount = function (value) {
+        this._amount -= value;
+        saveDb();
+    };
+    PlayerClaimBlocks.prototype.decrementPaymentTime = function () {
+        this._paymentTimeRemaining -= 1;
+        saveDb();
+    };
+    PlayerClaimBlocks.prototype.resetPaymentTime = function () {
+        this._paymentTimeRemaining = settings.claimBlockHourlyPayment;
+        saveDb();
+    };
+    PlayerClaimBlocks.fromJSON = function (data) {
+        return new PlayerClaimBlocks(data._amount || settings.startingClaimBlocks, data._paymentTimeRemaining || settings.claimBlockHourlyPayment);
+    };
+    return PlayerClaimBlocks;
+}());
 var PlayerData = /** @class */ (function () {
-    /**
-     * Creates a new PlayerData object
-     *
-     * @param playerID - The entity id of the player
-     *
-     * @param playerName - The name of the player
-     */
     function PlayerData(playerID, playerName) {
         this.schemaVersion = "1.0.0";
-        this.id = playerID;
-        this.name = playerName;
-        this.inClaim = false;
-        this.viewingClaim = false;
-        this.resizingClaimName = "";
-        this.firstPoint = { "x": 0, "y": 0, "z": 0 };
-        this.oppositeCorner = { "x": 0, "y": 0, "z": 0 };
-        this.entranceVelocity = { "x": 0, "y": 0, "z": 0 };
-        this.claimBlocks = {
-            amount: settings.startingClaimBlocks,
-            paymentTimeRemaining: settings.claimBlockHourlyPayment
-        };
-        this.claims = [];
+        this._id = playerID;
+        this._name = playerName;
+        this._inClaim = false;
+        this._viewingClaim = false;
+        this._resizingClaimName = "";
+        this._firstPoint = { x: 0, y: 0, z: 0 };
+        this._oppositeCorner = { x: 0, y: 0, z: 0 };
+        this._entranceVelocity = { x: 0, y: 0, z: 0 };
+        this._claimBlocks = new PlayerClaimBlocks(settings.startingClaimBlocks, settings.claimBlockHourlyPayment);
+        this._claims = [];
     }
-    /**
-    * Returns a PlayerData object loaded from JSON, if a key is missing it will be replaced with the default value
-    *
-    * @param data - The JSON object to load the PlayerData object from
-    *
-    * @return - The PlayerData object loaded from the JSON object
-    */
-    PlayerData.fromJSON = function (data) {
-        var _a, _b;
-        var defaultPlayerData = new PlayerData(data.id, data.name);
-        var playerData = new PlayerData(data.id, data.name);
-        playerData.schemaVersion = data.schemaVersion || defaultPlayerData.schemaVersion;
-        playerData.inClaim = data.inClaim !== undefined ? data.inClaim : defaultPlayerData.inClaim;
-        playerData.viewingClaim = data.viewingClaim !== undefined ? data.viewingClaim : defaultPlayerData.viewingClaim;
-        playerData.resizingClaimName = data.resizingClaimName || defaultPlayerData.resizingClaimName;
-        playerData.firstPoint = data.firstPoint || defaultPlayerData.firstPoint;
-        playerData.oppositeCorner = data.oppositeCorner || defaultPlayerData.oppositeCorner;
-        playerData.entranceVelocity = data.entranceVelocity || defaultPlayerData.entranceVelocity;
-        playerData.claimBlocks = {
-            amount: ((_a = data.claimBlocks) === null || _a === void 0 ? void 0 : _a.amount) || defaultPlayerData.claimBlocks.amount,
-            paymentTimeRemaining: ((_b = data.claimBlocks) === null || _b === void 0 ? void 0 : _b.paymentTimeRemaining) || defaultPlayerData.claimBlocks.paymentTimeRemaining,
-        };
-        playerData.claims = data.claims ? data.claims.map(Claim.fromJSON) : defaultPlayerData.claims;
-        return playerData;
+    Object.defineProperty(PlayerData.prototype, "id", {
+        // Getters
+        get: function () {
+            return this._id;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(PlayerData.prototype, "name", {
+        get: function () {
+            return this._name;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(PlayerData.prototype, "inClaim", {
+        get: function () {
+            return this._inClaim;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(PlayerData.prototype, "viewingClaim", {
+        get: function () {
+            return this._viewingClaim;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(PlayerData.prototype, "resizingClaimName", {
+        get: function () {
+            return this._resizingClaimName;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(PlayerData.prototype, "firstPoint", {
+        get: function () {
+            return this._firstPoint;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(PlayerData.prototype, "oppositeCorner", {
+        get: function () {
+            return this._oppositeCorner;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(PlayerData.prototype, "entranceVelocity", {
+        get: function () {
+            return this._entranceVelocity;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(PlayerData.prototype, "claimBlocks", {
+        get: function () {
+            return this._claimBlocks;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(PlayerData.prototype, "claims", {
+        get: function () {
+            return this._claims;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    // Setters
+    PlayerData.prototype.setName = function (newName) {
+        this._name = newName;
+        saveDb();
     };
-    /**
-     * Returns the requested claim
-     *
-     * @param claimName - The name of the claim to retrieve
-     */
+    PlayerData.prototype.setInClaim = function (value) {
+        this._inClaim = value;
+        saveDb();
+    };
+    PlayerData.prototype.setViewingClaim = function (value) {
+        this._viewingClaim = value;
+        saveDb();
+    };
+    PlayerData.prototype.setResizingClaimName = function (value) {
+        this._resizingClaimName = value;
+        saveDb();
+    };
+    PlayerData.prototype.setFirstPoint = function (value) {
+        this._firstPoint = value;
+        saveDb();
+    };
+    PlayerData.prototype.setOppositeCorner = function (value) {
+        this._oppositeCorner = value;
+        saveDb();
+    };
+    PlayerData.prototype.setEntranceVelocity = function (value) {
+        this._entranceVelocity = value;
+        saveDb();
+    };
+    PlayerData.prototype.addClaim = function (claim) {
+        this._claims.push(claim);
+        saveDb();
+    };
+    PlayerData.prototype.removeClaim = function (claim) {
+        this._claims = this._claims.filter(function (c) { return c !== claim; });
+        saveDb();
+    };
     PlayerData.prototype.getClaim = function (claimName) {
-        for (var _i = 0, _a = this.claims; _i < _a.length; _i++) {
-            var c = _a[_i];
-            if (c.name == claimName) {
-                return c;
-            }
-        }
+        return this._claims.find(function (c) { return c.name === claimName; });
+    };
+    PlayerData.fromJSON = function (data) {
+        var defaultPlayerData = new PlayerData(data._id, data._name);
+        var playerData = new PlayerData(data._id, data._name);
+        playerData.setInClaim(data._inClaim !== undefined ? data._inClaim : defaultPlayerData.inClaim);
+        playerData.setViewingClaim(data._viewingClaim !== undefined ? data.viewingClaim : defaultPlayerData.viewingClaim);
+        playerData.setResizingClaimName(data._resizingClaimName || defaultPlayerData.resizingClaimName);
+        playerData.setFirstPoint(data._firstPoint || defaultPlayerData.firstPoint);
+        playerData.setOppositeCorner(data._oppositeCorner || defaultPlayerData.oppositeCorner);
+        playerData.setEntranceVelocity(data._entranceVelocity || defaultPlayerData.entranceVelocity);
+        playerData._claimBlocks = PlayerClaimBlocks.fromJSON(data._claimBlocks || {});
+        playerData._claims = data._claims
+            ? data._claims.map(Claim.fromJSON).filter(function (claim) { return claim._name != "Undefined"; })
+            : defaultPlayerData.claims;
+        return playerData;
     };
     return PlayerData;
 }());
@@ -314,8 +569,11 @@ for (var _i = 0, _a = world.getDynamicPropertyIds(); _i < _a.length; _i++) {
     var property = world.getDynamicProperty(id);
     if (id.includes("db.")) {
         var parsedData = JSON.parse(property.toString());
-        var validatedData = PlayerData.fromJSON(parsedData);
-        database.push(validatedData);
+        // player id and name is required make sure it exists
+        if (Object.keys(parsedData).includes("_id") && Object.keys(parsedData).includes("_name")) {
+            var validatedData = PlayerData.fromJSON(parsedData);
+            database.push(validatedData);
+        }
     }
 }
 /**
@@ -462,14 +720,15 @@ var Ui = /** @class */ (function () {
                 // passed all the checks, now make the claim
                 else {
                     // subtract claim blocks
-                    playerData.claimBlocks.amount -= (claimWidth * claimLength);
+                    playerData.claimBlocks.decrementAmount(claimWidth * claimLength);
                     // create a new claim
-                    playerData.claims.push(new Claim(name_1, start, end, iconPath, showBorderParticles));
+                    playerData.addClaim(new Claim(name_1, start, end, iconPath, showBorderParticles));
                     sendNotification(owner, "chat.claim:created");
                     owner.playSound("random.levelup");
+                    // Reset resizingClaimName to avoid incorrect resizing behavior
+                    playerData.setResizingClaimName("");
                 }
             }
-            saveDb();
         });
     };
     Ui.resizeClaim = function (owner, claim, start, end) {
@@ -493,13 +752,12 @@ var Ui = /** @class */ (function () {
         form.show(owner).then(function (response) {
             // if claim resized
             if (response.selection == 1) {
-                claim.start = start;
-                claim.end = end;
+                claim.setStart(start);
+                claim.setEnd(end);
                 sendNotification(owner, "chat.claim:resized");
                 owner.playSound("random.levelup");
                 //add/subtract the blocks from players balance
-                playerData.claimBlocks.amount += blockDifference;
-                saveDb();
+                playerData.claimBlocks.incrementAmount(blockDifference);
             }
         });
     };
@@ -607,7 +865,7 @@ var Ui = /** @class */ (function () {
             }
             else {
                 // open player permissions menu
-                _this.managePermissions(owner, claim, claim.playerPermissionsList[response.selection].name);
+                _this.managePermissions(owner, claim, claim.playerPermissionsList[response.selection].id);
             }
         });
     };
@@ -622,33 +880,36 @@ var Ui = /** @class */ (function () {
      */
     Ui.playerPermissionsListModify = function (owner, claim, add) {
         var _this = this;
-        var players = [];
-        // if adding player, only show players not in list
-        if (add) {
-            // get the entire list of players that have ever joined the world
-            for (var _i = 0, database_4 = database; _i < database_4.length; _i++) {
-                var playerData = database_4[_i];
-                players.push(playerData.name);
-            }
-            // filter players from the list, we don't want to add people who are already in it
-            for (var _a = 0, _b = claim.playerPermissionsList; _a < _b.length; _a++) {
-                var playerPermissions = _b[_a];
-                var index = players.indexOf(playerPermissions.name);
-                players.splice(index, 1);
+        // player permissions not found in the claims list
+        var unsavedPlayers = [];
+        // get the entire list of players that have ever joined the world
+        for (var _i = 0, database_4 = database; _i < database_4.length; _i++) {
+            var playerData = database_4[_i];
+            unsavedPlayers.push(playerData.id);
+        }
+        // filter players from the list, we don't want to add people who are already in it
+        unsavedPlayers = unsavedPlayers.filter(function (p) {
+            for (var _i = 0, _a = claim.playerPermissionsList; _i < _a.length; _i++) {
+                var playerPermissions = _a[_i];
+                if (p == playerPermissions.id) {
+                    return false;
+                }
             }
             // make sure to remove owner from list as well
-            players.splice(players.indexOf(owner.name), 1);
-        }
-        // if removing player, only show players in list
-        else {
-            for (var _c = 0, _d = claim.playerPermissionsList; _c < _d.length; _c++) {
-                var playerPermissions = _d[_c];
-                players.push(playerPermissions.name);
+            if (p == owner.id) {
+                return false;
             }
+            return true;
+        });
+        // if no players are available to add notify the owner
+        if ((unsavedPlayers.length == 0) && add) {
+            sendNotification(owner, "chat.claim:no_players_to_add");
+            owner.playSound("note.didgeridoo");
+            return;
         }
-        // if no players are available to add or remove, notify the owner
-        if (players.length == 0) {
-            sendNotification(owner, "chat.claim:no_players");
+        // if no players are available to remove notify the owner
+        else if ((claim.playerPermissionsList.length == 0) && !add) {
+            sendNotification(owner, "chat.claim:no_players_to_remove");
             owner.playSound("note.didgeridoo");
             return;
         }
@@ -663,29 +924,33 @@ var Ui = /** @class */ (function () {
                     { "translate": "ui.manage.permissions.player.selection.modify.remove:title" }
                 ]
             })
-            .dropdown("ui.manage.permissions.player.selection.modify:player_dropdown", players);
+            .dropdown("ui.manage.permissions.player.selection.modify:player_dropdown", add ? unsavedPlayers.map(function (id) { return database.filter(function (p) { return p.id == id; })[0].name; }) : claim.playerPermissionsList.map(function (p) { return p.name; }));
         form.show(owner).then(function (response) {
-            var playerName = players[Number(response.formValues[0])];
-            if (add) {
-                // set up default permissions for specified player
-                var newPlayerPermissions = new PlayerPermissions(owner.id, owner.name);
-                claim.playerPermissionsList.push(newPlayerPermissions);
-            }
-            else {
-                // remove player from list
-                var index = claim.playerPermissionsList.indexOf(playerName);
-                claim.playerPermissionsList.splice(index, 1);
-                // if a players permissions have been removed notify them
-                for (var _i = 0, _a = world.getAllPlayers(); _i < _a.length; _i++) {
-                    var p = _a[_i];
-                    if (p.name == playerName) {
-                        p.runCommandAsync("tellraw @s {\"rawtext\":[{\"translate\":\"chat.prefix\"}, {\"text\":\" ".concat(owner.name, " \"}, {\"translate\":\"chat.claim:player_permissions_reset_notif\"}, {\"translate\":\"claim:name_color\"}, {\"text\":\" ").concat(claim.name, "\"}]}"));
-                        p.playSound("random.levelup");
-                        break;
+            if (!response.canceled) {
+                if (add) {
+                    var newPlayerPermissions = new PlayerPermissions(unsavedPlayers[response.formValues[0]], database.filter(function (p) { return p.id == unsavedPlayers[response.formValues[0]]; })[0].name);
+                    // copy public permissions to new player permissions
+                    for (var _i = 0, _a = Object.values(PermissionTypes); _i < _a.length; _i++) {
+                        var perm = _a[_i];
+                        newPlayerPermissions.setPermission(perm, claim.getPublicPermission(perm));
                     }
+                    // save new player permission to list
+                    claim.addPlayerPermissions(newPlayerPermissions);
+                }
+                else {
+                    // if a players permissions have been removed notify them
+                    for (var _b = 0, _c = world.getAllPlayers(); _b < _c.length; _b++) {
+                        var p = _c[_b];
+                        if (p.id == claim.playerPermissionsList[response.formValues[0]].id) {
+                            p.runCommandAsync("tellraw @s {\"rawtext\":[{\"translate\":\"chat.prefix\"}, {\"text\":\" ".concat(owner.name, " \"}, {\"translate\":\"chat.claim:player_permissions_reset_notif\"}, {\"translate\":\"claim:name_color\"}, {\"text\":\" ").concat(claim.name, "\"}]}"));
+                            p.playSound("random.levelup");
+                            break;
+                        }
+                    }
+                    // remove player from list
+                    claim.removePlayerPermissions(response.formValues[0]);
                 }
             }
-            saveDb();
             // return to previous menu
             _this.playerPermissionsList(owner, claim);
         });
@@ -724,43 +989,46 @@ var Ui = /** @class */ (function () {
                     { "text": ": ".concat(claim.name) }
                 ]
             })
-            .toggle("ui.manage.permissions:enter_claim", playerID ? playerPermissions.permissions.enterClaim : claim.publicPermissions.enterClaim)
-            .toggle("ui.manage.permissions:break_blocks", playerID ? playerPermissions.permissions.breakBlocks : claim.publicPermissions.breakBlocks)
-            .toggle("ui.manage.permissions:use_items_on_blocks", playerID ? playerPermissions.permissions.useItemsOnBlocks : claim.publicPermissions.useItemsOnBlocks)
-            .toggle("ui.manage.permissions:hurt_entities", playerID ? playerPermissions.permissions.hurtEntities : claim.publicPermissions.hurtEntities)
-            .toggle("ui.manage.permissions:interact_with_entities", playerID ? playerPermissions.permissions.interactWithEntities : claim.publicPermissions.interactWithEntities)
-            .toggle("ui.manage.permissions:use_doors", playerID ? playerPermissions.permissions.useDoors : claim.publicPermissions.useDoors)
-            .toggle("ui.manage.permissions:use_switches", playerID ? playerPermissions.permissions.useSwitches : claim.publicPermissions.useSwitches)
-            .toggle("ui.manage.permissions:open_containers", playerID ? playerPermissions.permissions.openContainers : claim.publicPermissions.openContainers)
-            .toggle("ui.manage.permissions:edit_signs", playerID ? playerPermissions.permissions.editSigns : claim.publicPermissions.editSigns);
+            .toggle("ui.manage.permissions:enter_claim", playerID ? playerPermissions.getPermission(PermissionTypes.ENTER_CLAIM) : claim.getPublicPermission(PermissionTypes.ENTER_CLAIM))
+            .toggle("ui.manage.permissions:break_blocks", playerID ? playerPermissions.getPermission(PermissionTypes.BREAK_BLOCKS) : claim.getPublicPermission(PermissionTypes.BREAK_BLOCKS))
+            .toggle("ui.manage.permissions:use_items_on_blocks", playerID ? playerPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS) : claim.getPublicPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS))
+            .toggle("ui.manage.permissions:hurt_entities", playerID ? playerPermissions.getPermission(PermissionTypes.HURT_ENTITIES) : claim.getPublicPermission(PermissionTypes.HURT_ENTITIES))
+            .toggle("ui.manage.permissions:interact_with_entities", playerID ? playerPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES) : claim.getPublicPermission(PermissionTypes.INTERACT_WITH_ENTITIES))
+            .toggle("ui.manage.permissions:use_doors", playerID ? playerPermissions.getPermission(PermissionTypes.USE_DOORS) : claim.getPublicPermission(PermissionTypes.USE_DOORS))
+            .toggle("ui.manage.permissions:use_switches", playerID ? playerPermissions.getPermission(PermissionTypes.USE_SWITCHES) : claim.getPublicPermission(PermissionTypes.USE_SWITCHES))
+            .toggle("ui.manage.permissions:use_beds", playerID ? playerPermissions.getPermission(PermissionTypes.USE_BEDS) : claim.getPublicPermission(PermissionTypes.USE_BEDS))
+            .toggle("ui.manage.permissions:open_containers", playerID ? playerPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS) : claim.getPublicPermission(PermissionTypes.OPEN_CONTAINERS))
+            .toggle("ui.manage.permissions:edit_signs", playerID ? playerPermissions.getPermission(PermissionTypes.EDIT_SIGNS) : claim.getPublicPermission(PermissionTypes.EDIT_SIGNS));
         if (!playerID) {
-            form.toggle("ui.manage.permissions:use_tnt", claim.publicPermissions.useTNT);
+            form.toggle("ui.manage.permissions:use_tnt", claim.getPublicPermission(PermissionTypes.USE_TNT));
         }
         form.show(owner).then(function (response) {
             if (!response.canceled) {
                 // save data
                 if (playerID) {
-                    playerPermissions.permissions.enterClaim = response.formValues[0];
-                    playerPermissions.permissions.breakBlocks = response.formValues[1];
-                    playerPermissions.permissions.useItemsOnBlocks = response.formValues[2];
-                    playerPermissions.permissions.hurtEntities = response.formValues[3];
-                    playerPermissions.permissions.interactWithEntities = response.formValues[4];
-                    playerPermissions.permissions.useDoors = response.formValues[5];
-                    playerPermissions.permissions.useSwitches = response.formValues[6];
-                    playerPermissions.permissions.editSigns = response.formValues[7];
-                    playerPermissions.permissions.openContainers = response.formValues[8];
+                    playerPermissions.setPermission(PermissionTypes.ENTER_CLAIM, response.formValues[0]);
+                    playerPermissions.setPermission(PermissionTypes.BREAK_BLOCKS, response.formValues[1]);
+                    playerPermissions.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, response.formValues[2]);
+                    playerPermissions.setPermission(PermissionTypes.HURT_ENTITIES, response.formValues[3]);
+                    playerPermissions.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, response.formValues[4]);
+                    playerPermissions.setPermission(PermissionTypes.USE_DOORS, response.formValues[5]);
+                    playerPermissions.setPermission(PermissionTypes.USE_SWITCHES, response.formValues[6]);
+                    playerPermissions.setPermission(PermissionTypes.USE_BEDS, response.formValues[7]);
+                    playerPermissions.setPermission(PermissionTypes.OPEN_CONTAINERS, response.formValues[8]);
+                    playerPermissions.setPermission(PermissionTypes.EDIT_SIGNS, response.formValues[9]);
                 }
                 else {
-                    claim.publicPermissions.enterClaim = response.formValues[0];
-                    claim.publicPermissions.breakBlocks = response.formValues[1];
-                    claim.publicPermissions.useItemsOnBlocks = response.formValues[2];
-                    claim.publicPermissions.hurtEntities = response.formValues[3];
-                    claim.publicPermissions.interactWithEntities = response.formValues[4];
-                    claim.publicPermissions.useDoors = response.formValues[5];
-                    claim.publicPermissions.useSwitches = response.formValues[6];
-                    claim.publicPermissions.openContainers = response.formValues[7];
-                    claim.publicPermissions.editSigns = response.formValues[8];
-                    claim.publicPermissions.useTNT = response.formValues[9];
+                    claim.setPublicPermission(PermissionTypes.ENTER_CLAIM, response.formValues[0]);
+                    claim.setPublicPermission(PermissionTypes.BREAK_BLOCKS, response.formValues[1]);
+                    claim.setPublicPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, response.formValues[2]);
+                    claim.setPublicPermission(PermissionTypes.HURT_ENTITIES, response.formValues[3]);
+                    claim.setPublicPermission(PermissionTypes.INTERACT_WITH_ENTITIES, response.formValues[4]);
+                    claim.setPublicPermission(PermissionTypes.USE_DOORS, response.formValues[5]);
+                    claim.setPublicPermission(PermissionTypes.USE_SWITCHES, response.formValues[6]);
+                    claim.setPublicPermission(PermissionTypes.USE_BEDS, response.formValues[7]);
+                    claim.setPublicPermission(PermissionTypes.OPEN_CONTAINERS, response.formValues[8]);
+                    claim.setPublicPermission(PermissionTypes.EDIT_SIGNS, response.formValues[9]);
+                    claim.setPublicPermission(PermissionTypes.USE_TNT, response.formValues[10]);
                 }
                 sendNotification(owner, "chat.claim:permissions_updated");
                 owner.playSound("random.levelup");
@@ -774,7 +1042,6 @@ var Ui = /** @class */ (function () {
                     }
                 }
             }
-            saveDb();
         });
     };
     /*
@@ -785,12 +1052,12 @@ var Ui = /** @class */ (function () {
         if (owner.dimension == world.getDimension("overworld")) {
             var playerData = getPlayerData(owner.id);
             // set flag
-            playerData.viewingClaim = true;
-            // disable player movement
-            owner.runCommandAsync("inputpermission set @s camera disabled");
-            owner.runCommandAsync("inputpermission set @s movement disabled");
+            playerData.setViewingClaim(true);
+            // disable player movement, besides sneaking which is used to cancel the view
+            owner.inputPermissions.cameraEnabled = false;
+            owner.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement, false);
             // hide hud
-            owner.runCommandAsync("hud @s hide");
+            owner.onScreenDisplay.setHudVisibility(HudVisibility.Hide);
             // fade parameters
             var transition = {
                 "fadeColor": {
@@ -804,7 +1071,8 @@ var Ui = /** @class */ (function () {
                     "holdTime": 5
                 }
             };
-            // load the claim
+            // load the claim, make sure to remove old ticking area if it exsists
+            owner.runCommandAsync("tickingarea remove claimView"); // this will not break other players viewing session, their chunnk will still be rendered until the camera is gone
             owner.runCommandAsync("tickingarea add ".concat(claim.start.x, " ").concat(claim.start.y, " ").concat(claim.start.z, " ").concat(claim.end.x, " ").concat(claim.end.y, " ").concat(claim.end.z, " claimView"));
             // all 4 points of the claim
             var points = [
@@ -842,35 +1110,27 @@ var Ui = /** @class */ (function () {
                     var delay = 60;
                 }
                 system.runTimeout(function () {
-                    cornerView.easeOptions = {
-                        "easeTime": 3,
-                        "easeType": EasingType.InOutSine
-                    };
-                    cornerView.location.x = points[index][0];
-                    cornerView.location.z = points[index][1];
-                    owner.camera.setCamera("minecraft:free", cornerView);
-                    // next corner
-                    if (index < 3) {
-                        nextCorner_1(index + 1);
-                    }
-                    // animation is over, return to first person
-                    else {
-                        system.runTimeout(function () {
-                            transition.fadeTime.holdTime = 1;
-                            owner.camera.fade(transition);
+                    // check if player has canceled the viewing session
+                    if (playerData.viewingClaim) {
+                        cornerView.easeOptions = {
+                            "easeTime": 3,
+                            "easeType": EasingType.InOutSine
+                        };
+                        cornerView.location.x = points[index][0];
+                        cornerView.location.z = points[index][1];
+                        owner.camera.setCamera("minecraft:free", cornerView);
+                        // next corner
+                        if (index < 3) {
+                            nextCorner_1(index + 1);
+                        }
+                        // animation is over, return to first person
+                        else {
                             system.runTimeout(function () {
-                                owner.camera.clear();
-                                // unload the claim
-                                owner.runCommandAsync("tickingarea remove claimView");
-                                // set flag back to false
-                                playerData.viewingClaim = false;
-                                // enable player movement again
-                                owner.runCommandAsync("inputpermission set @s camera enabled");
-                                owner.runCommandAsync("inputpermission set @s movement enabled");
-                                // show hud
-                                owner.runCommandAsync("hud @s reset");
-                            }, 30);
-                        }, 60);
+                                if (playerData.viewingClaim) {
+                                    Ui.exitClaimView(owner);
+                                }
+                            }, 60);
+                        }
                     }
                 }, delay);
             };
@@ -881,6 +1141,7 @@ var Ui = /** @class */ (function () {
             system.runTimeout(function () {
                 // show title to player
                 owner.onScreenDisplay.setTitle({ "translate": "ui.manage.view:loading" });
+                owner.onScreenDisplay.updateSubtitle({ "translate": "ui.manage.view:loading_subtitle" });
                 owner.camera.setCamera("minecraft:free", cornerView);
                 system.runTimeout(function () {
                     nextCorner_1(0);
@@ -893,6 +1154,37 @@ var Ui = /** @class */ (function () {
             sendNotification(owner, "chat.claim:view");
         }
     };
+    Ui.exitClaimView = function (owner) {
+        var playerData = getPlayerData(owner.id);
+        // fade parameters
+        var transition = {
+            "fadeColor": {
+                "red": 0,
+                "green": 0,
+                "blue": 0
+            },
+            "fadeTime": {
+                "fadeInTime": 0.5,
+                "fadeOutTime": 1,
+                "holdTime": 5
+            }
+        };
+        // unload the claim
+        owner.runCommandAsync("tickingarea remove claimView");
+        transition.fadeTime.holdTime = 1;
+        owner.camera.fade(transition);
+        system.runTimeout(function () {
+            owner.camera.clear();
+            // set flag back to false
+            playerData.setViewingClaim(false);
+            // enable player movement again
+            owner.inputPermissions.cameraEnabled = true;
+            owner.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement, true);
+            // show hud
+            owner.onScreenDisplay.setHudVisibility(HudVisibility.Reset);
+        }, 30);
+    };
+    ;
     Ui.removeClaim = function (owner, claim) {
         var _this = this;
         var playerData = getPlayerData(owner.id);
@@ -918,12 +1210,11 @@ var Ui = /** @class */ (function () {
             }
             else if (response.selection == 1) {
                 // delete claim
-                playerData.claims = playerData.claims.filter(function (c) { return c !== claim; });
+                playerData.removeClaim(claim);
                 sendNotification(owner, "chat.claim:removed");
                 owner.playSound("mob.creeper.say");
                 // add the claim blocks to the players balance
-                playerData.claimBlocks.amount += claimWidth * claimLength;
-                saveDb();
+                playerData.claimBlocks.incrementAmount(claimWidth * claimLength);
             }
         });
     };
@@ -949,14 +1240,13 @@ var Ui = /** @class */ (function () {
                 }
                 else {
                     // update data
-                    claim.name = name;
-                    claim.icon = iconPath;
-                    claim.particlesEnabled = showBorderParticles;
+                    claim.setName(name);
+                    claim.setIcon(iconPath);
+                    claim.setParticlesEnabled(showBorderParticles);
                     sendNotification(owner, "chat.claim:updated");
                     owner.playSound("note.cow_bell");
                 }
             }
-            saveDb();
         });
     };
     // player selected icons for their claims
@@ -971,13 +1261,19 @@ var Ui = /** @class */ (function () {
     return Ui;
 }());
 world.afterEvents.playerJoin.subscribe(function (data) {
+    system.runTimeout(function () {
+        world.sendMessage("§cWarning: your playing a development build of Shovel Land Claim, bugs and data loss may occur.");
+    }, 200);
     // verify player data is on file
     var playerFound = false;
     for (var _i = 0, database_5 = database; _i < database_5.length; _i++) {
         var p = database_5[_i];
         if (p.id == data.playerId) {
             // update player name in db to current; in case they changed it
-            p.name = data.playerName;
+            p.setName(data.playerName);
+            // set other values to default
+            p.setViewingClaim(false);
+            p.setResizingClaimName("");
             playerFound = true;
             break;
         }
@@ -987,14 +1283,20 @@ world.afterEvents.playerJoin.subscribe(function (data) {
         // create new player in db
         database.push(new PlayerData(data.playerId, data.playerName));
     }
-    // save changes to the database
-    saveDb();
+});
+world.afterEvents.playerLeave.subscribe(function (data) {
+    var playerData = getPlayerData(data.playerId);
+    // remove claim view ticking area if player left while viewing a claim
+    if (playerData.viewingClaim) {
+        world.getDimension("overworld").runCommandAsync("tickingarea remove claimView");
+    }
 });
 world.afterEvents.playerSpawn.subscribe(function (data) {
-    // make sure player has a claim shovel
+    // make sure player has only 1 claim shovel
+    data.player.runCommandAsync("execute if entity @s[hasitem = { item=".concat(shovelID, ", quantity =! 1}] run clear @s ").concat(shovelID, " 0"));
     data.player.runCommandAsync("execute if entity @s[hasitem = { item=".concat(shovelID, ", quantity = 0}] run give @s ").concat(shovelID, " 1 0 { \"keep_on_death\": { }, \"item_lock\": { \"mode\": \"lock_in_inventory\" } } "));
     // set flag to false since all camera positions will be reset upon rejoining
-    getPlayerData(data.player.id).viewingClaim = false;
+    getPlayerData(data.player.id).setViewingClaim(false);
 });
 // open menu when claim shovel is used
 world.afterEvents.itemUse.subscribe(function (data) {
@@ -1025,10 +1327,8 @@ world.beforeEvents.playerBreakBlock.subscribe(function (data) {
                 });
                 var isResize = false;
                 if (!data.player.isSneaking) {
-                    playerData.resizingClaimName = "";
-                    playerData.firstPoint.x = data.block.x;
-                    playerData.firstPoint.y = data.block.y;
-                    playerData.firstPoint.z = data.block.z;
+                    playerData.setResizingClaimName("");
+                    playerData.setFirstPoint(data.block.location);
                     runInAllClaims(function (playerID, playerName, claim) {
                         // user defined start and end points of the claim
                         var s = claim.start;
@@ -1053,8 +1353,8 @@ world.beforeEvents.playerBreakBlock.subscribe(function (data) {
                         if (aIndex != null) {
                             isResize = true;
                             if (playerID == data.player.id) {
-                                playerData.oppositeCorner = { "x": points[aIndex ^ 1][bIndex ^ 1][0], "y": data.block.y, "z": points[aIndex ^ 1][bIndex ^ 1][1] };
-                                playerData.resizingClaimName = claim.name;
+                                playerData.setOppositeCorner({ "x": points[aIndex ^ 1][bIndex ^ 1][0], "y": data.block.y, "z": points[aIndex ^ 1][bIndex ^ 1][1] });
+                                playerData.setResizingClaimName(claim.name);
                                 data.player.sendMessage({
                                     "rawtext": [
                                         { "translate": "chat.prefix" },
@@ -1093,32 +1393,42 @@ world.beforeEvents.playerBreakBlock.subscribe(function (data) {
                 }
                 // if player is crouching
                 else {
-                    var secondPoint = { "x": data.block.x, "y": data.block.y, "z": data.block.z };
-                    var intersectingClaim = false;
+                    var secondPoint = __assign({}, data.block.location); // Ensure a new object is created
+                    var claimIntersectingClaim = false;
+                    var playerIntersectingClaim = false;
                     // if claim is resized
                     if (playerData.resizingClaimName.length > 0) {
                         // get the claim object that is being resized
-                        for (var _i = 0, _a = playerData.claims; _i < _a.length; _i++) {
-                            var c = _a[_i];
-                            if (c.name == playerData.resizingClaimName) {
-                                var claim = c;
-                                break;
-                            }
-                        }
-                        var oldClaimWidth = Math.abs(claim.start.x - claim.end.x) + 1;
-                        var oldClaimLength = Math.abs(claim.start.z - claim.end.z) + 1;
+                        var resizingClaim = playerData.getClaim(playerData.resizingClaimName);
+                        var oldClaimWidth = Math.abs(resizingClaim.start.x - resizingClaim.end.x) + 1;
+                        var oldClaimLength = Math.abs(resizingClaim.start.z - resizingClaim.end.z) + 1;
                         var newClaimWidth = Math.abs(playerData.oppositeCorner.x - secondPoint.x) + 1;
                         var newClaimLength = Math.abs(playerData.oppositeCorner.z - secondPoint.z) + 1;
                         var blockDifference = (newClaimLength * newClaimWidth) - (oldClaimLength * oldClaimWidth);
                         // make sure new claim isn't intersecting others not counting itself
                         runInAllClaims(function (playerID, playerName, claim) {
-                            if (claim.isOverlap(playerData.firstPoint, secondPoint) && ((playerID != data.player.id) || (claim.name != playerData.resizingClaimName))) {
-                                intersectingClaim = true;
+                            if (claim.isOverlap(playerData.oppositeCorner, secondPoint) && ((playerID != data.player.id) || (claim.name != playerData.resizingClaimName))) {
+                                claimIntersectingClaim = true;
                             }
                         });
+                        // make sure another player isn't in the area
+                        for (var _i = 0, _a = world.getAllPlayers(); _i < _a.length; _i++) {
+                            var p = _a[_i];
+                            // we are creating a claim object just to use the isOverlap utility, this is not saved to the database
+                            if (new Claim("", playerData.oppositeCorner, secondPoint, "").isOverlap(p.location, p.location) && (p.id != data.player.id)) {
+                                playerIntersectingClaim = true;
+                            }
+                        }
                         // intersecting claim warning message, cancel resize
-                        if (intersectingClaim) {
-                            sendNotification(data.player, "chat.claim:intersecting");
+                        if (claimIntersectingClaim) {
+                            sendNotification(data.player, "chat.claim:claim_intersecting");
+                            system.run(function () {
+                                data.player.playSound("note.didgeridoo");
+                            });
+                        }
+                        // player is in the way warning message, cancel resize
+                        else if (playerIntersectingClaim) {
+                            sendNotification(data.player, "chat.claim:player_intersecting");
                             system.run(function () {
                                 data.player.playSound("note.didgeridoo");
                             });
@@ -1141,7 +1451,7 @@ world.beforeEvents.playerBreakBlock.subscribe(function (data) {
                         else {
                             system.run(function () {
                                 data.player.playSound("note.cow_bell");
-                                Ui.resizeClaim(data.player, claim, playerData.oppositeCorner, secondPoint);
+                                Ui.resizeClaim(data.player, resizingClaim, playerData.oppositeCorner, secondPoint);
                             });
                         }
                     }
@@ -1149,15 +1459,30 @@ world.beforeEvents.playerBreakBlock.subscribe(function (data) {
                     else {
                         var claimWidth = Math.abs(playerData.firstPoint.x - secondPoint.x) + 1;
                         var claimLength = Math.abs(playerData.firstPoint.z - secondPoint.z) + 1;
-                        // make sure new claim isn't intersecting others
                         runInAllClaims(function (playerID, playerName, claim) {
+                            // make sure new claim isn't intersecting others
                             if (claim.isOverlap(playerData.firstPoint, secondPoint)) {
-                                intersectingClaim = true;
+                                claimIntersectingClaim = true;
                             }
                         });
+                        // make sure another player isn't in the area
+                        for (var _b = 0, _c = world.getAllPlayers(); _b < _c.length; _b++) {
+                            var p = _c[_b];
+                            // we are creating a claim object just to use the isOverlap utility, this is not saved to the database
+                            if (new Claim("", playerData.firstPoint, secondPoint, "").isOverlap(p.location, p.location) && (p.id != data.player.id)) {
+                                playerIntersectingClaim = true;
+                            }
+                        }
                         // intersecting claim warning message, cancel creation
-                        if (intersectingClaim) {
-                            sendNotification(data.player, "chat.claim:intersecting");
+                        if (claimIntersectingClaim) {
+                            sendNotification(data.player, "chat.claim:claim_intersecting");
+                            system.run(function () {
+                                data.player.playSound("note.didgeridoo");
+                            });
+                        }
+                        // player is in the way warning message, cancel creation
+                        else if (playerIntersectingClaim) {
+                            sendNotification(data.player, "chat.claim:player_intersecting");
                             system.run(function () {
                                 data.player.playSound("note.didgeridoo");
                             });
@@ -1186,8 +1511,6 @@ world.beforeEvents.playerBreakBlock.subscribe(function (data) {
                     }
                 }
             }
-            // save changes to the database
-            saveDb();
         }
         // player is not in the overworld, warn them that they are not allowed to create a claim here
         else {
@@ -1327,15 +1650,31 @@ world.beforeEvents.itemUse.subscribe(function (data) {
 world.beforeEvents.playerInteractWithEntity.subscribe(function (data) {
     if (data.target.dimension == world.getDimension("overworld")) {
         runInAllClaims(function (playerID, playerName, claim) {
+            var margin = 0.5;
+            var start = { x: data.target.location.x - margin, y: data.target.location.y - margin, z: data.target.location.z - margin };
+            var end = { x: data.target.location.x + margin, y: data.target.location.y + margin, z: data.target.location.z + margin };
             // if player has interacted with an entity in a claim
-            if (claim.isOverlap(data.target.location, data.target.location) && (playerID != data.player.id) && !claim.hasPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data.player)) {
-                // cancel the action
-                data.cancel = true;
-                // notify player they don't have permissions
-                system.run(function () {
-                    sendNotification(data.player, "chat.claim.permission:interact_with_entities");
-                    data.player.playSound("note.didgeridoo");
-                });
+            if (claim.isOverlap(start, end) && (playerID != data.player.id)) {
+                // disallow player from interacting with rideable entities if they are not allowed to enter the claim
+                if (!claim.hasPermission(PermissionTypes.ENTER_CLAIM, data.player) && data.target.getComponent(EntityComponentTypes.Rideable)) {
+                    // cancel the action
+                    data.cancel = true;
+                    // notify player they don't have permissions
+                    system.run(function () {
+                        sendNotification(data.player, "chat.claim.permission:enter_claim");
+                        data.player.playSound("note.didgeridoo");
+                    });
+                }
+                // disallow player from interacting with entities based on permissions
+                if (!claim.hasPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data.player)) {
+                    // cancel the action
+                    data.cancel = true;
+                    // notify player they don't have permissions
+                    system.run(function () {
+                        sendNotification(data.player, "chat.claim.permission:interact_with_entities");
+                        data.player.playSound("note.didgeridoo");
+                    });
+                }
             }
         });
     }
@@ -1393,6 +1732,18 @@ world.beforeEvents.playerInteractWithBlock.subscribe(function (data) {
                         });
                     }
                 }
+                // bed interaction permissions
+                else if (claim.isOverlap(data.block.location, data.block.location) && data.block.matches("minecraft:bed") && !data.player.isSneaking) {
+                    if (!claim.hasPermission(PermissionTypes.USE_BEDS, data.player)) {
+                        // cancel the action
+                        data.cancel = true;
+                        // notify player they don't have permissions
+                        system.run(function () {
+                            sendNotification(data.player, "chat.claim.permission:use_beds");
+                            data.player.playSound("note.didgeridoo");
+                        });
+                    }
+                }
                 // opening chests/container permissions
                 else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Inventory) && !data.player.isSneaking) {
                     if (!claim.hasPermission(PermissionTypes.OPEN_CONTAINERS, data.player)) {
@@ -1433,6 +1784,14 @@ world.beforeEvents.playerInteractWithBlock.subscribe(function (data) {
         });
     }
 });
+world.afterEvents.worldInitialize.subscribe(function () {
+    // disable showing locked item text; the claim shovel is locked in the inventory
+    world.gameRules.showTags = false;
+    // disable fire spreads
+    world.gameRules.doFireTick = false;
+    // remove claim view ticking area if it exists
+    world.getDimension("overworld").runCommandAsync("tickingarea remove claimView");
+});
 // player management in claims, runs every 1/20th of a second
 system.runInterval(function () {
     // make sure fire charges can't fly into claims
@@ -1455,13 +1814,17 @@ system.runInterval(function () {
             // capture the state of player attribute "in-claim" before it is updated
             var inClaimOld = playerData.inClaim;
             // set flag to false before for loop updates it
-            playerData.inClaim = false;
+            playerData.setInClaim(false);
+            // if player is crouching set viewing claim flag to false to cancel it and return to first person
+            if (p.isSneaking && playerData.viewingClaim) {
+                Ui.exitClaimView(p);
+            }
             runInAllClaims(function (playerID, playerName, claim) {
                 // apply an offset to the player location to be more accurate with claim bounds
                 var location = { "x": p.location.x - 0.5, "y": p.location.y - 0.5, "z": p.location.z - 0.5 };
                 // if player is in the claim
                 if (claim.isOverlap(location, location)) {
-                    playerData.inClaim = true;
+                    playerData.setInClaim(true);
                     // make sure player can't hurt entities if they don't have permission
                     if ((playerID != p.id) && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, p)) {
                         p.addEffect("weakness", 40, { "amplifier": 255, "showParticles": false });
@@ -1483,14 +1846,23 @@ system.runInterval(function () {
                             sendNotification(p, "chat.claim.permission:enter_claim");
                             p.playSound("note.didgeridoo");
                             // save entrance velocity
-                            playerData.entranceVelocity = p.getVelocity();
+                            playerData.setEntranceVelocity(p.getVelocity());
                         }
                         var velocity = playerData.entranceVelocity;
                         // if player is riding an entity eject them
                         if (p.hasComponent(EntityRidingComponent.componentId)) {
-                            var ridingComponent = p.getComponent(EntityRidingComponent.componentId);
-                            var riddenComponent = ridingComponent.entityRidingOn.getComponent(EntityRideableComponent.componentId);
-                            riddenComponent.ejectRider(p);
+                            var entity_1 = p.getComponent(EntityRidingComponent.componentId).entityRidingOn;
+                            var riddenComponent_1 = entity_1.getComponent(EntityRideableComponent.componentId);
+                            riddenComponent_1.ejectRider(p);
+                            // teleport the ridden entity to the player 1 second after they are ejected
+                            system.runTimeout(function () {
+                                entity_1.teleport(p.location);
+                                // remount the player after a 0.5 second delay
+                                system.runTimeout(function () {
+                                    // const riddenComponent = entity.getComponent(EntityRideableComponent.componentId) as EntityRideableComponent;
+                                    riddenComponent_1.addRider(p);
+                                }, 10);
+                            }, 20);
                         }
                         p.applyKnockback(-velocity.x, -velocity.z, 3, 0.5);
                         p.addEffect("wither", 40);
@@ -1510,7 +1882,7 @@ system.runInterval(function () {
         }
         // player is not in overworld
         else {
-            playerData.inClaim = false;
+            playerData.setInClaim(false);
         }
     }
 }, 1);
@@ -1574,10 +1946,10 @@ system.runInterval(function () {
         var p = _a[_i];
         var playerData = getPlayerData(p.id);
         // decrement timer by 1
-        playerData.claimBlocks.paymentTimeRemaining -= 1;
+        playerData.claimBlocks.decrementPaymentTime();
         // if time is up reward blocks and reset timer
         if (playerData.claimBlocks.paymentTimeRemaining <= 0) {
-            playerData.claimBlocks.amount += settings.claimBlockHourlyPayment;
+            playerData.claimBlocks.incrementAmount(settings.claimBlockHourlyPayment);
             sendNotification(p, {
                 "rawtext": [
                     { "translate": "chat.blocks:payment1" },
@@ -1586,9 +1958,8 @@ system.runInterval(function () {
                 ]
             });
             p.playSound("random.levelup");
-            playerData.claimBlocks.paymentTimeRemaining = 60;
+            playerData.claimBlocks.resetPaymentTime();
         }
     }
-    saveDb();
 }, 1200);
 //# sourceMappingURL=main.js.map
