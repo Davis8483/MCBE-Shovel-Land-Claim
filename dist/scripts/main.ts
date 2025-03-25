@@ -86,6 +86,7 @@ enum PermissionTypes {
     INTERACT_WITH_ENTITIES = "interactWithEntities",
     USE_DOORS = "useDoors",
     USE_SWITCHES = "useSwitches",
+    USE_BEDS = "useBeds",
     OPEN_CONTAINERS = "openContainers",
     EDIT_SIGNS = "editSigns"
 }
@@ -115,6 +116,7 @@ class PlayerPermissions {
         interactWithEntities: boolean;
         useDoors: boolean;
         useSwitches: boolean;
+        useBeds: boolean;
         openContainers: boolean;
         editSigns: boolean;
     }
@@ -137,6 +139,7 @@ class PlayerPermissions {
             [PermissionTypes.INTERACT_WITH_ENTITIES]: false,
             [PermissionTypes.USE_DOORS]: true,
             [PermissionTypes.USE_SWITCHES]: true,
+            [PermissionTypes.USE_BEDS]: false,
             [PermissionTypes.OPEN_CONTAINERS]: false,
             [PermissionTypes.EDIT_SIGNS]: false,
         };
@@ -190,6 +193,7 @@ class PlayerPermissions {
         permissions.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data._permissions?.interactWithEntities !== undefined ? data._permissions.interactWithEntities : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES));
         permissions.setPermission(PermissionTypes.USE_DOORS, data._permissions?.useDoors !== undefined ? data._permissions.useDoors : defaultPermissions.getPermission(PermissionTypes.USE_DOORS));
         permissions.setPermission(PermissionTypes.USE_SWITCHES, data._permissions?.useSwitches !== undefined ? data._permissions.useSwitches : defaultPermissions.getPermission(PermissionTypes.USE_SWITCHES));
+        permissions.setPermission(PermissionTypes.USE_BEDS, data._permissions?.useBeds !== undefined ? data._permissions.useBeds : defaultPermissions.getPermission(PermissionTypes.USE_BEDS));
         permissions.setPermission(PermissionTypes.OPEN_CONTAINERS, data._permissions?.openContainers !== undefined ? data._permissions.openContainers : defaultPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS));
         permissions.setPermission(PermissionTypes.EDIT_SIGNS, data._permissions?.editSigns !== undefined ? data._permissions.editSigns : defaultPermissions.getPermission(PermissionTypes.EDIT_SIGNS));
         return permissions;
@@ -226,6 +230,7 @@ class Claim {
             [PermissionTypes.INTERACT_WITH_ENTITIES]: false,
             [PermissionTypes.USE_DOORS]: true,
             [PermissionTypes.USE_SWITCHES]: true,
+            [PermissionTypes.USE_BEDS]: false,
             [PermissionTypes.OPEN_CONTAINERS]: false,
             [PermissionTypes.EDIT_SIGNS]: false,
         };
@@ -343,6 +348,7 @@ class Claim {
             interactWithEntities: data._publicPermissions?.interactWithEntities !== undefined ? data._publicPermissions.interactWithEntities : defaultClaim.getPublicPermission(PermissionTypes.INTERACT_WITH_ENTITIES),
             useDoors: data._publicPermissions?.useDoors !== undefined ? data._publicPermissions.useDoors : defaultClaim.getPublicPermission(PermissionTypes.USE_DOORS),
             useSwitches: data._publicPermissions?.useSwitches !== undefined ? data._publicPermissions.useSwitches : defaultClaim.getPublicPermission(PermissionTypes.USE_SWITCHES),
+            useBeds: data._publicPermissions?.useBeds !== undefined ? data._publicPermissions.useBeds : defaultClaim.getPublicPermission(PermissionTypes.USE_BEDS),
             openContainers: data._publicPermissions?.openContainers !== undefined ? data._publicPermissions.openContainers : defaultClaim.getPublicPermission(PermissionTypes.OPEN_CONTAINERS),
             editSigns: data._publicPermissions?.editSigns !== undefined ? data._publicPermissions.editSigns : defaultClaim.getPublicPermission(PermissionTypes.EDIT_SIGNS)
         };
@@ -1096,6 +1102,7 @@ class Ui {
             .toggle("ui.manage.permissions:interact_with_entities", playerID ? playerPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES) : claim.getPublicPermission(PermissionTypes.INTERACT_WITH_ENTITIES))
             .toggle("ui.manage.permissions:use_doors", playerID ? playerPermissions.getPermission(PermissionTypes.USE_DOORS) : claim.getPublicPermission(PermissionTypes.USE_DOORS))
             .toggle("ui.manage.permissions:use_switches", playerID ? playerPermissions.getPermission(PermissionTypes.USE_SWITCHES) : claim.getPublicPermission(PermissionTypes.USE_SWITCHES))
+            .toggle("ui.manage.permissions:use_beds", playerID ? playerPermissions.getPermission(PermissionTypes.USE_BEDS) : claim.getPublicPermission(PermissionTypes.USE_BEDS))
             .toggle("ui.manage.permissions:open_containers", playerID ? playerPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS) : claim.getPublicPermission(PermissionTypes.OPEN_CONTAINERS))
             .toggle("ui.manage.permissions:edit_signs", playerID ? playerPermissions.getPermission(PermissionTypes.EDIT_SIGNS) : claim.getPublicPermission(PermissionTypes.EDIT_SIGNS))
 
@@ -1116,8 +1123,10 @@ class Ui {
                     playerPermissions.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, response.formValues[4] as boolean);
                     playerPermissions.setPermission(PermissionTypes.USE_DOORS, response.formValues[5] as boolean);
                     playerPermissions.setPermission(PermissionTypes.USE_SWITCHES, response.formValues[6] as boolean);
-                    playerPermissions.setPermission(PermissionTypes.OPEN_CONTAINERS, response.formValues[7] as boolean);
-                    playerPermissions.setPermission(PermissionTypes.EDIT_SIGNS, response.formValues[8] as boolean);
+                    playerPermissions.setPermission(PermissionTypes.USE_BEDS, response.formValues[7] as boolean);
+                    playerPermissions.setPermission(PermissionTypes.OPEN_CONTAINERS, response.formValues[8] as boolean);
+                    playerPermissions.setPermission(PermissionTypes.EDIT_SIGNS, response.formValues[9] as boolean);
+
                 }
                 else {
                     claim.setPublicPermission(PermissionTypes.ENTER_CLAIM, response.formValues[0] as boolean);
@@ -1127,9 +1136,10 @@ class Ui {
                     claim.setPublicPermission(PermissionTypes.INTERACT_WITH_ENTITIES, response.formValues[4] as boolean);
                     claim.setPublicPermission(PermissionTypes.USE_DOORS, response.formValues[5] as boolean);
                     claim.setPublicPermission(PermissionTypes.USE_SWITCHES, response.formValues[6] as boolean);
-                    claim.setPublicPermission(PermissionTypes.OPEN_CONTAINERS, response.formValues[7] as boolean);
-                    claim.setPublicPermission(PermissionTypes.EDIT_SIGNS, response.formValues[8] as boolean);
-                    claim.setPublicPermission(PermissionTypes.USE_TNT, response.formValues[9] as boolean);
+                    claim.setPublicPermission(PermissionTypes.USE_BEDS, response.formValues[7] as boolean);
+                    claim.setPublicPermission(PermissionTypes.OPEN_CONTAINERS, response.formValues[8] as boolean);
+                    claim.setPublicPermission(PermissionTypes.EDIT_SIGNS, response.formValues[9] as boolean);
+                    claim.setPublicPermission(PermissionTypes.USE_TNT, response.formValues[10] as boolean);
                 }
 
                 sendNotification(owner, "chat.claim:permissions_updated");
@@ -1965,6 +1975,19 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                         // notify player they don't have permissions
                         system.run(() => {
                             sendNotification(data.player, "chat.claim.permission:use_switches");
+                            data.player.playSound("note.didgeridoo");
+                        })
+                    }
+                }
+                // bed interaction permissions
+                else if (claim.isOverlap(data.block.location, data.block.location) && data.block.matches("minecraft:bed") && !data.player.isSneaking) {
+                    if (!claim.hasPermission(PermissionTypes.USE_BEDS, data.player)){
+                        // cancel the action
+                        data.cancel = true;
+
+                        // notify player they don't have permissions
+                        system.run(() => {
+                            sendNotification(data.player, "chat.claim.permission:use_beds");
                             data.player.playSound("note.didgeridoo");
                         })
                     }
