@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, ItemStack, CameraFadeOptions, CameraSetPosOptions, EasingType, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockType, BlockComponentTypes, BlockPermutation, BlockTypes, EntityComponentTypes, InputPermissionCategory, HudElement, HudVisibility, EntityInventoryComponent } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, CameraFadeOptions, CameraSetPosOptions, EasingType, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockType, BlockComponentTypes, BlockPermutation, BlockTypes, EntityComponentTypes, InputPermissionCategory, HudElement, HudVisibility, EntityInventoryComponent, EntityProjectileComponent, EntityIsChargedComponent } from '@minecraft/server';
 import { ActionFormData, MessageFormData, ModalFormData } from '@minecraft/server-ui';
 
 const shovelID = "lca:claim_shovel"
@@ -468,6 +468,7 @@ class PlayerData {
     private _id: string;
     private _name: string;
     private _inClaim: boolean;
+    private _itemCharged: boolean;
     private _viewingClaim: boolean;
     private _resizingClaimName: string;
     private _firstPoint: Vector3;
@@ -480,6 +481,7 @@ class PlayerData {
         this._id = playerID;
         this._name = playerName;
         this._inClaim = false;
+        this._itemCharged = false;
         this._viewingClaim = false;
         this._resizingClaimName = "";
         this._firstPoint = { x: 0, y: 0, z: 0 };
@@ -500,6 +502,10 @@ class PlayerData {
 
     get inClaim(): boolean {
         return this._inClaim;
+    }
+
+    get itemCharged(): boolean {
+        return this._itemCharged;
     }
 
     get viewingClaim(): boolean {
@@ -538,6 +544,11 @@ class PlayerData {
 
     setInClaim(value: boolean): void {
         this._inClaim = value;
+        saveDb();
+    }
+
+    setItemCharged(value: boolean): void {
+        this._itemCharged = value;
         saveDb();
     }
 
@@ -585,8 +596,9 @@ class PlayerData {
         const defaultPlayerData = new PlayerData(data._id, data._name);
         const playerData = new PlayerData(data._id, data._name);
         playerData.setInClaim(data._inClaim !== undefined ? data._inClaim : defaultPlayerData.inClaim);
-        playerData.setViewingClaim(data._viewingClaim !== undefined ? data.viewingClaim : defaultPlayerData.viewingClaim);
-        playerData.setResizingClaimName(data._resizingClaimName || defaultPlayerData.resizingClaimName);
+        playerData.setItemCharged(data._itemCharged !== undefined ? data._itemCharged : defaultPlayerData.itemCharged);
+        playerData.setViewingClaim(data._viewingClaim !== undefined ? data._viewingClaim : defaultPlayerData.viewingClaim);
+        playerData.setResizingClaimName(data._resizingClaimName || defaultPlayerData._resizingClaimName);
         playerData.setFirstPoint(data._firstPoint || defaultPlayerData.firstPoint);
         playerData.setOppositeCorner(data._oppositeCorner || defaultPlayerData.oppositeCorner);
         playerData.setEntranceVelocity(data._entranceVelocity || defaultPlayerData.entranceVelocity);
@@ -1467,13 +1479,6 @@ world.afterEvents.itemUse.subscribe((data) => {
     };
 });
 
-// disallow players from using items when viewing a claim
-world.beforeEvents.itemUse.subscribe((data) => {
-    if (getPlayerData(data.source.id).viewingClaim) {
-        data.cancel = true;
-    }
-});
-
 // Set/adjust claim points if player is sneaking
 world.beforeEvents.playerBreakBlock.subscribe((data) => {
 
@@ -1851,9 +1856,16 @@ world.afterEvents.pistonActivate.subscribe((data) => {
         }
     }
 
-})
+});
 
 world.beforeEvents.itemUse.subscribe((data) => {
+
+    getPlayerData(data.source.id).setItemCharged(true);
+
+    // disallow player from using items while viewing claim
+    if (getPlayerData(data.source.id).viewingClaim) {
+        data.cancel = true;
+    }
 
     // disallowed items that could cause harm to an entity
     var disallowedItems = ["minecraft:splash_potion", "minecraft:lingering_potion", "minecraft:bow", "minecraft:crossbow"]
@@ -1875,7 +1887,11 @@ world.beforeEvents.itemUse.subscribe((data) => {
             }
         });
     }
-})
+});
+
+world.afterEvents.itemReleaseUse.subscribe((data) => {
+    getPlayerData(data.source.id).setItemCharged(false);
+});
 
 world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
     
@@ -2047,16 +2063,46 @@ world.afterEvents.worldInitialize.subscribe(() => {
     world.getDimension("overworld").runCommandAsync("tickingarea remove claimView")
 });
 
-// player management in claims, runs every 1/20th of a second
+// player/entity management in claims
 system.runInterval(() => {
 
-    // make sure fire charges can't fly into claims
-    // also make sure withers can't fly into claim
     for (var e of world.getDimension("overworld").getEntities()) {
+
+        // save the state of the entity's "in-claim" attribute before it is updated
+        e.setDynamicProperty("inClaimOld", e.getDynamicProperty("inClaim") as boolean | false);
+
+        e.setDynamicProperty("inClaim", false);
+
         runInAllClaims((playerID, playerName, claim) => {
-            if (claim.isOverlap(e.location, e.location)) {
+            if (e.isValid() && claim.isOverlap(e.location, e.location)) {
+                // update flag
+                e.setDynamicProperty("inClaim", true);
+
+                // make sure fire charges and withers can't fly into claim
                 if (e.typeId == "minecraft:small_fireball" || e.typeId == "minecraft:wither") {
                     e.remove();
+                }
+
+                if (e.hasComponent(EntityComponentTypes.Projectile)) {
+                    const projectile = e.getComponent(EntityComponentTypes.Projectile) as EntityProjectileComponent;
+
+                    // disallow projectile from entering claim if it was not fired by a player
+                    if ((e.getDynamicProperty("inClaimOld") == false) && !projectile.owner) {
+                        e.remove();
+                        world.sendMessage("removed")
+                    }
+                    else {
+                        world.getPlayers().filter(p => p.id == projectile.owner?.id).forEach(p => {
+                            if ((playerID != p.id) && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, p)) {
+                                e.remove();
+
+                                // notify player
+                                sendNotification(p, "chat.claim.permission:hurt_entities");
+                                p.playSound("note.didgeridoo");
+                            }
+                        });
+                    }     
+
                 }
             }
         });
@@ -2144,6 +2190,19 @@ system.runInterval(() => {
                         p.addEffect("wither", 40)
 
                     }
+
+                    // don't allow the player to enter claim with a charged item
+                    if (!inClaimOld && playerData.itemCharged && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, p) && (playerID != p.id)) {
+                        var inventory = p.getComponent(EntityComponentTypes.Inventory) as EntityInventoryComponent;
+
+                        // copy the item we want to swap
+                        var swapItem = inventory.container.getItem((p.selectedSlotIndex + 1) % 9);
+
+                        inventory.container.moveItem(p.selectedSlotIndex, (p.selectedSlotIndex + 1) % 9, inventory.container);
+                        inventory.container.setItem(p.selectedSlotIndex, swapItem);
+
+                        playerData.setItemCharged(false);
+                    }
                 }
             });
 
@@ -2165,7 +2224,7 @@ system.runInterval(() => {
             playerData.setInClaim(false);
         }
     }
-}, 1);
+});
 
 // renders claim particles every 1 second
 system.runInterval(() => {
