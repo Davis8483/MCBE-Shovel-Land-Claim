@@ -474,6 +474,8 @@ class PlayerData {
     private _firstPoint: Vector3;
     private _oppositeCorner: Vector3;
     private _entranceVelocity: Vector3;
+    private _previousLocation: Vector3;
+    private _pendingEntranceDisallow: boolean;
     private _claimBlocks: PlayerClaimBlocks;
     private _claims: Claim[];
 
@@ -487,6 +489,8 @@ class PlayerData {
         this._firstPoint = { x: 0, y: 0, z: 0 };
         this._oppositeCorner = { x: 0, y: 0, z: 0 };
         this._entranceVelocity = { x: 0, y: 0, z: 0 };
+        this._previousLocation = { x: 0, y: 0, z: 0 };
+        this._pendingEntranceDisallow = false;
         this._claimBlocks = new PlayerClaimBlocks(settings.startingClaimBlocks, settings.claimBlockHourlyPayment);
         this._claims = [];
     }
@@ -526,6 +530,14 @@ class PlayerData {
 
     get entranceVelocity(): Vector3 {
         return this._entranceVelocity;
+    }
+
+    get previousLocation(): Vector3 {
+        return this._previousLocation;
+    }
+
+    get pendingEntranceDisallow(): boolean {
+        return this._pendingEntranceDisallow;
     }
 
     get claimBlocks(): PlayerClaimBlocks {
@@ -577,6 +589,16 @@ class PlayerData {
         saveDb();
     }
 
+    setPreviousLocation(value: Vector3): void {
+        this._previousLocation = value;
+        saveDb();
+    }
+
+    setPendingEntranceDisallow(value: boolean): void {
+        this._pendingEntranceDisallow = value;
+        saveDb();
+    }
+
     addClaim(claim: Claim): void {
         this._claims.push(claim);
         saveDb();
@@ -602,6 +624,8 @@ class PlayerData {
         playerData.setFirstPoint(data._firstPoint || defaultPlayerData.firstPoint);
         playerData.setOppositeCorner(data._oppositeCorner || defaultPlayerData.oppositeCorner);
         playerData.setEntranceVelocity(data._entranceVelocity || defaultPlayerData.entranceVelocity);
+        playerData.setPreviousLocation(data._previousLocation || defaultPlayerData.previousLocation);
+        playerData.setPendingEntranceDisallow(data._pendingEntranceDisallow !== undefined ? data._pendingEntranceDisallow : defaultPlayerData.pendingEntranceDisallow);
         playerData._claimBlocks = PlayerClaimBlocks.fromJSON(data._claimBlocks || {});
         playerData._claims = data._claims 
             ? data._claims.map(Claim.fromJSON).filter(claim => claim._name != "Undefined") 
@@ -1157,12 +1181,48 @@ class Ui {
                 sendNotification(owner, "chat.claim:permissions_updated");
                 owner.playSound("random.levelup");
 
-                // if a players permissions have been updated notify them
                 for (var p of world.getAllPlayers()) {
-                    if (p.id == playerID) {
-                        p.runCommandAsync(`tellraw @s {"rawtext":[{"translate":"chat.prefix"}, {"text":" ${owner.name} "}, {"translate":"chat.claim:player_permissions_updated_notif"}, {"translate":"claim:name_color"}, {"text":" ${claim.name}"}]}`);
+                    var playerData: PlayerData = getPlayerData(p.id);
+
+                    // if a players permissions have been updated notify them
+                    if (playerID && p.id == playerID) {
+                        // p.runCommandAsync(`tellraw @s {"rawtext":[{"translate":"chat.prefix"}, {"text":" ${owner.name} "}, {"translate":"chat.claim:player_permissions_updated_notif"}, {"translate":"claim:name_color"}, {"text":" ${claim.name}"}]}`);
+                        sendNotification(p, {
+                            "rawtext": [
+                                {"text":`${owner.name} `},
+                                {"translate":"chat.claim:player_permissions_updated_notif"},
+                                {"translate":"claim:name_color"},
+                                {"text":` ${claim.name}`}
+                            ]
+                        })
                         p.playSound("random.levelup");
-                        break;
+                    }
+
+                    // if the claims global permissions have been updated notify all players in the claim
+                    if (!playerID && claim.isOverlap(p.location, p.location) && (playerData.id != owner.id)) {
+                        sendNotification(p, {
+                            "rawtext": [
+                                {"text":`${owner.name} `},
+                                {"translate":"chat.claim:public_permissions_updated_notif"},
+                                {"translate":"claim:name_color"},
+                                {"text":` ${claim.name}`}
+                            ]
+                        })
+                        p.playSound("random.levelup");
+                    }
+
+                    // if a players enter claim permission has been removed while they are in the claim, notify the owner
+                    if (!claim.hasPermission(PermissionTypes.ENTER_CLAIM, p) && playerData.inClaim && (playerID ? (playerData.id == playerID) : true)) {
+                        
+                        // set flag so the player is not ejected from the claim
+                        playerData.setPendingEntranceDisallow(true);
+
+                        // notify owner
+                        sendNotification(owner, {
+                            "rawtext": [
+                                { "text": `${playerData.name}` },
+                                { "translate": "chat.claim:pending_entrance_disallow" }]
+                        })
                     }
                 }
             }
@@ -1440,6 +1500,9 @@ world.afterEvents.playerJoin.subscribe((data) => {
             p.setViewingClaim(false);
             p.setResizingClaimName("");
 
+            // if player is not in a claim this flag will automatically be set back to false
+            p.setPendingEntranceDisallow(true);
+
             playerFound = true;
             break;
         }
@@ -1450,6 +1513,8 @@ world.afterEvents.playerJoin.subscribe((data) => {
         // create new player in db
         database.push(new PlayerData(data.playerId, data.playerName));
     }
+
+    
 
 });
 
@@ -2153,16 +2218,27 @@ system.runInterval(() => {
                     }
 
                     // if player is not allowed in claim, apply knockback to remove them
-                    if ((playerID != p.id) && !claim.hasPermission(PermissionTypes.ENTER_CLAIM, p)) {
+                    if ((playerID != p.id) && !claim.hasPermission(PermissionTypes.ENTER_CLAIM, p) && !playerData.pendingEntranceDisallow) {
                         // player has entered claim
                         if (!inClaimOld && playerData.inClaim) {
 
-                            // send player a notification
-                            sendNotification(p, "chat.claim.permission:enter_claim");
-                            p.playSound("note.didgeridoo");
-
                             // save entrance velocity
                             playerData.setEntranceVelocity(p.getVelocity());
+
+                            // detect if player teleported into claim; entrance velocity is 0
+                            if (playerData.entranceVelocity.x == 0 || playerData.entranceVelocity.z == 0){
+
+                                // wait a second before playing sound so it is played at the teleported to location
+                                system.runTimeout(() => {
+                                    sendNotification(p, "chat.claim.permission:teleport_enter_claim");
+                                    p.playSound("note.didgeridoo");
+                                }, 10);
+                            }
+                            // player did not teleport, send a normal notif
+                            else {
+                                sendNotification(p, "chat.claim.permission:enter_claim");
+                                p.playSound("note.didgeridoo");
+                            }
                         }
 
                         const velocity: Vector3 = playerData.entranceVelocity;
@@ -2186,9 +2262,22 @@ system.runInterval(() => {
                             }, 20);
                         }
 
-                        p.applyKnockback(-velocity.x, -velocity.z, 3, 0.5);
-                        p.addEffect("wither", 40)
+                        // detect if player teleported into claim; entrance velocity is 0
+                        if (playerData.entranceVelocity.x == 0 || playerData.entranceVelocity.z == 0) {
 
+                            // check to make sure tp location is outside of claim
+                            if (!claim.isOverlap(playerData.previousLocation, playerData.previousLocation)) {
+
+                                // teleport player back to last known location before teleport
+                                p.teleport(playerData.previousLocation);
+                            }
+                        }
+                        // player did not teleport, bounce them out of the claim
+                        else {
+                            // apply knockback to the player and wither them
+                            p.applyKnockback(-velocity.x, -velocity.z, 3, 0.5);
+                            p.addEffect("wither", 40)
+                        }
                     }
 
                     // don't allow the player to enter claim with a charged item
@@ -2218,6 +2307,15 @@ system.runInterval(() => {
                 // play exit sound
                 p.playSound("random.door_close")
             }
+            
+            // the flag should always be false if player is not in a claim
+            if (!playerData.inClaim){
+                // set pending entrance disallow flag to false; after this point the player will not be able to enter the claim again
+                playerData.setPendingEntranceDisallow(false);
+            }
+
+            // save player location for later use
+            playerData.setPreviousLocation(p.location);
         }
         // player is not in overworld
         else {
