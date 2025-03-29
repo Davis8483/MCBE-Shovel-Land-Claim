@@ -24,6 +24,7 @@ chat.claim:updated=§aClaim config has been saved!§r
 chat.claim:resized=§aClaim has been resized!§r
 chat.claim:permissions_updated=§aClaim permissions have been updated!§r
 chat.claim:player_permissions_updated_notif=§ahas updated your permissions for§r
+chat.claim:public_permissions_updated_notif=§ahas updated the public permissions for§r
 chat.claim:player_permissions_reset_notif=§bhas reset your permissions for§r
 
 chat.point.new:selected=First block selected
@@ -37,6 +38,7 @@ chat.claim.permission:use_item_on_block=§cYou're not allowed to use items on bl
 chat.claim.permission:use_tnt=§cYou're not allowed to use tnt!§r
 chat.claim.permission:hurt_entities=§cYou're not allowed to use projectiles, they could hurt entities!§r
 chat.claim.permission:enter_claim=§cYou're not allowed to enter this claim!§r
+chat.claim.permission:teleport_enter_claim=§cYou're not allowed to enter this claim, teleport has been cancelled!§r
 chat.claim.permission:interact_with_entities=§cYou're not allowed to interact with entities!§r
 chat.claim.permission:use_doors=§cYou're not allowed to use doors!§r
 chat.claim.permission:use_switches=§cYou're not allowed to use switches!§r
@@ -45,6 +47,7 @@ chat.claim.permission:open_containers=§cYou're not allowed to open containers!�
 chat.claim.permission:edit_signs=§cYou're not allowed to edit signs!§r
 chat.claim:view=§cYou can only view a claim from the overworld!§r
 chat.claim:piston=§cYou can't use a piston from outside this claim!§r
+chat.claim:pending_entrance_disallow=§c is in the claim, the "Enter Claim" permission will not be applied until they leave!§r
 
 chat.blocks:payment1=§aYou've recieved your hourly payment of§r
 chat.blocks:payment2=§ablocks!§r
