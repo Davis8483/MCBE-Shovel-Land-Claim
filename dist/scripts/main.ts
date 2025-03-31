@@ -1212,7 +1212,7 @@ class Ui {
                     }
 
                     // if a players enter claim permission has been removed while they are in the claim, notify the owner
-                    if (!claim.hasPermission(PermissionTypes.ENTER_CLAIM, p) && playerData.inClaim && (playerID ? (playerData.id == playerID) : true)) {
+                    if (!claim.hasPermission(PermissionTypes.ENTER_CLAIM, p) && claim.isOverlap(p.location, p.location) && (playerData.id != owner.id) && (playerID ? (playerData.id == playerID) : true)) {
                         
                         // set flag so the player is not ejected from the claim
                         playerData.setPendingEntranceDisallow(true);
