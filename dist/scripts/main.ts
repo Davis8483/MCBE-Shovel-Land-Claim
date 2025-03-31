@@ -1186,7 +1186,6 @@ class Ui {
 
                     // if a players permissions have been updated notify them
                     if (playerID && p.id == playerID) {
-                        // p.runCommandAsync(`tellraw @s {"rawtext":[{"translate":"chat.prefix"}, {"text":" ${owner.name} "}, {"translate":"chat.claim:player_permissions_updated_notif"}, {"translate":"claim:name_color"}, {"text":" ${claim.name}"}]}`);
                         sendNotification(p, {
                             "rawtext": [
                                 {"text":`${owner.name} `},
