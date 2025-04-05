@@ -15,12 +15,14 @@
  * ```json
  * {
  *   "module_name": "@minecraft/server",
- *   "version": "1.17.0"
+ *   "version": "1.18.0"
  * }
  * ```
  *
  */
 import * as minecraftcommon from '@minecraft/common';
+// @ts-ignore Optional types-only package, will decay to any if @minecraft/vanilla-data isn't installed
+import type * as minecraftvanilladata from '@minecraft/vanilla-data';
 /**
  * The types of block components that are accessible via
  * function Block.getComponent.
@@ -108,6 +110,15 @@ export enum BlockVolumeIntersection {
      *
      */
     Intersects = 2,
+}
+
+/**
+ * The state of a button on a keyboard, controller, or touch
+ * interface.
+ */
+export enum ButtonState {
+    Pressed = 'Pressed',
+    Released = 'Released',
 }
 
 export enum CustomComponentNameErrorReason {
@@ -992,6 +1003,8 @@ export enum EntityDamageCause {
      */
     suffocation = 'suffocation',
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Damage caused by an Entity killing itself. For example, from
      * the /kill command.
@@ -1488,6 +1501,34 @@ export enum HudVisibility {
 }
 
 /**
+ * All the different input buttons that are supported. Use with
+ * {@link InputInfo.getButtonState} via {@link
+ * Player.inputInfo} or {@link PlayerButtonInputAfterEvent} via
+ * {@link WorldAfterEvents.playerButtonInput}
+ */
+export enum InputButton {
+    /**
+     * @remarks
+     * This is mapped to the 'Jump' button on controllers,
+     * keyboards, and touch interfaces.
+     *
+     */
+    Jump = 'Jump',
+    /**
+     * @remarks
+     * This is mapped to the 'Sneak' button on controllers,
+     * keyboards, and touch interfaces. By default, this is shift
+     * on a keyboard or B on an Xbox controller. On touch
+     * interfaces this will only be pressed for 1 tick or less and
+     * then it will be released immediately even if the player
+     * holds their finger down. Dismounting a horse or exiting a
+     * boat will not send a Sneak button change event.
+     *
+     */
+    Sneak = 'Sneak',
+}
+
+/**
  * Describes the type of input of a device.
  */
 export enum InputMode {
@@ -1659,6 +1700,19 @@ export enum ItemLockMode {
 }
 
 /**
+ * Represents the type of liquid that can be placed on a block
+ * or flow dynamically in the world.
+ */
+export enum LiquidType {
+    /**
+     * @remarks
+     * Represents water as a type of liquid.
+     *
+     */
+    Water = 'Water',
+}
+
+/**
  * Describes the memory of a device.
  */
 export enum MemoryTier {
@@ -1755,6 +1809,25 @@ export enum MoonPhase {
      *
      */
     WaxingGibbous = 7,
+}
+
+/**
+ * An enumeration describing the reason for the namespace name
+ * error being thrown
+ */
+export enum NamespaceNameErrorReason {
+    /**
+     * @remarks
+     * A restricted namespace was used as the namespace
+     *
+     */
+    DisallowedNamespace = 'DisallowedNamespace',
+    /**
+     * @remarks
+     * The name was missing a namespace when one is required
+     *
+     */
+    NoNamespace = 'NoNamespace',
 }
 
 /**
@@ -2167,6 +2240,189 @@ export enum WeatherType {
     Thunder = 'Thunder',
 }
 
+export type BlockComponentReturnType<T extends string> = T extends keyof BlockComponentTypeMap
+    ? BlockComponentTypeMap[T]
+    : BlockComponent;
+
+export type BlockComponentTypeMap = {
+    fluidContainer: BlockFluidContainerComponent;
+    inventory: BlockInventoryComponent;
+    'minecraft:fluidContainer': BlockFluidContainerComponent;
+    'minecraft:inventory': BlockInventoryComponent;
+    'minecraft:piston': BlockPistonComponent;
+    'minecraft:record_player': BlockRecordPlayerComponent;
+    'minecraft:sign': BlockSignComponent;
+    piston: BlockPistonComponent;
+    record_player: BlockRecordPlayerComponent;
+    sign: BlockSignComponent;
+};
+
+/**
+ * Type alias used by the {@link BlockPermutation} matches and
+ * resolve functions to narrow block state argument types to
+ * those mapped by {@link
+ * @minecraft/vanilla-data.BlockStateMapping}.
+ */
+export type BlockStateArg<T> = T extends `${minecraftvanilladata.MinecraftBlockTypes}`
+    ? T extends keyof minecraftvanilladata.BlockStateMapping
+        ? minecraftvanilladata.BlockStateMapping[T]
+        : never
+    : Record<string, boolean | number | string>;
+
+export type EntityComponentReturnType<T extends string> = T extends keyof EntityComponentTypeMap
+    ? EntityComponentTypeMap[T]
+    : EntityComponent;
+
+export type EntityComponentTypeMap = {
+    addrider: EntityAddRiderComponent;
+    ageable: EntityAgeableComponent;
+    breathable: EntityBreathableComponent;
+    can_climb: EntityCanClimbComponent;
+    can_fly: EntityCanFlyComponent;
+    can_power_jump: EntityCanPowerJumpComponent;
+    color: EntityColorComponent;
+    color2: EntityColor2Component;
+    cursor_inventory: PlayerCursorInventoryComponent;
+    equippable: EntityEquippableComponent;
+    fire_immune: EntityFireImmuneComponent;
+    floats_in_liquid: EntityFloatsInLiquidComponent;
+    flying_speed: EntityFlyingSpeedComponent;
+    friction_modifier: EntityFrictionModifierComponent;
+    ground_offset: EntityGroundOffsetComponent;
+    healable: EntityHealableComponent;
+    health: EntityHealthComponent;
+    inventory: EntityInventoryComponent;
+    is_baby: EntityIsBabyComponent;
+    is_charged: EntityIsChargedComponent;
+    is_chested: EntityIsChestedComponent;
+    is_dyeable: EntityIsDyeableComponent;
+    is_hidden_when_invisible: EntityIsHiddenWhenInvisibleComponent;
+    is_ignited: EntityIsIgnitedComponent;
+    is_illager_captain: EntityIsIllagerCaptainComponent;
+    is_saddled: EntityIsSaddledComponent;
+    is_shaking: EntityIsShakingComponent;
+    is_sheared: EntityIsShearedComponent;
+    is_stackable: EntityIsStackableComponent;
+    is_stunned: EntityIsStunnedComponent;
+    is_tamed: EntityIsTamedComponent;
+    item: EntityItemComponent;
+    lava_movement: EntityLavaMovementComponent;
+    leashable: EntityLeashableComponent;
+    mark_variant: EntityMarkVariantComponent;
+    'minecraft:addrider': EntityAddRiderComponent;
+    'minecraft:ageable': EntityAgeableComponent;
+    'minecraft:breathable': EntityBreathableComponent;
+    'minecraft:can_climb': EntityCanClimbComponent;
+    'minecraft:can_fly': EntityCanFlyComponent;
+    'minecraft:can_power_jump': EntityCanPowerJumpComponent;
+    'minecraft:color': EntityColorComponent;
+    'minecraft:color2': EntityColor2Component;
+    'minecraft:cursor_inventory': PlayerCursorInventoryComponent;
+    'minecraft:equippable': EntityEquippableComponent;
+    'minecraft:fire_immune': EntityFireImmuneComponent;
+    'minecraft:floats_in_liquid': EntityFloatsInLiquidComponent;
+    'minecraft:flying_speed': EntityFlyingSpeedComponent;
+    'minecraft:friction_modifier': EntityFrictionModifierComponent;
+    'minecraft:ground_offset': EntityGroundOffsetComponent;
+    'minecraft:healable': EntityHealableComponent;
+    'minecraft:health': EntityHealthComponent;
+    'minecraft:inventory': EntityInventoryComponent;
+    'minecraft:is_baby': EntityIsBabyComponent;
+    'minecraft:is_charged': EntityIsChargedComponent;
+    'minecraft:is_chested': EntityIsChestedComponent;
+    'minecraft:is_dyeable': EntityIsDyeableComponent;
+    'minecraft:is_hidden_when_invisible': EntityIsHiddenWhenInvisibleComponent;
+    'minecraft:is_ignited': EntityIsIgnitedComponent;
+    'minecraft:is_illager_captain': EntityIsIllagerCaptainComponent;
+    'minecraft:is_saddled': EntityIsSaddledComponent;
+    'minecraft:is_shaking': EntityIsShakingComponent;
+    'minecraft:is_sheared': EntityIsShearedComponent;
+    'minecraft:is_stackable': EntityIsStackableComponent;
+    'minecraft:is_stunned': EntityIsStunnedComponent;
+    'minecraft:is_tamed': EntityIsTamedComponent;
+    'minecraft:item': EntityItemComponent;
+    'minecraft:lava_movement': EntityLavaMovementComponent;
+    'minecraft:leashable': EntityLeashableComponent;
+    'minecraft:mark_variant': EntityMarkVariantComponent;
+    'minecraft:movement': EntityMovementComponent;
+    'minecraft:movement.amphibious': EntityMovementAmphibiousComponent;
+    'minecraft:movement.basic': EntityMovementBasicComponent;
+    'minecraft:movement.fly': EntityMovementFlyComponent;
+    'minecraft:movement.generic': EntityMovementGenericComponent;
+    'minecraft:movement.glide': EntityMovementGlideComponent;
+    'minecraft:movement.hover': EntityMovementHoverComponent;
+    'minecraft:movement.jump': EntityMovementJumpComponent;
+    'minecraft:movement.skip': EntityMovementSkipComponent;
+    'minecraft:movement.sway': EntityMovementSwayComponent;
+    'minecraft:navigation.climb': EntityNavigationClimbComponent;
+    'minecraft:navigation.float': EntityNavigationFloatComponent;
+    'minecraft:navigation.fly': EntityNavigationFlyComponent;
+    'minecraft:navigation.generic': EntityNavigationGenericComponent;
+    'minecraft:navigation.hover': EntityNavigationHoverComponent;
+    'minecraft:navigation.walk': EntityNavigationWalkComponent;
+    'minecraft:onfire': EntityOnFireComponent;
+    'minecraft:projectile': EntityProjectileComponent;
+    'minecraft:push_through': EntityPushThroughComponent;
+    'minecraft:rideable': EntityRideableComponent;
+    'minecraft:riding': EntityRidingComponent;
+    'minecraft:scale': EntityScaleComponent;
+    'minecraft:skin_id': EntitySkinIdComponent;
+    'minecraft:strength': EntityStrengthComponent;
+    'minecraft:tameable': EntityTameableComponent;
+    'minecraft:tamemount': EntityTameMountComponent;
+    'minecraft:type_family': EntityTypeFamilyComponent;
+    'minecraft:underwater_movement': EntityUnderwaterMovementComponent;
+    'minecraft:variant': EntityVariantComponent;
+    'minecraft:wants_jockey': EntityWantsJockeyComponent;
+    movement: EntityMovementComponent;
+    'movement.amphibious': EntityMovementAmphibiousComponent;
+    'movement.basic': EntityMovementBasicComponent;
+    'movement.fly': EntityMovementFlyComponent;
+    'movement.generic': EntityMovementGenericComponent;
+    'movement.glide': EntityMovementGlideComponent;
+    'movement.hover': EntityMovementHoverComponent;
+    'movement.jump': EntityMovementJumpComponent;
+    'movement.skip': EntityMovementSkipComponent;
+    'movement.sway': EntityMovementSwayComponent;
+    'navigation.climb': EntityNavigationClimbComponent;
+    'navigation.float': EntityNavigationFloatComponent;
+    'navigation.fly': EntityNavigationFlyComponent;
+    'navigation.generic': EntityNavigationGenericComponent;
+    'navigation.hover': EntityNavigationHoverComponent;
+    'navigation.walk': EntityNavigationWalkComponent;
+    onfire: EntityOnFireComponent;
+    projectile: EntityProjectileComponent;
+    push_through: EntityPushThroughComponent;
+    rideable: EntityRideableComponent;
+    riding: EntityRidingComponent;
+    scale: EntityScaleComponent;
+    skin_id: EntitySkinIdComponent;
+    strength: EntityStrengthComponent;
+    tameable: EntityTameableComponent;
+    tamemount: EntityTameMountComponent;
+    type_family: EntityTypeFamilyComponent;
+    underwater_movement: EntityUnderwaterMovementComponent;
+    variant: EntityVariantComponent;
+    wants_jockey: EntityWantsJockeyComponent;
+};
+
+export type ItemComponentReturnType<T extends string> = T extends keyof ItemComponentTypeMap
+    ? ItemComponentTypeMap[T]
+    : ItemComponent;
+
+export type ItemComponentTypeMap = {
+    compostable: ItemCompostableComponent;
+    cooldown: ItemCooldownComponent;
+    durability: ItemDurabilityComponent;
+    enchantable: ItemEnchantableComponent;
+    food: ItemFoodComponent;
+    'minecraft:compostable': ItemCompostableComponent;
+    'minecraft:cooldown': ItemCooldownComponent;
+    'minecraft:durability': ItemDurabilityComponent;
+    'minecraft:enchantable': ItemEnchantableComponent;
+    'minecraft:food': ItemFoodComponent;
+};
+
 /**
  * Represents a block in a dimension. A block represents a
  * unique X, Y, and Z within a dimension and get/sets the state
@@ -2316,6 +2572,42 @@ export class Block {
     bottomCenter(): Vector3;
     /**
      * @remarks
+     * Returns whether this block is removed when touched by
+     * liquid.
+     *
+     * @param liquidType
+     * The type of liquid this function should be called for.
+     * @returns
+     * Whether this block is removed when touched by liquid.
+     * @throws This function can throw errors.
+     *
+     * {@link Error}
+     *
+     * {@link LocationInUnloadedChunkError}
+     *
+     * {@link LocationOutOfWorldBoundariesError}
+     */
+    canBeDestroyedByLiquidSpread(liquidType: LiquidType): boolean;
+    /**
+     * @remarks
+     * Returns whether this block can have a liquid placed over it,
+     * i.e. be waterlogged.
+     *
+     * @param liquidType
+     * The type of liquid this function should be called for.
+     * @returns
+     * Whether this block can have a liquid placed over it.
+     * @throws This function can throw errors.
+     *
+     * {@link Error}
+     *
+     * {@link LocationInUnloadedChunkError}
+     *
+     * {@link LocationOutOfWorldBoundariesError}
+     */
+    canContainLiquid(liquidType: LiquidType): boolean;
+    /**
+     * @remarks
      * Returns the {@link Vector3} of the center of this block on
      * the X, Y, and Z axis.
      *
@@ -2355,7 +2647,7 @@ export class Block {
      *
      * {@link LocationOutOfWorldBoundariesError}
      */
-    getComponent(componentId: string): BlockComponent | undefined;
+    getComponent<T extends string>(componentId: T): BlockComponentReturnType<T> | undefined;
     /**
      * @remarks
      * Creates a prototype item stack based on this block that can
@@ -2439,6 +2731,25 @@ export class Block {
     hasTag(tag: string): boolean;
     /**
      * @remarks
+     * Returns whether this block stops liquid from flowing.
+     *
+     * @param liquidType
+     * The type of liquid this function should be called for.
+     * @returns
+     * Whether this block stops liquid from flowing.
+     * @throws This function can throw errors.
+     *
+     * {@link Error}
+     *
+     * {@link LocationInUnloadedChunkError}
+     *
+     * {@link LocationOutOfWorldBoundariesError}
+     */
+    isLiquidBlocking(liquidType: LiquidType): boolean;
+    /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
+     * @remarks
      * Returns true if this reference to a block is still valid
      * (for example, if the block is unloaded, references to that
      * block will no longer be valid.)
@@ -2447,6 +2758,46 @@ export class Block {
      * True if this block object is still working and valid.
      */
     isValid(): boolean;
+    /**
+     * @remarks
+     * Returns whether liquid can flow into the block from the
+     * provided direction, or flow out from the provided direction
+     * when liquid is placed into it with a bucket.
+     *
+     * @param liquidType
+     * The type of liquid this function should be called for.
+     * @returns
+     * Whether liquid can flow into the block from the provided
+     * direction, or flow out from the provided direction when
+     * liquid is placed into it with a bucket
+     * @throws This function can throw errors.
+     *
+     * {@link Error}
+     *
+     * {@link LocationInUnloadedChunkError}
+     *
+     * {@link LocationOutOfWorldBoundariesError}
+     */
+    liquidCanFlowFromDirection(liquidType: LiquidType, flowDirection: Direction): boolean;
+    /**
+     * @remarks
+     * Returns whether this block is removed and spawns its item
+     * when touched by liquid.
+     *
+     * @param liquidType
+     * The type of liquid this function should be called for.
+     * @returns
+     * Whether this block is removed and spawns its item when
+     * touched by liquid.
+     * @throws This function can throw errors.
+     *
+     * {@link Error}
+     *
+     * {@link LocationInUnloadedChunkError}
+     *
+     * {@link LocationOutOfWorldBoundariesError}
+     */
+    liquidSpreadCausesSpawn(liquidType: LiquidType): boolean;
     /**
      * @remarks
      * Tests whether this block matches a specific criteria.
@@ -2791,7 +3142,7 @@ export class BlockEvent {
     private constructor();
     /**
      * @remarks
-     * Block impacted by this event.
+     * Block currently in the world at the location of this event.
      *
      */
     readonly block: Block;
@@ -3049,6 +3400,34 @@ export class BlockPermutation {
     readonly 'type': BlockType;
     /**
      * @remarks
+     * Returns whether this block is removed when touched by
+     * liquid.
+     *
+     * @param liquidType
+     * The type of liquid this function should be called for.
+     * @returns
+     * Whether this block is removed when touched by liquid.
+     * @throws This function can throw errors.
+     *
+     * {@link Error}
+     */
+    canBeDestroyedByLiquidSpread(liquidType: LiquidType): boolean;
+    /**
+     * @remarks
+     * Returns whether this block can have a liquid placed over it,
+     * i.e. be waterlogged.
+     *
+     * @param liquidType
+     * The type of liquid this function should be called for.
+     * @returns
+     * Whether this block can have a liquid placed over it.
+     * @throws This function can throw errors.
+     *
+     * {@link Error}
+     */
+    canContainLiquid(liquidType: LiquidType): boolean;
+    /**
+     * @remarks
      * Returns all available block states associated with this
      * block.
      *
@@ -3078,7 +3457,9 @@ export class BlockPermutation {
      * Returns the state if the permutation has it, else
      * `undefined`.
      */
-    getState(stateName: string): boolean | number | string | undefined;
+    getState<T extends keyof minecraftvanilladata.BlockStateSuperset>(
+        stateName: T,
+    ): minecraftvanilladata.BlockStateSuperset[T] | undefined;
     /**
      * @remarks
      * Creates a copy of the permutation.
@@ -3111,6 +3492,34 @@ export class BlockPermutation {
     hasTag(tag: string): boolean;
     /**
      * @remarks
+     * Returns whether this block stops liquid from flowing.
+     *
+     * @param liquidType
+     * The type of liquid this function should be called for.
+     * @returns
+     * Whether this block stops liquid from flowing.
+     * @throws This function can throw errors.
+     *
+     * {@link Error}
+     */
+    isLiquidBlocking(liquidType: LiquidType): boolean;
+    /**
+     * @remarks
+     * Returns whether this block is removed and spawns its item
+     * when touched by liquid.
+     *
+     * @param liquidType
+     * The type of liquid this function should be called for.
+     * @returns
+     * Whether this block is removed and spawns its item when
+     * touched by liquid.
+     * @throws This function can throw errors.
+     *
+     * {@link Error}
+     */
+    liquidSpreadCausesSpawn(liquidType: LiquidType): boolean;
+    /**
+     * @remarks
      * Returns a boolean whether a specified permutation matches
      * this permutation. If states is not specified, matches checks
      * against the set of types more broadly.
@@ -3118,7 +3527,10 @@ export class BlockPermutation {
      * @param blockName
      * An optional set of states to compare against.
      */
-    matches(blockName: string, states?: Record<string, boolean | number | string>): boolean;
+    matches<T extends string = minecraftvanilladata.MinecraftBlockTypes>(
+        blockName: T,
+        states?: BlockStateArg<T>,
+    ): boolean;
     /**
      * @remarks
      * Returns a derived BlockPermutation with a specific property
@@ -3130,7 +3542,10 @@ export class BlockPermutation {
      * Value of the block property.
      * @throws This function can throw errors.
      */
-    withState(name: string, value: boolean | number | string): BlockPermutation;
+    withState<T extends keyof minecraftvanilladata.BlockStateSuperset>(
+        name: T,
+        value: minecraftvanilladata.BlockStateSuperset[T],
+    ): BlockPermutation;
     /**
      * @remarks
      * Given a type identifier and an optional set of properties,
@@ -3183,7 +3598,10 @@ export class BlockPermutation {
      * }
      * ```
      */
-    static resolve(blockName: string, states?: Record<string, boolean | number | string>): BlockPermutation;
+    static resolve<T extends string = minecraftvanilladata.MinecraftBlockTypes>(
+        blockName: T,
+        states?: BlockStateArg<T>,
+    ): BlockPermutation;
 }
 
 /**
@@ -3620,16 +4038,12 @@ export class BlockVolume extends BlockVolumeBase {
      * A world block location that represents a corner in a 3D
      * rectangle
      *
-     * This property can't be edited in read-only mode.
-     *
      */
     'from': Vector3;
     /**
      * @remarks
      * A world block location that represents the opposite corner
      * in a 3D rectangle
-     *
-     * This property can't be edited in read-only mode.
      *
      */
     to: Vector3;
@@ -3639,8 +4053,6 @@ export class BlockVolume extends BlockVolumeBase {
      * Check to see if the given location is directly adjacent to
      * the outer surface of a BlockVolume.
      *
-     *
-     * This function can't be called in read-only mode.
      *
      * @param pos
      * The world block location to test
@@ -3656,8 +4068,6 @@ export class BlockVolume extends BlockVolumeBase {
      * Check to see if a two block volumes are directly adjacent
      * and two faces touch.
      *
-     * This function can't be called in read-only mode.
-     *
      * @param other
      * The volume to test
      * @returns
@@ -3669,8 +4079,6 @@ export class BlockVolume extends BlockVolumeBase {
      * @remarks
      * Return an enumeration which represents the intersection
      * between two BlockVolume objects
-     *
-     * This function can't be called in read-only mode.
      *
      */
     intersects(other: BlockVolume): BlockVolumeIntersection;
@@ -3686,15 +4094,11 @@ export class BlockVolumeBase {
      * Fetch a {@link BlockLocationIterator} that represents all of
      * the block world locations within the specified volume
      *
-     * This function can't be called in read-only mode.
-     *
      */
     getBlockLocationIterator(): BlockLocationIterator;
     /**
      * @remarks
      * Return the capacity (volume) of the BlockVolume (W*D*H)
-     *
-     * This function can't be called in read-only mode.
      *
      */
     getCapacity(): number;
@@ -3702,8 +4106,6 @@ export class BlockVolumeBase {
      * @remarks
      * Get the largest corner position of the volume (guaranteed to
      * be >= min)
-     *
-     * This function can't be called in read-only mode.
      *
      * @throws This function can throw errors.
      */
@@ -3713,8 +4115,6 @@ export class BlockVolumeBase {
      * Get the smallest corner position of the volume (guaranteed
      * to be <= max)
      *
-     * This function can't be called in read-only mode.
-     *
      * @throws This function can throw errors.
      */
     getMin(): Vector3;
@@ -3723,8 +4123,6 @@ export class BlockVolumeBase {
      * Get a {@link Vector3} object where each component represents
      * the number of blocks along that axis
      *
-     * This function can't be called in read-only mode.
-     *
      */
     getSpan(): Vector3;
     /**
@@ -3732,15 +4130,11 @@ export class BlockVolumeBase {
      * Check to see if a given world block location is inside a
      * BlockVolume
      *
-     * This function can't be called in read-only mode.
-     *
      */
     isInside(location: Vector3): boolean;
     /**
      * @remarks
      * Move a BlockVolume by a specified amount
-     *
-     * This function can't be called in read-only mode.
      *
      * @param delta
      * Amount of blocks to move by
@@ -3879,6 +4273,7 @@ export class Camera {
         cameraPreset: string,
         setOptions?:
             | CameraDefaultOptions
+            | CameraFixedBoomOptions
             | CameraSetFacingOptions
             | CameraSetLocationOptions
             | CameraSetPosOptions
@@ -3934,6 +4329,8 @@ export class Component {
      */
     readonly typeId: string;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Returns whether the component is valid. A component is
      * considered valid if its owner is valid, in addition to any
@@ -4120,6 +4517,8 @@ export class Container {
      */
     getSlot(slot: number): ContainerSlot;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Returns whether a container object (or the entity or block
      * that this container is associated with) is still available
@@ -4519,6 +4918,8 @@ export class ContainerSlot {
      */
     isStackableWith(itemStack: ItemStack): boolean;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Returns whether the ContainerSlot is valid. The container
      * slot is valid if the container exists and is loaded, and the
@@ -5046,24 +5447,8 @@ export class Dimension {
      */
     runCommand(commandString: string): CommandResult;
     /**
-     * @remarks
-     * Runs a particular command asynchronously from the context of
-     * the broader dimension.  Note that there is a maximum queue
-     * of 128 asynchronous commands that can be run in a given
-     * tick.
-     *
-     * @param commandString
-     * Command to run. Note that command strings should not start
-     * with slash.
-     * @returns
-     * For commands that return data, returns a CommandResult with
-     * an indicator of command results.
-     * @throws
-     * Throws an exception if the command fails due to incorrect
-     * parameters or command syntax, or in erroneous cases for the
-     * command. Note that in many cases, if the command does not
-     * operate (e.g., a target selector found no matches), this
-     * method will not throw an exception.
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     * @throws This function can throw errors.
      */
     runCommandAsync(commandString: string): Promise<CommandResult>;
     /**
@@ -5370,6 +5755,8 @@ export class Effect {
      */
     readonly typeId: string;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Returns whether an effect instance is available for use in
      * this context.
@@ -6013,7 +6400,7 @@ export class Entity {
      * Returns the component if it exists on the entity, otherwise
      * undefined.
      */
-    getComponent(componentId: string): EntityComponent | undefined;
+    getComponent<T extends string>(componentId: T): EntityComponentReturnType<T> | undefined;
     /**
      * @remarks
      * Returns all components that are both present on this entity
@@ -6204,6 +6591,8 @@ export class Entity {
      */
     hasTag(tag: string): boolean;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Returns whether the entity can be manipulated by script. A
      * Player is considered valid when it's EntityLifetimeState is
@@ -6359,17 +6748,7 @@ export class Entity {
      */
     runCommand(commandString: string): CommandResult;
     /**
-     * @remarks
-     * Runs a particular command asynchronously from the context of
-     * this entity. Note that there is a maximum queue of 128
-     * asynchronous commands that can be run in a given tick.
-     *
-     * @param commandString
-     * Command to run. Note that command strings should not start
-     * with slash.
-     * @returns
-     * For commands that return data, returns a JSON structure with
-     * command response values.
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
      * @throws This function can throw errors.
      */
     runCommandAsync(commandString: string): Promise<CommandResult>;
@@ -7449,7 +7828,6 @@ export class EntityInventoryComponent extends EntityComponent {
      * Defines the container for this entity. The container will be
      * undefined if the entity has been removed.
      *
-     * @throws This property can throw when used.
      */
     readonly container?: Container;
     /**
@@ -9550,12 +9928,16 @@ export class GameRules {
 }
 
 /**
+ * @deprecated This class is deprecated and will be removed in 2.0.0.
+ *
  * Provides an adaptable interface for callers to subscribe to
  * an event that fires when a button is pushed.
  */
 export class IButtonPushAfterEventSignal {
     private constructor();
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Subscribes to the event.
      *
@@ -9564,6 +9946,8 @@ export class IButtonPushAfterEventSignal {
      */
     subscribe(callback: (arg0: ButtonPushAfterEvent) => void): (arg0: ButtonPushAfterEvent) => void;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Unsubscribes from the event.
      *
@@ -9574,12 +9958,16 @@ export class IButtonPushAfterEventSignal {
 }
 
 /**
+ * @deprecated This class is deprecated and will be removed in 2.0.0.
+ *
  * Provides an adaptable interface for callers to subscribe to
  * an event that fires after a lever is used.
  */
 export class ILeverActionAfterEventSignal {
     private constructor();
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Subscribes to the event.
      *
@@ -9588,6 +9976,8 @@ export class ILeverActionAfterEventSignal {
      */
     subscribe(callback: (arg0: LeverActionAfterEvent) => void): (arg0: LeverActionAfterEvent) => void;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Unsubscribes from the event.
      *
@@ -9623,15 +10013,33 @@ export class InputInfo {
      * {@link InvalidEntityError}
      */
     readonly touchOnlyAffectsHotbar: boolean;
+    /**
+     * @throws This function can throw errors.
+     *
+     * {@link minecraftcommon.EngineError}
+     *
+     * {@link InvalidEntityError}
+     */
+    getButtonState(button: InputButton): ButtonState;
+    /**
+     * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
+     */
+    getMovementVector(): Vector2;
 }
 
 /**
+ * @deprecated This class is deprecated and will be removed in 2.0.0.
+ *
  * Provides an adaptable interface for callers to subscribe to
  * an event that fires after a player joins a world.
  */
 export class IPlayerJoinAfterEventSignal {
     private constructor();
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Subscribes to the event.
      *
@@ -9640,6 +10048,8 @@ export class IPlayerJoinAfterEventSignal {
      */
     subscribe(callback: (arg0: PlayerJoinAfterEvent) => void): (arg0: PlayerJoinAfterEvent) => void;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Unsubscribes from the event.
      *
@@ -9650,12 +10060,16 @@ export class IPlayerJoinAfterEventSignal {
 }
 
 /**
+ * @deprecated This class is deprecated and will be removed in 2.0.0.
+ *
  * Provides an adaptable interface for callers to subscribe to
  * an event that fires after a player leaves a world.
  */
 export class IPlayerLeaveAfterEventSignal {
     private constructor();
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Subscribes to the event.
      *
@@ -9664,6 +10078,8 @@ export class IPlayerLeaveAfterEventSignal {
      */
     subscribe(callback: (arg0: PlayerLeaveAfterEvent) => void): (arg0: PlayerLeaveAfterEvent) => void;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Unsubscribes from the event.
      *
@@ -9674,12 +10090,16 @@ export class IPlayerLeaveAfterEventSignal {
 }
 
 /**
+ * @deprecated This class is deprecated and will be removed in 2.0.0.
+ *
  * Provides an adaptable interface for callers to subscribe to
  * an event that fires after a player spawns.
  */
 export class IPlayerSpawnAfterEventSignal {
     private constructor();
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Subscribes to the event.
      *
@@ -9688,6 +10108,8 @@ export class IPlayerSpawnAfterEventSignal {
      */
     subscribe(callback: (arg0: PlayerSpawnAfterEvent) => void): (arg0: PlayerSpawnAfterEvent) => void;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Unsubscribes from the event.
      *
@@ -10647,7 +11069,7 @@ export class ItemStack {
      * }
      * ```
      */
-    getComponent(componentId: string): ItemComponent | undefined;
+    getComponent<T extends string>(componentId: T): ItemComponentReturnType<T> | undefined;
     /**
      * @remarks
      * Returns all components that are both present on this item
@@ -11248,6 +11670,10 @@ export class ItemUseBeforeEventSignal {
 }
 
 /**
+ * @deprecated This class is deprecated and will be removed in 2.0.0.
+ *
+ * Use {@link PlayerInteractWithBlockAfterEvent} instead.
+ *
  * Contains information related to an item being used on a
  * block. This event fires when an item used by a player
  * successfully triggers a block interaction.
@@ -11255,18 +11681,30 @@ export class ItemUseBeforeEventSignal {
 export class ItemUseOnAfterEvent {
     private constructor();
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
+     * Use {@link PlayerInteractWithBlockAfterEvent} instead.
+     *
      * @remarks
      * The block that the item is used on.
      *
      */
     readonly block: Block;
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
+     * Use {@link PlayerInteractWithBlockAfterEvent} instead.
+     *
      * @remarks
      * The face of the block that an item is being used on.
      *
      */
     readonly blockFace: Direction;
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
+     * Use {@link PlayerInteractWithBlockAfterEvent} instead.
+     *
      * @remarks
      * Location relative to the bottom north-west corner of the
      * block where the item is placed.
@@ -11274,6 +11712,10 @@ export class ItemUseOnAfterEvent {
      */
     readonly faceLocation: Vector3;
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
+     * Use {@link PlayerInteractWithBlockAfterEvent} instead.
+     *
      * @remarks
      * This value will be true if the event was triggered on
      * players initial interaction button press and false on events
@@ -11282,12 +11724,20 @@ export class ItemUseOnAfterEvent {
      */
     readonly isFirstEvent: boolean;
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
+     * Use {@link PlayerInteractWithBlockAfterEvent} instead.
+     *
      * @remarks
      * The impacted item stack that is being used on a block.
      *
      */
     readonly itemStack: ItemStack;
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
+     * Use {@link PlayerInteractWithBlockAfterEvent} instead.
+     *
      * @remarks
      * Returns the source entity that triggered this item event.
      *
@@ -11296,12 +11746,16 @@ export class ItemUseOnAfterEvent {
 }
 
 /**
+ * @deprecated This class is deprecated and will be removed in 2.0.0.
+ *
  * Manages callbacks that are connected to an item being used
  * on a block event.
  */
 export class ItemUseOnAfterEventSignal {
     private constructor();
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Adds a callback that will be called when an item is used on
      * a block.
@@ -11313,6 +11767,8 @@ export class ItemUseOnAfterEventSignal {
      */
     subscribe(callback: (arg0: ItemUseOnAfterEvent) => void): (arg0: ItemUseOnAfterEvent) => void;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Removes a callback from being called when an item is used on
      * a block.
@@ -11326,6 +11782,10 @@ export class ItemUseOnAfterEventSignal {
 }
 
 /**
+ * @deprecated This class is deprecated and will be removed in 2.0.0.
+ *
+ * Use {@link PlayerInteractWithBlockBeforeEvent} instead.
+ *
  * Contains information related to an item being used on a
  * block.
  */
@@ -11333,6 +11793,10 @@ export class ItemUseOnAfterEventSignal {
 export class ItemUseOnBeforeEvent extends ItemUseOnAfterEvent {
     private constructor();
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
+     * Use {@link PlayerInteractWithBlockBeforeEvent} instead.
+     *
      * @remarks
      * If set to true, this will cancel the item use behavior.
      *
@@ -11341,12 +11805,16 @@ export class ItemUseOnBeforeEvent extends ItemUseOnAfterEvent {
 }
 
 /**
+ * @deprecated This class is deprecated and will be removed in 2.0.0.
+ *
  * Manages callbacks that fire before an item being used on a
  * block event.
  */
 export class ItemUseOnBeforeEventSignal {
     private constructor();
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Adds a callback that will be called before an item is used
      * on a block.
@@ -11358,6 +11826,8 @@ export class ItemUseOnBeforeEventSignal {
      */
     subscribe(callback: (arg0: ItemUseOnBeforeEvent) => void): (arg0: ItemUseOnBeforeEvent) => void;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Removes a callback from being called before an item is used
      * on a block.
@@ -11519,8 +11989,6 @@ export class ListBlockVolume extends BlockVolumeBase {
      * @remarks
      * Insert block locations into container.
      *
-     * This function can't be called in read-only mode.
-     *
      * @param locations
      * Array of block locations to be inserted into container.
      */
@@ -11529,8 +11997,6 @@ export class ListBlockVolume extends BlockVolumeBase {
      * @remarks
      * Remove block locations from container.
      *
-     * This function can't be called in read-only mode.
-     *
      * @param locations
      * Array of block locations to be removed from container.
      */
@@ -11538,11 +12004,21 @@ export class ListBlockVolume extends BlockVolumeBase {
 }
 
 /**
+ * @deprecated This class is deprecated and will be removed in 2.0.0.
+ *
+ * Use {@link @minecraft/vanilla-data.MinecraftDimensionTypes}
+ * instead.
+ *
  * A collection of default Minecraft dimension types.
  */
 export class MinecraftDimensionTypes {
     private constructor();
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
+     * Use {@link @minecraft/vanilla-data.MinecraftDimensionTypes}
+     * instead.
+     *
      * @remarks
      * The Nether is a collection of biomes separate from the
      * Overworld, including Soul Sand Valleys and Crimson forests.
@@ -11552,6 +12028,11 @@ export class MinecraftDimensionTypes {
      */
     static readonly nether = 'minecraft:nether';
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
+     * Use {@link @minecraft/vanilla-data.MinecraftDimensionTypes}
+     * instead.
+     *
      * @remarks
      * The overworld is a collection of biomes, including forests,
      * plains, jungles, mountains, deserts, taiga, and more. This
@@ -11561,6 +12042,11 @@ export class MinecraftDimensionTypes {
      */
     static readonly overworld = 'minecraft:overworld';
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
+     * Use {@link @minecraft/vanilla-data.MinecraftDimensionTypes}
+     * instead.
+     *
      * @remarks
      * The End is separate from the Overworld and the Nether and is
      * generated whenever you create an End portal. Here, a giant
@@ -12132,6 +12618,53 @@ export class Player extends Entity {
     setSpawnPoint(spawnPoint?: DimensionLocation): void;
     /**
      * @remarks
+     * Creates a new particle emitter at a specified location in
+     * the world. Only visible to the target player.
+     *
+     * This function can't be called in read-only mode.
+     *
+     * @param effectName
+     * Identifier of the particle to create.
+     * @param location
+     * The location at which to create the particle emitter.
+     * @param molangVariables
+     * A set of optional, customizable variables that can be
+     * adjusted for this particle.
+     * @throws This function can throw errors.
+     *
+     * {@link Error}
+     *
+     * {@link LocationInUnloadedChunkError}
+     *
+     * {@link LocationOutOfWorldBoundariesError}
+     * @example spawnParticle.ts
+     * ```typescript
+     * import { world, MolangVariableMap, Vector3 } from '@minecraft/server';
+     *
+     * world.afterEvents.playerSpawn.subscribe(event => {
+     *     const targetLocation = event.player.location;
+     *     for (let i = 0; i < 100; i++) {
+     *         const molang = new MolangVariableMap();
+     *
+     *         molang.setColorRGB('variable.color', {
+     *             red: Math.random(),
+     *             green: Math.random(),
+     *             blue: Math.random()
+     *         });
+     *
+     *         const newLocation: Vector3 = {
+     *             x: targetLocation.x + Math.floor(Math.random() * 8) - 4,
+     *             y: targetLocation.y + Math.floor(Math.random() * 8) - 4,
+     *             z: targetLocation.z + Math.floor(Math.random() * 8) - 4,
+     *         };
+     *         event.player.spawnParticle('minecraft:colored_flame_particle', newLocation, molang);
+     *     }
+     * });
+     * ```
+     */
+    spawnParticle(effectName: string, location: Vector3, molangVariables?: MolangVariableMap): void;
+    /**
+     * @remarks
      * Sets the item cooldown time for a particular cooldown
      * category.
      *
@@ -12285,6 +12818,63 @@ export class PlayerBreakBlockBeforeEventSignal {
      *
      */
     unsubscribe(callback: (arg0: PlayerBreakBlockBeforeEvent) => void): void;
+}
+
+/**
+ * Event data for when a player presses a button.
+ */
+export class PlayerButtonInputAfterEvent {
+    private constructor();
+    /**
+     * @remarks
+     * The button this event is about.
+     *
+     */
+    readonly button: InputButton;
+    /**
+     * @remarks
+     * The state that this button transferred to.
+     *
+     */
+    readonly newButtonState: ButtonState;
+    /**
+     * @remarks
+     * The player that performed the input event.
+     *
+     */
+    readonly player: Player;
+}
+
+/**
+ * Manages callbacks that are connected to player inputs.
+ */
+export class PlayerButtonInputAfterEventSignal {
+    private constructor();
+    /**
+     * @remarks
+     * Adds a callback that will be called after the player
+     * performs an input.
+     *
+     * This function can't be called in read-only mode.
+     *
+     * This function can be called in early-execution mode.
+     *
+     */
+    subscribe(
+        callback: (arg0: PlayerButtonInputAfterEvent) => void,
+        options?: InputEventOptions,
+    ): (arg0: PlayerButtonInputAfterEvent) => void;
+    /**
+     * @remarks
+     * Removes a callback from being called after the player
+     * performs an input.
+     *
+     * This function can't be called in read-only mode.
+     *
+     * This function can be called in early-execution mode.
+     *
+     */
+    unsubscribe(callback: (arg0: PlayerButtonInputAfterEvent) => void): void;
 }
 
 /**
@@ -12651,6 +13241,8 @@ export class PlayerInputPermissionCategoryChangeAfterEventSignal {
 export class PlayerInputPermissions {
     private constructor();
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Camera input permissions for the player. If set to true,
      * input relating to camera movement is enabled for the player.
@@ -12658,6 +13250,8 @@ export class PlayerInputPermissions {
      */
     cameraEnabled: boolean;
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Movement input permissions for the player. If set to true
      * input relating to movement is enabled for the player.
@@ -13631,6 +14225,8 @@ export class ScoreboardIdentity {
      */
     getEntity(): Entity | undefined;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Returns true if the ScoreboardIdentity reference is still
      * valid.
@@ -13703,6 +14299,8 @@ export class ScoreboardObjective {
      */
     hasParticipant(participant: Entity | ScoreboardIdentity | string): boolean;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Returns true if the ScoreboardObjective reference is still
      * valid.
@@ -13839,6 +14437,8 @@ export class ScreenDisplay {
      */
     isForcedHidden(hudElement: HudElement): boolean;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Returns true if the current reference to this screen display
      * manager object is valid and functional.
@@ -14170,6 +14770,8 @@ export class Structure {
      */
     getIsWaterlogged(location: Vector3): boolean;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Returns whether the Structure is valid. The Structure may
      * become invalid if it is deleted.
@@ -14394,17 +14996,23 @@ export class System {
      * Returns a collection of after-events for system-level
      * operations.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly afterEvents: SystemAfterEvents;
     /**
      * @remarks
      * Represents the current world tick of the server.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly currentTick: number;
     /**
      * @remarks
      * Contains the device information for the server.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly serverSystemInfo: SystemInfo;
@@ -14550,6 +15158,31 @@ export class System {
     runTimeout(callback: () => void, tickDelay?: number): number;
     /**
      * @remarks
+     * Causes an event to fire within script with the specified
+     * message ID and payload.
+     *
+     * This function can't be called in read-only mode.
+     *
+     * @param id
+     * Identifier of the message to send. This is custom and
+     * dependent on the kinds of behavior packs and content you may
+     * have installed within the world.
+     * @param message
+     * Data component of the message to send. This is custom and
+     * dependent on the kinds of behavior packs and content you may
+     * have installed within the world. Message may not exceed 2048
+     * characters in length.
+     * @throws This function can throw errors.
+     *
+     * {@link minecraftcommon.EngineError}
+     *
+     * {@link minecraftcommon.InvalidArgumentError}
+     *
+     * {@link NamespaceNameError}
+     */
+    sendScriptEvent(id: string, message: string): void;
+    /**
+     * @remarks
      * waitTicks returns a promise that resolves after the
      * requested number of ticks.
      *
@@ -14578,6 +15211,8 @@ export class SystemAfterEvents {
      * An event that fires when a /scriptevent command is set. This
      * provides a way for commands and other systems to trigger
      * behavior within script.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly scriptEventReceive: ScriptEventCommandMessageAfterEventSignal;
@@ -14923,6 +15558,8 @@ export class World {
      * of the world.  Event callbacks are called in a deferred
      * manner. Event callbacks are executed in read-write mode.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly afterEvents: WorldAfterEvents;
     /**
@@ -14930,6 +15567,8 @@ export class World {
      * Contains a set of events that are applicable to the entirety
      * of the world. Event callbacks are called immediately. Event
      * callbacks are executed in read-only mode.
+     *
+     * This property can be read in early-execution mode.
      *
      * @example customCommand.ts
      * ```typescript
@@ -15207,6 +15846,8 @@ export class World {
      */
     playMusic(trackId: string, musicOptions?: MusicOptions): void;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Plays a sound for all players. DEPRECATED: Use
      * Dimension.playSound.
@@ -15418,6 +16059,8 @@ export class WorldAfterEvents {
      * explosion. It is fired after the blocks have already been
      * destroyed.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly blockExplode: BlockExplodeAfterEventSignal;
     /**
@@ -15432,6 +16075,8 @@ export class WorldAfterEvents {
      * that will update the component definition state of an
      * entity.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly dataDrivenEntityTrigger: DataDrivenEntityTriggerAfterEventSignal;
     /**
@@ -15439,17 +16084,23 @@ export class WorldAfterEvents {
      * This event fires when an effect, like poisoning, is added to
      * an entity.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly effectAdd: EffectAddAfterEventSignal;
     /**
      * @remarks
      * This event fires when an entity dies.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly entityDie: EntityDieAfterEventSignal;
     /**
      * @remarks
      * This event fires when entity health changes in any degree.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly entityHealthChanged: EntityHealthChangedAfterEventSignal;
@@ -15458,6 +16109,8 @@ export class WorldAfterEvents {
      * This event fires when an entity hits (that is, melee
      * attacks) a block.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly entityHitBlock: EntityHitBlockAfterEventSignal;
     /**
@@ -15465,17 +16118,23 @@ export class WorldAfterEvents {
      * This event fires when an entity hits (that is, melee
      * attacks) another entity.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly entityHitEntity: EntityHitEntityAfterEventSignal;
     /**
      * @remarks
      * This event fires when an entity is hurt (takes damage).
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly entityHurt: EntityHurtAfterEventSignal;
     /**
      * @remarks
      * Fires when an entity is loaded.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly entityLoad: EntityLoadAfterEventSignal;
@@ -15484,17 +16143,23 @@ export class WorldAfterEvents {
      * Fires when an entity is removed (for example, potentially
      * unloaded, or removed after being killed).
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly entityRemove: EntityRemoveAfterEventSignal;
     /**
      * @remarks
      * This event fires when an entity is spawned.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly entitySpawn: EntitySpawnAfterEventSignal;
     /**
      * @remarks
      * This event is fired after an explosion occurs.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly explosion: ExplosionAfterEventSignal;
@@ -15503,11 +16168,15 @@ export class WorldAfterEvents {
      * This event fires when a world.gameRules property has
      * changed.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly gameRuleChange: GameRuleChangeAfterEventSignal;
     /**
      * @remarks
      * This event fires when a chargeable item completes charging.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly itemCompleteUse: ItemCompleteUseAfterEventSignal;
@@ -15516,11 +16185,15 @@ export class WorldAfterEvents {
      * This event fires when a chargeable item is released from
      * charging.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly itemReleaseUse: ItemReleaseUseAfterEventSignal;
     /**
      * @remarks
      * This event fires when a chargeable item starts charging.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly itemStartUse: ItemStartUseAfterEventSignal;
@@ -15532,11 +16205,15 @@ export class WorldAfterEvents {
      * occur once at the beginning of the block placement. Note:
      * This event cannot be used with Hoe or Axe items.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly itemStartUseOn: ItemStartUseOnAfterEventSignal;
     /**
      * @remarks
      * This event fires when a chargeable item stops charging.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly itemStopUse: ItemStopUseAfterEventSignal;
@@ -15546,6 +16223,8 @@ export class WorldAfterEvents {
      * Block button after successfully using an item. Note: This
      * event cannot be used with Hoe or Axe items.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly itemStopUseOn: ItemStopUseOnAfterEventSignal;
     /**
@@ -15553,12 +16232,18 @@ export class WorldAfterEvents {
      * This event fires when an item is successfully used by a
      * player.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly itemUse: ItemUseAfterEventSignal;
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * This event fires when an item is used on a block by a
      * player.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly itemUseOn: ItemUseOnAfterEventSignal;
@@ -15572,26 +16257,52 @@ export class WorldAfterEvents {
      * @remarks
      * This event fires when a piston expands or retracts.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly pistonActivate: PistonActivateAfterEventSignal;
     /**
      * @remarks
      * This event fires for a block that is broken by a player.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly playerBreakBlock: PlayerBreakBlockAfterEventSignal;
     /**
      * @remarks
+     * This event fires when an {@link InputButton} state is
+     * changed.
+     *
+     * This property can be read in early-execution mode.
+     *
+     */
+    readonly playerButtonInput: PlayerButtonInputAfterEventSignal;
+    /**
+     * @remarks
      * Fires when a player moved to a different dimension.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly playerDimensionChange: PlayerDimensionChangeAfterEventSignal;
+    /**
+     * @remarks
+     * This property can be read in early-execution mode.
+     *
+     */
     readonly playerEmote: PlayerEmoteAfterEventSignal;
+    /**
+     * @remarks
+     * This property can be read in early-execution mode.
+     *
+     */
     readonly playerGameModeChange: PlayerGameModeChangeAfterEventSignal;
     /**
      * @remarks
-     * This event fires when a player's {@link
-     * @minecraft/Server.InputMode} changes.
+     * This event fires when a player's {@link InputMode} changes.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly playerInputModeChange: PlayerInputModeChangeAfterEventSignal;
@@ -15599,17 +16310,23 @@ export class WorldAfterEvents {
      * @remarks
      * This event fires when a players input permissions change.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly playerInputPermissionCategoryChange: PlayerInputPermissionCategoryChangeAfterEventSignal;
     /**
      * @remarks
      * An event for when a player interacts with a block.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly playerInteractWithBlock: PlayerInteractWithBlockAfterEventSignal;
     /**
      * @remarks
      * This event fires when a player interacts with an entity.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly playerInteractWithEntity: PlayerInteractWithEntityAfterEventSignal;
@@ -15631,6 +16348,8 @@ export class WorldAfterEvents {
      * @remarks
      * This event fires for a block that is placed by a player.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly playerPlaceBlock: PlayerPlaceBlockAfterEventSignal;
     /**
@@ -15646,6 +16365,8 @@ export class WorldAfterEvents {
      * A pressure plate has popped back up (i.e., there are no
      * entities on the pressure plate.)
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly pressurePlatePop: PressurePlatePopAfterEventSignal;
     /**
@@ -15653,11 +16374,15 @@ export class WorldAfterEvents {
      * A pressure plate has pushed (at least one entity has moved
      * onto a pressure plate.)
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly pressurePlatePush: PressurePlatePushAfterEventSignal;
     /**
      * @remarks
      * This event fires when a projectile hits a block.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly projectileHitBlock: ProjectileHitBlockAfterEventSignal;
@@ -15665,17 +16390,23 @@ export class WorldAfterEvents {
      * @remarks
      * This event fires when a projectile hits an entity.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly projectileHitEntity: ProjectileHitEntityAfterEventSignal;
     /**
      * @remarks
      * A target block was hit.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly targetBlockHit: TargetBlockHitAfterEventSignal;
     /**
      * @remarks
      * A trip wire was tripped.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly tripWireTrip: TripWireTripAfterEventSignal;
@@ -15684,12 +16415,18 @@ export class WorldAfterEvents {
      * This event will be triggered when the weather changes within
      * Minecraft.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly weatherChange: WeatherChangeAfterEventSignal;
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * This event fires when the script environment is initialized
      * on a World.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly worldInitialize: WorldInitializeAfterEventSignal;
@@ -15709,6 +16446,8 @@ export class WorldBeforeEvents {
      * This event is triggered after an event has been added to an
      * entity.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly effectAdd: EffectAddBeforeEventSignal;
     /**
@@ -15716,11 +16455,15 @@ export class WorldBeforeEvents {
      * Fires before an entity is removed from the world (for
      * example, unloaded or removed after being killed.)
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly entityRemove: EntityRemoveBeforeEventSignal;
     /**
      * @remarks
      * This event is fired after an explosion occurs.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly explosion: ExplosionBeforeEventSignal;
@@ -15729,12 +16472,18 @@ export class WorldBeforeEvents {
      * This event fires when an item is successfully used by a
      * player.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly itemUse: ItemUseBeforeEventSignal;
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * This event fires when an item is used on a block by a
      * player.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly itemUseOn: ItemUseOnBeforeEventSignal;
@@ -15742,12 +16491,21 @@ export class WorldBeforeEvents {
      * @remarks
      * This event fires before a block is broken by a player.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly playerBreakBlock: PlayerBreakBlockBeforeEventSignal;
+    /**
+     * @remarks
+     * This property can be read in early-execution mode.
+     *
+     */
     readonly playerGameModeChange: PlayerGameModeChangeBeforeEventSignal;
     /**
      * @remarks
      * Fires before a player interacts with a block.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     readonly playerInteractWithBlock: PlayerInteractWithBlockBeforeEventSignal;
@@ -15755,27 +16513,42 @@ export class WorldBeforeEvents {
      * @remarks
      * Fires before a player interacts with an entity.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly playerInteractWithEntity: PlayerInteractWithEntityBeforeEventSignal;
     /**
      * @remarks
      * Fires when a player leaves the game.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly playerLeave: PlayerLeaveBeforeEventSignal;
+    /**
+     * @remarks
+     * This property can be read in early-execution mode.
+     *
+     */
     readonly weatherChange: WeatherChangeBeforeEventSignal;
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * This event fires immediately when the script environment is
      * initialized on a World. Not all script functionality may be
      * available. For guaranteed access to world state, use the
      * world initialize after event.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     readonly worldInitialize: WorldInitializeBeforeEventSignal;
 }
 
 /**
+ * @deprecated This class is deprecated and will be removed in 2.0.0.
+ *
  * Contains information and methods that can be used at the
  * initialization of the scripting environment for a World.
  */
@@ -15784,6 +16557,8 @@ export class WorldInitializeAfterEvent {
 }
 
 /**
+ * @deprecated This class is deprecated and will be removed in 2.0.0.
+ *
  * Manages callbacks that are run on the first tick of the
  * World. Do note that this event may run multiple times within
  * a session in the case that the /reload command is used.
@@ -15791,6 +16566,8 @@ export class WorldInitializeAfterEvent {
 export class WorldInitializeAfterEventSignal {
     private constructor();
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Adds a callback that will be called when the scripting
      * environment is initialized for a World.
@@ -15802,6 +16579,8 @@ export class WorldInitializeAfterEventSignal {
      */
     subscribe(callback: (arg0: WorldInitializeAfterEvent) => void): (arg0: WorldInitializeAfterEvent) => void;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Removes a callback from being called the scripting
      * environment is initialized for a World.
@@ -15815,6 +16594,8 @@ export class WorldInitializeAfterEventSignal {
 }
 
 /**
+ * @deprecated This class is deprecated and will be removed in 2.0.0.
+ *
  * Contains information and methods that can be used at the
  * initialization of the scripting environment for a World.
  * Also, use the supplied blockRegistry object to register
@@ -15825,6 +16606,8 @@ export class WorldInitializeBeforeEvent {
     private constructor();
     readonly blockComponentRegistry: BlockComponentRegistry;
     /**
+     * @deprecated This property is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Provides the functionality for registering custom components
      * for items.
@@ -15834,6 +16617,8 @@ export class WorldInitializeBeforeEvent {
 }
 
 /**
+ * @deprecated This class is deprecated and will be removed in 2.0.0.
+ *
  * Manages callbacks that are run at the initialization of the
  * scripting environment for a World. Do note that this event
  * may run multiple times within a session in the case that the
@@ -15842,6 +16627,8 @@ export class WorldInitializeBeforeEvent {
 export class WorldInitializeBeforeEventSignal {
     private constructor();
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Adds a callback that will be called when the scripting
      * environment is initialized for a World.
@@ -15853,6 +16640,8 @@ export class WorldInitializeBeforeEventSignal {
      */
     subscribe(callback: (arg0: WorldInitializeBeforeEvent) => void): (arg0: WorldInitializeBeforeEvent) => void;
     /**
+     * @deprecated This function is deprecated and will be removed in 2.0.0.
+     *
      * @remarks
      * Removes a callback from being called the scripting
      * environment is initialized for a World.
@@ -16173,6 +16962,26 @@ export interface CameraFadeTimeOptions {
      *
      */
     holdTime: number;
+}
+
+/**
+ * Options to control pivot points and offsets of the third
+ * person boom preset.
+ */
+export interface CameraFixedBoomOptions {
+    /**
+     * @remarks
+     * Changes the pivot point to be <x, y, z> away from the
+     * player.
+     *
+     */
+    entityOffset?: Vector3;
+    /**
+     * @remarks
+     * Offsets the camera from center by <x, y>.
+     *
+     */
+    viewOffset?: Vector2;
 }
 
 export interface CameraSetFacingOptions {
@@ -16980,6 +17789,29 @@ export interface GreaterThanOrEqualsComparison {
 }
 
 /**
+ * An interface that is passed into {@link
+ * @minecraft/Server.PlayerButtonInputAfterEventSignal.subscribe}
+ * that filters out which events are passed to the provided
+ * callback.
+ */
+export interface InputEventOptions {
+    /**
+     * @remarks
+     * The buttons the callback should be called for. If undefined,
+     * the callback will be called for all buttons.
+     *
+     */
+    buttons?: InputButton[];
+    /**
+     * @remarks
+     * The state the callback should be called for. If undefined,
+     * the callback will be called for all button states.
+     *
+     */
+    state?: ButtonState;
+}
+
+/**
  * Contains a set of events that will be raised for an item.
  * This object must be bound using the ItemComponentRegistry.
  */
@@ -17749,6 +18581,11 @@ export class CustomComponentInvalidRegistryError extends Error {
 // @ts-ignore Class inheritance allowed for native defined classes
 export class CustomComponentNameError extends Error {
     private constructor();
+    /**
+     * @remarks
+     * This property can be read in early-execution mode.
+     *
+     */
     reason: CustomComponentNameErrorReason;
 }
 
@@ -17787,11 +18624,15 @@ export class InvalidEntityError extends Error {
      * @remarks
      * The id of the entity that is now invalid.
      *
+     * This property can be read in early-execution mode.
+     *
      */
     id: string;
     /**
      * @remarks
      * The type of the entity that is now invalid.
+     *
+     * This property can be read in early-execution mode.
      *
      */
     type: string;
@@ -17865,6 +18706,21 @@ export class LocationInUnloadedChunkError extends Error {
 // @ts-ignore Class inheritance allowed for native defined classes
 export class LocationOutOfWorldBoundariesError extends Error {
     private constructor();
+}
+
+/**
+ * Thrown when a name requires a namespace and an error occurs
+ * when validating that namespace
+ */
+// @ts-ignore Class inheritance allowed for native defined classes
+export class NamespaceNameError extends Error {
+    private constructor();
+    /**
+     * @remarks
+     * This property can be read in early-execution mode.
+     *
+     */
+    reason: NamespaceNameErrorReason;
 }
 
 /**
