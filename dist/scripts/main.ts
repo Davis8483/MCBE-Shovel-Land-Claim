@@ -1519,6 +1519,21 @@ system.runInterval(() => {
                     }     
 
                 }
+
+                // set entrance velocity for entities
+                if (e.getDynamicProperty("inClaimOld") == false) {
+                    e.setDynamicProperty("entranceVelocity", e.getVelocity());
+                }
+
+                // disallow creepers from entering claims
+                if (e.getDynamicPropertyIds().includes("entranceVelocity") && e.typeId == "minecraft:creeper") {
+                    var xVelocity = (e.getDynamicProperty("entranceVelocity") as Vector3).x;
+                    var zVelocity = (e.getDynamicProperty("entranceVelocity") as Vector3).z;
+
+                    // eject from claim
+                    e.applyKnockback(-xVelocity, -zVelocity, 3, 0.5);
+
+                }
             }
         });
     }
