@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, ItemStack, CameraFadeOptions, CameraSetPosOptions, EasingType, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockType, BlockComponentTypes, BlockPermutation, BlockTypes, EntityComponentTypes, InputPermissionCategory, HudElement, HudVisibility, EntityInventoryComponent, EntityProjectileComponent, EntityIsChargedComponent } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, CameraFadeOptions, BlockFilter, CameraSetPosOptions, EasingType, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockType, BlockComponentTypes, BlockPermutation, BlockTypes, EntityComponentTypes, InputPermissionCategory, HudElement, HudVisibility, EntityInventoryComponent, EntityProjectileComponent, EntityIsChargedComponent, BlockVolume } from '@minecraft/server';
 import { ActionFormData, MessageFormData, ModalFormData } from '@minecraft/server-ui';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings } from './database.js';
 
@@ -1658,6 +1658,36 @@ system.runInterval(() => {
                         playerData.setItemCharged(false);
                     }
                 }
+
+                // var s = claim.start;
+                // var e = claim.end;
+
+                // // all 4 points of the claim
+                // var points = [
+                //     [[s.x, s.z], [s.x, e.z]],
+                //     [[e.x, s.z], [e.x, e.z]]
+                // ]
+
+                // var dimension = world.getDimension("overworld");
+
+                // // loop through all sides of the claim to remove flowing water/lava
+                // for (var a = 0; a < points.length; a++) {
+                //     for (var b = 0; b < points[a].length; b++) {
+
+                //         var sideStart = { "x": points[a][b][0] + 1, "y": dimension.heightRange.min, "z": points[a][b][1] + 1 };
+                //         var sideEnd = { "x": points[a ^ 1][b][0] - 1, "y": dimension.heightRange.max, "z": points[a ^ 1][b][1] - 1 };
+
+                //         var side = new BlockVolume(sideStart, sideEnd);
+
+                //         var flowingBlocks = dimension.getBlocks(side, {"includeTypes": ["minecraft:water", "minecraft:flowing_lava", "minecraft:stone"]}, true).getBlockLocationIterator()
+
+                //         for (var block of flowingBlocks) {
+
+                //             // remove the block
+                //             dimension.fillBlocks(new BlockVolume(block, block), "minecraft:air");
+                //         }
+                //     }
+                // }
             });
 
 
@@ -1711,8 +1741,20 @@ system.runInterval(() => {
         var segmentHeight = 10
         var averageOffset = (segmentHeight * numSegments)
 
-        // only render if particles are enabled
-        if (claim.particlesEnabled) {
+        var claimShovelOut = false;
+
+        // check if claim owner has claim shovel out
+        for (var p of world.getAllPlayers()) {
+            if (p.id == playerID && p.getComponent(EntityComponentTypes.Inventory).container.getItem(p.selectedSlotIndex)?.matches(shovelID)) {
+                // set flag
+                claimShovelOut = true;
+                
+                break;
+            }
+        }
+
+        // only render if particles are enabled or owner has claim shovel out
+        if (claim.particlesEnabled || claimShovelOut) {
             // loop through all claim points to determine particle type
             for (var a = 0; a < points.length; a++) {
                 for (var b = 0; b < points[a].length; b++) {
@@ -1739,10 +1781,17 @@ system.runInterval(() => {
                             var particlePoint: Vector3 = { "x": points[a][b][0] + 0.5, "y": i + 0.5, "z": points[a][b][1] + 0.5 };
 
                             try {
-                                dimension.spawnParticle(xParticleType, particlePoint);
-                                dimension.spawnParticle(yParticleType, particlePoint);
-                                dimension.spawnParticle("lca:rising_claim_dust", particlePoint);
-                                dimension.spawnParticle("lca:falling_claim_dust", particlePoint);
+                                if (claim.particlesEnabled) {
+                                    dimension.spawnParticle(xParticleType, particlePoint);
+                                    dimension.spawnParticle(yParticleType, particlePoint);
+                                    dimension.spawnParticle("lca:rising_claim_dust", particlePoint);
+                                    dimension.spawnParticle("lca:falling_claim_dust", particlePoint);
+                                } else if (claimShovelOut) {
+                                    p.spawnParticle(xParticleType, particlePoint);
+                                    p.spawnParticle(yParticleType, particlePoint);
+                                    p.spawnParticle("lca:rising_claim_dust", particlePoint);
+                                    p.spawnParticle("lca:falling_claim_dust", particlePoint);
+                                }
                             }
                             catch {
                                 // do nothing
