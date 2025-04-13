@@ -2,7 +2,7 @@ import { world, system, Player, Vector3, ItemStack, CameraFadeOptions, BlockFilt
 import { ActionFormData, MessageFormData, ModalFormData } from '@minecraft/server-ui';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings } from './database.js';
 
-const shovelID = "lca:claim_shovel"
+const shovelID = "slc:claim_shovel"
 
 const claimIcons = {
 
@@ -1765,17 +1765,17 @@ system.runInterval(() => {
                         // creates sets of verticle claim particles 20 blocks below and above the claim
                         for (var i = averageY - averageOffset; i <= averageY + averageOffset; i += segmentHeight) {
                             if (points[a][b][0] > points[a ^ 1][b][0]) {
-                                var xParticleType = "lca:negx_claim_dust";
+                                var xParticleType = "slc:negx_claim_dust";
                             }
                             else {
-                                var xParticleType = "lca:posx_claim_dust";
+                                var xParticleType = "slc:posx_claim_dust";
                             }
 
                             if (points[a][b][1] > points[a][b ^ 1][1]) {
-                                var yParticleType = "lca:negz_claim_dust";
+                                var yParticleType = "slc:negz_claim_dust";
                             }
                             else {
-                                var yParticleType = "lca:posz_claim_dust";
+                                var yParticleType = "slc:posz_claim_dust";
                             }
 
                             var particlePoint: Vector3 = { "x": points[a][b][0] + 0.5, "y": i + 0.5, "z": points[a][b][1] + 0.5 };
@@ -1784,13 +1784,13 @@ system.runInterval(() => {
                                 if (claim.particlesEnabled) {
                                     dimension.spawnParticle(xParticleType, particlePoint);
                                     dimension.spawnParticle(yParticleType, particlePoint);
-                                    dimension.spawnParticle("lca:rising_claim_dust", particlePoint);
-                                    dimension.spawnParticle("lca:falling_claim_dust", particlePoint);
+                                    dimension.spawnParticle("slc:rising_claim_dust", particlePoint);
+                                    dimension.spawnParticle("slc:falling_claim_dust", particlePoint);
                                 } else if (claimShovelOut) {
                                     p.spawnParticle(xParticleType, particlePoint);
                                     p.spawnParticle(yParticleType, particlePoint);
-                                    p.spawnParticle("lca:rising_claim_dust", particlePoint);
-                                    p.spawnParticle("lca:falling_claim_dust", particlePoint);
+                                    p.spawnParticle("slc:rising_claim_dust", particlePoint);
+                                    p.spawnParticle("slc:falling_claim_dust", particlePoint);
                                 }
                             }
                             catch {

@@ -2,7 +2,7 @@
   "format_version": "1.20.20",
   "minecraft:item": {
     "description": {
-      "identifier": "lca:claim_shovel",
+      "identifier": "slc:claim_shovel",
       "menu_category": {
         "category": "equipment",
         "group": "itemGroup.name.shovel"
@@ -22,7 +22,7 @@
         ]
       },
       "minecraft:icon": {
-        "texture": "lca_claim_shovel"
+        "texture": "slc_claim_shovel"
       },
       "minecraft:cooldown": {
         "category": "land_shovel_use",
