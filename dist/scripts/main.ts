@@ -1,6 +1,7 @@
 import { world, system, Player, Vector3, ItemStack, CameraFadeOptions, BlockFilter, CameraSetPosOptions, EasingType, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockType, BlockComponentTypes, BlockPermutation, BlockTypes, EntityComponentTypes, InputPermissionCategory, HudElement, HudVisibility, EntityInventoryComponent, EntityProjectileComponent, EntityIsChargedComponent, BlockVolume } from '@minecraft/server';
 import { ActionFormData, MessageFormData, ModalFormData } from '@minecraft/server-ui';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings } from './database.js';
+import { playSound, AddonSounds } from './sounds.js';
 
 const shovelID = "slc:claim_shovel"
 
@@ -124,7 +125,7 @@ class Ui {
             if (response.selection == 0) {
                 if (playerData.claims.length == 0) {
                     sendNotification(owner, "chat.claim:no_claims");
-                    owner.playSound("note.didgeridoo");
+                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
                 }
                 else {
                     this.managePage(owner);
@@ -163,11 +164,11 @@ class Ui {
 
                 if (name.length == 0) {
                     sendNotification(owner, "chat.claim:name_required")
-                    owner.playSound("note.didgeridoo");
+                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
                 }
                 else if (!isUniqueName) {
                     sendNotification(owner, "chat.claim:use_unique_name")
-                    owner.playSound("note.didgeridoo");
+                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
                 }
                 // passed all the checks, now make the claim
                 else {
@@ -178,8 +179,9 @@ class Ui {
                     // create a new claim
                     playerData.addClaim(new Claim(name, start, end, iconPath, showBorderParticles));
 
+                    // notify player
                     sendNotification(owner, "chat.claim:created")
-                    owner.playSound("random.levelup");
+                    playSound(owner, AddonSounds.Global.POSITIVE_EVENT);
 
                     // Reset resizingClaimName to avoid incorrect resizing behavior
                     playerData.setResizingClaimName("");
@@ -219,8 +221,9 @@ class Ui {
                 claim.setStart(start);
                 claim.setEnd(end);
 
+                // notify player
                 sendNotification(owner, "chat.claim:resized")
-                owner.playSound("random.levelup");
+                playSound(owner, AddonSounds.Global.POSITIVE_EVENT);
 
                 //add/subtract the blocks from players balance
                 playerData.claimBlocks.incrementAmount(blockDifference);
@@ -385,13 +388,13 @@ class Ui {
         // if no players are available to add notify the owner
         if ((unsavedPlayers.length == 0) && add) {
             sendNotification(owner, "chat.claim:no_players_to_add");
-            owner.playSound("note.didgeridoo");
+            playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
             return;
         }
         // if no players are available to remove notify the owner
         else if ((claim.playerPermissionsList.length == 0) && !add) {
             sendNotification(owner, "chat.claim:no_players_to_remove");
-            owner.playSound("note.didgeridoo");
+            playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
             return;
         }
 
@@ -425,11 +428,11 @@ class Ui {
                 }
                 else {
 
-                    // if a players permissions have been removed notify them
+                    // if a players permissions have been removed/reset notify them
                     for (var p of world.getAllPlayers()) {
                         if (p.id == claim.playerPermissionsList[response.formValues[0] as number].id) {
                             p.runCommandAsync(`tellraw @s {"rawtext":[{"translate":"chat.prefix"}, {"text":" ${owner.name} "}, {"translate":"chat.claim:player_permissions_reset_notif"}, {"translate":"claim:name_color"}, {"text":" ${claim.name}"}]}`);
-                            p.playSound("random.levelup");
+                            playSound(p, AddonSounds.Global.POSITIVE_EVENT);
                             break;
                         }
                     }
@@ -530,7 +533,7 @@ class Ui {
                 }
 
                 sendNotification(owner, "chat.claim:permissions_updated");
-                owner.playSound("random.levelup");
+                playSound(owner, AddonSounds.Claim.SAVE);
 
                 for (var p of world.getAllPlayers()) {
                     var playerData: PlayerData = getPlayerData(p.id);
@@ -545,7 +548,7 @@ class Ui {
                                 {"text":` ${claim.name}`}
                             ]
                         })
-                        p.playSound("random.levelup");
+                        playSound(p, AddonSounds.Claim.SAVE);
                     }
 
                     // if the claims global permissions have been updated notify all players in the claim
@@ -558,7 +561,7 @@ class Ui {
                                 {"text":` ${claim.name}`}
                             ]
                         })
-                        p.playSound("random.levelup");
+                        playSound(p, AddonSounds.Claim.SAVE);
                     }
 
                     // if a players enter claim permission has been removed while they are in the claim, notify the owner
@@ -689,7 +692,7 @@ class Ui {
 
             // start transition
             owner.camera.fade(transition);
-            owner.playSound("beacon.activate");
+            playSound(owner, AddonSounds.Claim.VIEW);
 
             // goto the first corner and start the animation
             system.runTimeout(() => {
@@ -705,7 +708,7 @@ class Ui {
         }
         // player is not in the right dimension
         else {
-            owner.playSound("note.didgeridoo");
+            playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
             sendNotification(owner, "chat.claim:view");
         }
     }
@@ -781,7 +784,7 @@ class Ui {
                 playerData.removeClaim(claim);
 
                 sendNotification(owner, "chat.claim:removed")
-                owner.playSound("mob.creeper.say");
+                playSound(owner, AddonSounds.Claim.DELETE);
 
                 // add the claim blocks to the players balance
                 playerData.claimBlocks.incrementAmount(claimWidth * claimLength);
@@ -813,7 +816,7 @@ class Ui {
 
                 if (name.length == 0) {
                     sendNotification(owner, "chat.claim:name_required")
-                    owner.playSound("note.didgeridoo");
+                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
                 }
                 else {
 
@@ -823,7 +826,7 @@ class Ui {
                     claim.setParticlesEnabled(showBorderParticles);
 
                     sendNotification(owner, "chat.claim:updated")
-                    owner.playSound("note.cow_bell");
+                    playSound(owner, AddonSounds.Claim.SAVE);
                 }
             }
 
@@ -962,15 +965,11 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                                     ]
                                 });
 
-                                system.run(() => {
-                                    data.player.playSound("note.banjo");
-                                });
+                                playSound(data.player, AddonSounds.Shovel.RESIZE);
 
                             } else {
                                 sendNotification(data.player, "chat.point.resize:disallowed");
-                                system.run(() => {
-                                    data.player.playSound("note.didgeridoo");
-                                });
+                                playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                             }
                         }
                     });
@@ -986,9 +985,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                             ]
                         });
 
-                        system.run(() => {
-                            data.player.playSound("note.cow_bell");
-                        });
+                        playSound(data.player, AddonSounds.Shovel.SELECT);
                     }
                 }
                 // if player is crouching
@@ -1029,38 +1026,27 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         // intersecting claim warning message, cancel resize
                         if (claimIntersectingClaim) {
                             sendNotification(data.player, "chat.claim:claim_intersecting");
-                            system.run(() => {
-                                data.player.playSound("note.didgeridoo");
-                            });
+                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // player is in the way warning message, cancel resize
                         else if (playerIntersectingClaim) {
                             sendNotification(data.player, "chat.claim:player_intersecting");
-                            system.run(() => {
-                                data.player.playSound("note.didgeridoo");
-                            });
+                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // claim isn't wide enough warning message, cancel resize
                         else if (newClaimWidth < settings.claimMinimumWidth || newClaimLength < settings.claimMinimumWidth) {
                             sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:width1" }, { "text": ` ${settings.claimMinimumWidth} ` }, { "translate": "chat.claim:width2" }] });
-                            system.run(() => {
-                                data.player.playSound("note.didgeridoo");
-                            });
+                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // not enough claim blocks warning message, cancel resize
                         else if (playerData.claimBlocks.amount < blockDifference) {
                             sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:blocks1" }, { "text": ` ${(blockDifference) - playerData.claimBlocks.amount} ` }, { "translate": "chat.claim:blocks3" }] });
-                            system.run(() => {
-                                data.player.playSound("note.didgeridoo");
-                            });
+                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // all requirements met, open the claim resizing ui
                         else {
-                            system.run(() => {
-                                data.player.playSound("note.cow_bell");
-
-                                Ui.resizeClaim(data.player, resizingClaim, playerData.oppositeCorner, secondPoint);
-                            });
+                            playSound(data.player, AddonSounds.Shovel.SELECT);
+                            Ui.resizeClaim(data.player, resizingClaim, playerData.oppositeCorner, secondPoint);
                         }
                     }
                     // not resizing, create a new claim
@@ -1087,38 +1073,27 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         // intersecting claim warning message, cancel creation
                         if (claimIntersectingClaim) {
                             sendNotification(data.player, "chat.claim:claim_intersecting");
-
-                            system.run(() => {
-                                data.player.playSound("note.didgeridoo");
-                            });
+                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // player is in the way warning message, cancel creation
                         else if (playerIntersectingClaim) {
                             sendNotification(data.player, "chat.claim:player_intersecting");
-
-                            system.run(() => {
-                                data.player.playSound("note.didgeridoo");
-                            });
+                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // claim is not wide enough warning message, cancel creation
                         else if (claimWidth < settings.claimMinimumWidth || claimLength < settings.claimMinimumWidth) {
                             sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:width1" }, { "text": ` ${settings.claimMinimumWidth} ` }, { "translate": "chat.claim:width2" }] });
-                            system.run(() => {
-                                data.player.playSound("note.didgeridoo");
-                            });
+                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // not enough claim blocks warning message, cancel creation
                         else if (playerData.claimBlocks.amount < (claimWidth * claimLength)) {
                             sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:blocks1" }, { "text": ` ${(claimWidth * claimLength) - playerData.claimBlocks.amount} ` }, { "translate": "chat.claim:blocks2" }] });
-                            system.run(() => {
-                                data.player.playSound("note.didgeridoo");
-                            });
+                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // all requirements are met, open the claim creation ui
                         else {
                             system.run(() => {
-                                data.player.playSound("note.cow_bell");
-
+                                playSound(data.player, AddonSounds.Shovel.SELECT);
                                 Ui.newClaim(data.player, playerData.firstPoint, secondPoint);
                             });
                         }
@@ -1131,9 +1106,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
         // player is not in the overworld, warn them that they are not allowed to create a claim here
         else {
             sendNotification(data.player, "chat.shovel:dimension_warning");
-            system.run(() => {
-                data.player.playSound("note.didgeridoo");
-            });
+            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
         }
 
     }
@@ -1148,10 +1121,9 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                 if (claim.isOverlap(data.block, data.block) && (playerID != data.player.id) && !claim.hasPermission(PermissionTypes.BREAK_BLOCKS, data.player)) {
                     data.cancel = true;
 
-                    system.run(() => {
-                        sendNotification(data.player, "chat.claim.permission:break_blocks");
-                        data.player.playSound("note.didgeridoo");
-                    });
+                    playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                    sendNotification(data.player, "chat.claim.permission:break_blocks");
+
                 }
             });
         }
@@ -1198,10 +1170,8 @@ world.beforeEvents.explosion.subscribe((data) => {
 
         // if tnt effected a claim notify player
         if ((data.source.typeId == "minecraft:tnt") && sendDisallowedNotification) {
-            system.run(() => {
-                sendNotification(closestPlayer, "chat.claim.permission:use_tnt");
-                closestPlayer.playSound("note.didgeridoo");
-            });
+            playSound(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT);
+            sendNotification(closestPlayer, "chat.claim.permission:use_tnt");
         }
 
     }
@@ -1264,10 +1234,8 @@ world.afterEvents.pistonActivate.subscribe((data) => {
             var closestPlayer: Player = getClosestPlayer(data.piston.block.location)
 
             // notify player
-            system.run(() => {
-                sendNotification(closestPlayer, "chat.claim:piston");
-                closestPlayer.playSound("note.didgeridoo");
-            });
+            playSound(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT);
+            sendNotification(closestPlayer, "chat.claim:piston");
         }
     }
 
@@ -1295,10 +1263,9 @@ world.beforeEvents.itemUse.subscribe((data) => {
                 data.cancel = true;
 
                 // notify player they don't have permissions
-                system.run(() => {
-                    sendNotification(data.source, "chat.claim.permission:hurt_entities");
-                    data.source.playSound("note.didgeridoo");
-                })
+                playSound(data.source, AddonSounds.Global.NEGATIVE_EVENT);
+                sendNotification(data.source, "chat.claim.permission:hurt_entities");
+                 
             }
         });
     }
@@ -1325,10 +1292,8 @@ world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
                     data.cancel = true;
 
                     // notify player they don't have permissions
-                    system.run(() => {
-                        sendNotification(data.player, "chat.claim.permission:enter_claim");
-                        data.player.playSound("note.didgeridoo");
-                    })
+                    playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                    sendNotification(data.player, "chat.claim.permission:enter_claim");
                 }
 
                 // disallow player from interacting with entities based on permissions
@@ -1338,10 +1303,8 @@ world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
                     data.cancel = true;
 
                     // notify player they don't have permissions
-                    system.run(() => {
-                        sendNotification(data.player, "chat.claim.permission:interact_with_entities");
-                        data.player.playSound("note.didgeridoo");
-                    })
+                    playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                    sendNotification(data.player, "chat.claim.permission:interact_with_entities");
                 }
             }
         });
@@ -1353,11 +1316,8 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
     // blocks that are disabled by admin; can't be placed
     if (data.itemStack && settings.disallowedBlocks.includes(data.itemStack.typeId)) {
         // notify player
+        playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
         sendNotification(data.player, "chat.world:disabled_item");
-
-        system.run(() => {
-            data.player.playSound("note.didgeridoo");
-        });
 
         data.cancel = true;
     }
@@ -1391,10 +1351,9 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                         data.cancel = true;
 
                         // notify player they don't have permissions
-                        system.run(() => {
-                            sendNotification(data.player, "chat.claim.permission:use_doors");
-                            data.player.playSound("note.didgeridoo");
-                        })
+                        playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                        sendNotification(data.player, "chat.claim.permission:use_doors");
+                    
                     }
                 }
                 // lever/button interaction permissions
@@ -1404,10 +1363,8 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                         data.cancel = true;
 
                         // notify player they don't have permissions
-                        system.run(() => {
-                            sendNotification(data.player, "chat.claim.permission:use_switches");
-                            data.player.playSound("note.didgeridoo");
-                        })
+                        playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                        sendNotification(data.player, "chat.claim.permission:use_switches");
                     }
                 }
                 // bed interaction permissions
@@ -1417,10 +1374,9 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                         data.cancel = true;
 
                         // notify player they don't have permissions
-                        system.run(() => {
-                            sendNotification(data.player, "chat.claim.permission:use_beds");
-                            data.player.playSound("note.didgeridoo");
-                        })
+                        playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                        sendNotification(data.player, "chat.claim.permission:use_beds");
+                         
                     }
                 }
                 // opening chests/container permissions
@@ -1430,10 +1386,8 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                         data.cancel = true;
 
                         // notify player they don't have permissions
-                        system.run(() => {
-                            sendNotification(data.player, "chat.claim.permission:open_containers");
-                            data.player.playSound("note.didgeridoo");
-                        })
+                        playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                        sendNotification(data.player, "chat.claim.permission:open_containers");
                     }
                 }
                 // editing signs permissions
@@ -1443,10 +1397,8 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                         data.cancel = true;
 
                         // notify player they don't have permissions
-                        system.run(() => {
-                            sendNotification(data.player, "chat.claim.permission:edit_signs");
-                            data.player.playSound("note.didgeridoo");
-                        })
+                        playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                        sendNotification(data.player, "chat.claim.permission:edit_signs");
                     }
                 }
                 // block placing/using items on blocks permissions
@@ -1456,10 +1408,9 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                         data.cancel = true;
 
                         // notify player they don't have permissions
-                        system.run(() => {
-                            sendNotification(data.player, "chat.claim.permission:use_item_on_block");
-                            data.player.playSound("note.didgeridoo");
-                        });
+                        playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                        sendNotification(data.player, "chat.claim.permission:use_item_on_block");
+                          
                     }
                 }
             }
@@ -1512,8 +1463,8 @@ system.runInterval(() => {
                                 e.remove();
 
                                 // notify player
+                                playSound(p, AddonSounds.Global.NEGATIVE_EVENT);
                                 sendNotification(p, "chat.claim.permission:hurt_entities");
-                                p.playSound("note.didgeridoo");
                             }
                         });
                     }     
@@ -1595,14 +1546,14 @@ system.runInterval(() => {
 
                                 // wait a second before playing sound so it is played at the teleported to location
                                 system.runTimeout(() => {
+                                    playSound(p, AddonSounds.Global.NEGATIVE_EVENT);
                                     sendNotification(p, "chat.claim.permission:teleport_enter_claim");
-                                    p.playSound("note.didgeridoo");
                                 }, 10);
                             }
                             // player did not teleport, send a normal notif
                             else {
+                                playSound(p, AddonSounds.Global.NEGATIVE_EVENT);
                                 sendNotification(p, "chat.claim.permission:enter_claim");
-                                p.playSound("note.didgeridoo");
                             }
                         }
 
@@ -1695,12 +1646,12 @@ system.runInterval(() => {
             // player has entered claim
             if (!inClaimOld && playerData.inClaim) {
                 // play entrance sound
-                p.playSound("random.door_open")
+                playSound(p, AddonSounds.Claim.ENTER)
             }
             // player has exited the claim
             else if (inClaimOld && !playerData.inClaim) {
                 // play exit sound
-                p.playSound("random.door_close")
+                playSound(p, AddonSounds.Claim.LEAVE)
             }
             
             // the flag should always be false if player is not in a claim
@@ -1823,7 +1774,7 @@ system.runInterval(() => {
                     { "text": ` ${settings.claimBlockHourlyPayment} ` },
                     { "translate": "chat.blocks:payment2" }]
             })
-            p.playSound("random.levelup");
+            playSound(p, AddonSounds.Global.POSITIVE_EVENT);
 
             playerData.claimBlocks.resetPaymentTime();
         }
