@@ -36,7 +36,7 @@ export class ShovelUI {
                     { "text": "\n\n" },
                     { "translate": "ui.main:body.paragraph:4" }, { "text": ` §e${playerData.claimBlocks.amount}§r ` },
                     { "text": "\n\n" },
-                    { "translate": "ui.main:body.paragraph:5-1" }, { "text": ` §a+${settings.claimBlockHourlyPayment}§r ` }, { "translate": "ui.main:body.paragraph:5-2" }, { "text": ` §9${playerData.claimBlocks.paymentTimeRemaining}§r ` }, { "translate": "ui.main:body.paragraph:5-3" }
+                    { "translate": "ui.main:body.paragraph:5", "with": [settings.claimBlockHourlyPayment.toString(), playerData.claimBlocks.paymentTimeRemaining.toString()] }
                 ]
             })
             .button("ui.main.button:manage", "textures/ui/icon_setting.png", () => {
@@ -155,10 +155,10 @@ export class ShovelUI {
             .body({
                 "rawtext": [
                     { "text": "\n" },
-                    { "translate": "ui.manage.body:claim_start" },
-                    { "text": `:  §cX§r=${claim.start.x} §9Z§r=${claim.start.z}\n\n` },
-                    { "translate": "ui.manage.body:claim_end" },
-                    { "text": `: §cX§r=${claim.end.x} §9Z§r=${claim.end.z}\n ` }
+                    { "translate": "ui.manage.body:claim_start", "with": [claim.start.x.toString(), claim.start.z.toString()] },
+                    { "text": "\n\n" },
+                    { "translate": "ui.manage.body:claim_end", "with": [claim.end.x.toString(), claim.end.z.toString()] },
+                    { "text": "\n " }
                 ]
             })
             .button("ui.manage.button:config", "textures/ui/debug_glyph_color.png", () => {this.claimConfig(owner, claim)})
@@ -316,15 +316,12 @@ export class ShovelUI {
         const form = new CallbackModalFormData()
             .title(playerID ? {
                 "rawtext": [
-                    { "text": `${playerPermissions.name}` },
-                    { "translate": "ui.manage.permissions.player:title" },
-                    { "text": `: ${claim.name}` }
+                    { "translate": "ui.manage.permissions.player:title", "with": [playerPermissions.name, claim.name] },
                 ]
             } :
                 {
                     "rawtext": [
-                        { "translate": "ui.manage.permissions.public:title" },
-                        { "text": `: ${claim.name}` }
+                        { "translate": "ui.manage.permissions.public:title", "with": [claim.name] }
                     ]
                 }
             )
