@@ -101,14 +101,14 @@ export class ShovelUI {
         const form = new CallbackActionFormData()
             .title("ui.manage:title")
 
-        for (var c of playerData.claims) {
+        for (const c of playerData.claims) {
 
             form.button(
                 {
                     "rawtext": [
                         { "text": `${c.name}§r\n§c${c.getSize().width}§8x§9${c.getSize().length} ` }
                     ]
-                }, c.icon, () => {this.manageClaim(owner, playerData.claims.filter(cl => cl.name == c.name)[0])});
+                }, c.icon, () => {this.manageClaim(owner, c)});
         }
 
         form.button("ui.global.button:back", undefined, () => {this.main(owner)});
