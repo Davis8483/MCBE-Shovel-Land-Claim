@@ -306,6 +306,13 @@ export class Claim {
         saveDb();
     }
 
+    getSize(): {width: number, length: number, area: number} {
+        const width = Math.abs(this._start.x - this._end.x) + 1;
+        const length = Math.abs(this._start.z - this._end.z) + 1;
+        const area = width * length;
+        return { width, length, area };
+    }
+
     /**
      * Returns a Claim object loaded from JSON, if a key is missing it will be replaced with the default value.
      * Claim name is required, if it is not found it will be replaced with "Undefined" and should be removed by the caller.
