@@ -15,23 +15,19 @@ chat.claim:no_claims=§cYou don't have any claims!§r
 chat.claim:removed=§cClaim removed.§r
 chat.claim:claim_intersecting=§cA claim is already here!§r
 chat.claim:player_intersecting=§cA player is in the way!§r
-chat.claim:width1=§cYou're claim must be at least§r
-chat.claim:width2=§cblocks wide!§r
-chat.claim:blocks1=§cYou need§r
-chat.claim:blocks2=§cmore block(s) to create this claim!§r
-chat.claim:blocks3=§cmore block(s) to resize this claim!§r
+chat.claim:width=§cYou're claim must be at least %s blocks wide!§r
+chat.claim:blocks_new=§cYou need %s more block(s) to create this claim!§r
+chat.claim:blocks_resize=§cYou need %s more block(s) to resize this claim!§r
 chat.claim:updated=§aClaim config has been saved!§r
 chat.claim:resized=§aClaim has been resized!§r
 chat.claim:permissions_updated=§aClaim permissions have been updated!§r
-chat.claim:player_permissions_updated_notif=§ahas updated your permissions for§r
-chat.claim:public_permissions_updated_notif=§ahas updated the public permissions for§r
+chat.claim:player_permissions_updated_notif=§a%s has updated your permissions for [claim:name_color]%s§r
+chat.claim:public_permissions_updated_notif=§a%s has updated the public permissions for [claim:name_color]%s§r
 chat.claim:player_permissions_reset_notif=§bhas reset your permissions for§r
 
-chat.point.new:selected=First block selected
-chat.point.resize:selected=Claim corner selected
+chat.point.new:selected=First block selected: [§c%s§r, §a%s§r, §9%s§r]\n§bCrouch click to set the opposite corner of the claim!§r
+chat.point.resize:selected=Claim corner selected: [§c%s§r, §a%s§r, §9%s§r]\n§dCrouch click a another block to resize the claim!§r
 chat.point.resize:disallowed=§cYou must be the owner to resize a claim!§r
-chat.point.new:hint=§bCrouch click to set the opposite corner of the claim!§r
-chat.point.resize:hint=§dCrouch click a another block to resize the claim!§r
 
 chat.claim.permission:break_blocks=§cYou're not allowed to break blocks!§r
 chat.claim.permission:use_item_on_block=§cYou're not allowed to use items on blocks!§r
@@ -47,27 +43,32 @@ chat.claim.permission:open_containers=§cYou're not allowed to open containers!�
 chat.claim.permission:edit_signs=§cYou're not allowed to edit signs!§r
 chat.claim:view=§cYou can only view a claim from the overworld!§r
 chat.claim:piston=§cYou can't use a piston from outside this claim!§r
-chat.claim:pending_entrance_disallow=§c is in the claim, the "Enter Claim" permission will not be applied until they leave!§r
+chat.claim:pending_entrance_disallow=§c%s is in the claim, the "Enter Claim" permission will not be applied until they leave!§r
 
-chat.blocks:payment1=§aYou've recieved your hourly payment of§r
-chat.blocks:payment2=§ablocks!§r
+chat.blocks:payment=§aYou've recieved your hourly payment of %s blocks!§r
 
 ui.global.button:back=Back
+ui.global.button:save=Save
 
 ui.main:title=§5Shovel§r Land Claim
 ui.main:body.paragraph:1=Welcome to Land Claim!
 ui.main:body.paragraph:2=§bCreate a claim§r by breaking two opposite corners.
 ui.main:body.paragraph:3=§dResize a claim§r by breaking any corner and specifying a new one.
 ui.main:body.paragraph:4=§l§6Claim Block Balance§r:
-ui.main:body.paragraph:5-1=§oYou will recieve
-ui.main:body.paragraph:5-2=§omore in
-ui.main:body.paragraph:5-3=§ominutes.
+ui.main:body.paragraph:5=§oYou will recieve §a%s§r more in §9%s§r minutes.
 ui.main.button:manage=Manage Claims
+ui.main.button:op_panel=Operator Panel
+ui.main.button:global_player_permissions=§l§9Global§r Player Permissions
+ui.main.button:addon_info=Addon Info
 ui.main.button:close=Close
 
+ui.op_panel:title=Operator Panel
+
+ui.addon_info:title=Addon Info
+
 ui.manage:title=Manage Claim
-ui.manage.body:claim_start=Claim Start
-ui.manage.body:claim_end=Claim End
+ui.manage.body:claim_start=Claim Start: §cX§r=%s §9Z§r=%s
+ui.manage.body:claim_end=Claim End: §cX§r=%s §9Z§r=%s
 ui.manage.button:config=Config
 ui.manage.button:public_permissions=Public Permissions
 ui.manage.button:player_permissions=Player Permissions
@@ -80,10 +81,8 @@ ui.manage.remove:label:claim_blocks=§6Claim Blocks§r
 ui.manage.remove.button:confirm=§cRemove Claim§r
 ui.manage.remove.button:cancel=Cancel
 
-ui.manage.config:title=Claim Config
-
-ui.manage.permissions.public:title=Public Permissions
-ui.manage.permissions.player:title='s Permissions
+ui.manage.permissions.public:title=Public Permissions: %s
+ui.manage.permissions.player:title=%s's Permissions: %s
 ui.manage.permissions:enter_claim=Enter Claim
 ui.manage.permissions:break_blocks=Break Blocks
 ui.manage.permissions:use_items_on_blocks=Use Items On Blocks | Ex: Placing
@@ -110,6 +109,7 @@ ui.manage.view:loading=Loading...
 ui.manage.view:loading_subtitle=§dcrouch to cancel
 
 ui.claim.new:title=New Claim
+ui.claim.new:submit=Create Claim
 
 ui.claim.resize:title=Resize Claim
 ui.claim.resize:body=Are you sure you want to resize this claim? The blocks will be added/subtracted from your balance.
@@ -117,10 +117,12 @@ ui.manage.resize:label:claim_blocks=§6Claim Blocks§r
 ui.claim.resize.button:cancel=Cancel
 ui.claim.resize.button:resize=§dResize Claim§r
 
+ui.claim.config:title=Claim Config
 ui.claim.config.textbox:name=Name
 ui.claim.config:name_placeholder=Ex: Home
 ui.claim.config.dropdown:icon=Icon 
 ui.claim.config.toggle:border_particles=Border Particles
+ui.claim.config.submit=Save Config
 
 ui.claim.icons:land=Land
 ui.claim.icons:bed=Bed
