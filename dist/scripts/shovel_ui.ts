@@ -16,8 +16,13 @@ export class ShovelUI {
         "ui.claim.icons:flowers": "textures/ui/icon_spring.png"
     };
 
-    static main(owner: Player) {
-        var playerData: PlayerData = PlayerData.fromId(owner.id);
+    /**
+     * Main menu for the shovel land claim addon.
+     * 
+     * @param player - The player to show the form to
+     */
+    static main(player: Player) {
+        var playerData: PlayerData = PlayerData.fromId(player.id);
 
         const form = new CallbackActionFormData()
             .title("ui.main:title")
@@ -36,25 +41,37 @@ export class ShovelUI {
             })
             .button("ui.main.button:manage", "textures/ui/icon_setting.png", () => {
                 if (playerData.claims.length == 0) {
-                    sendNotification(owner, "chat.claim:no_claims");
-                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
+                    sendNotification(player, "chat.claim:no_claims");
+                    playSound(player, AddonSounds.Global.NEGATIVE_EVENT);
                 }
                 else {
-                    this.managePage(owner);
+                    this.claimsList(player);
                 }
             })
             .button("ui.main.button:close")
 
-        form.show(owner);
+        form.show(player);
     }
 
+    /**
+     * New claim creation page, uses the claimConfig page under the hood.
+     * 
+     * @param owner - The player that owns the claim
+     * @param start - The starting Vector3 of the claim
+     * @param end - The ending Vector3 of the claim
+     */
     static newClaim(owner: Player, start: Vector3, end: Vector3) {
-        var playerData: PlayerData = PlayerData.fromId(owner.id);
-
         this.claimConfig(owner, new Claim("", start, end, this.claimIcons[Object.keys(this.claimIcons)[0]]), true);
-
     }
 
+    /**
+     * Popup to confirm resizing a claim.
+     * 
+     * @param owner - The player that owns the claim
+     * @param claim - The claim to resize
+     * @param start - The starting Vector3 of the claim
+     * @param end - The ending Vector3 of the claim
+     */
     static resizeClaim(owner: Player, claim: Claim, start: Vector3, end: Vector3) {
         var playerData: PlayerData = PlayerData.fromId(owner.id);
 
@@ -95,7 +112,12 @@ export class ShovelUI {
         });
     }
 
-    static managePage(owner: Player) {
+    /**
+     * Shows a list of claims the player owns.
+     * 
+     * @param owner - The player that owns the claims
+     */
+    static claimsList(owner: Player) {
         var playerData: PlayerData = PlayerData.fromId(owner.id);
 
         const form = new CallbackActionFormData()
@@ -115,6 +137,12 @@ export class ShovelUI {
         form.show(owner)
     }
 
+    /**
+     * A form with options to manage a claim. These options include, configuring the claim, managing permissions, viewing the claim and removing it.
+     * 
+     * @param owner - The player that owns the claim
+     * @param claim - The claim to manage
+     */
     static manageClaim(owner: Player, claim: Claim) {
 
         const form = new CallbackActionFormData()
@@ -138,7 +166,7 @@ export class ShovelUI {
             .button("ui.manage.button:player_permissions", "textures/ui/icon_steve.png", () => {this.playerPermissionsList(owner, claim)})
             .button("ui.manage.button:view", "textures/ui/magnifyingGlass.png", () => {this.viewClaim(owner, claim)})
             .button("ui.manage.button:remove", "textures/ui/icon_trash.png", () => {this.removeClaim(owner, claim)})
-            .button("ui.global.button:back", undefined, () => {this.managePage(owner)});
+            .button("ui.global.button:back", undefined, () => {this.claimsList(owner)});
 
         form.show(owner);
     }
@@ -370,9 +398,12 @@ export class ShovelUI {
         form.show(owner);
     }
 
-    /*
-    Uses the camera command to circle around the specified claim.
-    */
+    /**
+     * Uses the camera command to view a claim.
+     * 
+     * @param owner - The player that owns the claim
+     * @param claim - The claim to view
+     */
     static viewClaim(owner: Player, claim: Claim) {
 
         // only run if player is in overworld
@@ -500,6 +531,11 @@ export class ShovelUI {
         }
     }
 
+    /**
+     * Exits the claim view and returns the player to first person.
+     * 
+     * @param owner - The player that owns the claim
+     */
     static exitClaimView(owner: Player) {
         var playerData = PlayerData.fromId(owner.id);
 
