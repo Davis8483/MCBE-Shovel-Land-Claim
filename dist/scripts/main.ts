@@ -1,34 +1,10 @@
-import { world, system, Player, Vector3, ItemStack, CameraFadeOptions, BlockFilter, CameraSetPosOptions, EasingType, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockType, BlockComponentTypes, BlockPermutation, BlockTypes, EntityComponentTypes, InputPermissionCategory, HudElement, HudVisibility, EntityInventoryComponent, EntityProjectileComponent, EntityIsChargedComponent, BlockVolume } from '@minecraft/server';
-import { ActionFormData, MessageFormData, ModalFormData } from '@minecraft/server-ui';
+import { world, system, Player, Vector3, ItemStack, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, EntityProjectileComponent, } from '@minecraft/server';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
+import { sendNotification } from './notifications.js';
+import { ShovelUI } from './shovel_ui.js';
 
 const shovelID = "slc:claim_shovel"
-
-const claimIcons = {
-
-    // name: path
-    "ui.claim.icons:land": "textures/ui/icon_recipe_nature.png",
-    "ui.claim.icons:bed": "textures/ui/icon_recipe_item.png",
-    "ui.claim.icons:farmland": "textures/ui/icon_new.png",
-    "ui.claim.icons:weapons": "textures/ui/icon_recipe_equipment.png",
-    "ui.claim.icons:flowers": "textures/ui/icon_spring.png"
-};
-
-function sendNotification(player: Player, langEntry: string | RawMessage) {
-    var rawText: RawMessage[] = [{ "translate": "chat.prefix" }, { "text": " " }]
-
-    if (typeof langEntry == "string") {
-        rawText.push({ "translate": `${langEntry}` });
-    }
-    else {
-        for (var segment of langEntry.rawtext) {
-            rawText.push(segment);
-        }
-    }
-
-    player.runCommandAsync(`tellraw @s {"rawtext":${JSON.stringify(rawText)}}`);
-}
 
 /**
  * Runs the callback for every claim saved in the database
@@ -75,765 +51,6 @@ function getClosestPlayer(blockLocation: Vector3): Player {
     return closestPlayer;
 }
 
-/**
- * Returns the players data including claims
- * 
- * @param playerId - The entity id of the player
- */
-function getPlayerData(playerId: string): PlayerData {
-
-    for (var player of database) {
-        if (playerId == player.id) {
-            return player;
-        }
-    }
-}
-
-class Ui {
-    // player selected icons for their claims
-    static claimIcons = {
-        // name: path
-        "ui.claim.icons:land": "textures/ui/icon_recipe_nature.png",
-        "ui.claim.icons:bed": "textures/ui/icon_recipe_item.png",
-        "ui.claim.icons:farmland": "textures/ui/icon_new.png",
-        "ui.claim.icons:weapons": "textures/ui/icon_recipe_equipment.png",
-        "ui.claim.icons:flowers": "textures/ui/icon_spring.png"
-    };
-
-    static main(owner: Player) {
-        var playerData: PlayerData = getPlayerData(owner.id);
-
-        const form = new ActionFormData()
-            .title("ui.main:title")
-            .body({
-                "rawtext": [
-                    { "translate": "ui.main:body.paragraph:1" },
-                    { "text": "\n\n" },
-                    { "translate": "ui.main:body.paragraph:2" },
-                    { "text": "\n\n" },
-                    { "translate": "ui.main:body.paragraph:3" },
-                    { "text": "\n\n" },
-                    { "translate": "ui.main:body.paragraph:4" }, { "text": ` §e${playerData.claimBlocks.amount}§r ` },
-                    { "text": "\n\n" },
-                    { "translate": "ui.main:body.paragraph:5-1" }, { "text": ` §a+${settings.claimBlockHourlyPayment}§r ` }, { "translate": "ui.main:body.paragraph:5-2" }, { "text": ` §9${playerData.claimBlocks.paymentTimeRemaining}§r ` }, { "translate": "ui.main:body.paragraph:5-3" }
-                ]
-            })
-            .button("ui.main.button:manage", "textures/ui/icon_setting.png")
-            .button("ui.main.button:close")
-
-        form.show(owner).then((response) => {
-            if (response.selection == 0) {
-                if (playerData.claims.length == 0) {
-                    sendNotification(owner, "chat.claim:no_claims");
-                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-                }
-                else {
-                    this.managePage(owner);
-                }
-            }
-        });
-    }
-
-    static newClaim(owner: Player, start: Vector3, end: Vector3) {
-        var playerData: PlayerData = getPlayerData(owner.id);
-
-        const form = new ModalFormData()
-            .title("ui.claim.new:title")
-            .textField("ui.claim.config.textbox:name", "ui.claim.config:name_placeholder")
-            .dropdown("ui.claim.config.dropdown:icon", Object.keys(claimIcons))
-            .toggle("ui.claim.config.toggle:border_particles", true)
-
-        form.show(owner).then((response) => {
-
-            if (!response.canceled) {
-
-                const name = response.formValues[0].toString();
-                const iconPath = claimIcons[Object.keys(claimIcons)[response.formValues[1].toString()]];
-                const showBorderParticles = response.formValues[2] as boolean;
-                const claimWidth = Math.abs(start.x - end.x) + 1;
-                const claimLength = Math.abs(start.z - end.z) + 1;
-
-                var isUniqueName = true;
-
-                // names are used to identify claims, make sure player is using a unique name
-                for (var c of playerData.claims) {
-                    if (c.name == name) {
-                        isUniqueName = false;
-                    }
-                }
-
-                if (name.length == 0) {
-                    sendNotification(owner, "chat.claim:name_required")
-                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-                }
-                else if (!isUniqueName) {
-                    sendNotification(owner, "chat.claim:use_unique_name")
-                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-                }
-                // passed all the checks, now make the claim
-                else {
-
-                    // subtract claim blocks
-                    playerData.claimBlocks.decrementAmount(claimWidth * claimLength);
-
-                    // create a new claim
-                    playerData.addClaim(new Claim(name, start, end, iconPath, showBorderParticles));
-
-                    // notify player
-                    sendNotification(owner, "chat.claim:created")
-                    playSound(owner, AddonSounds.Global.POSITIVE_EVENT);
-
-                    // Reset resizingClaimName to avoid incorrect resizing behavior
-                    playerData.setResizingClaimName("");
-                }
-            }
-        });
-    }
-
-    static resizeClaim(owner: Player, claim: Claim, start: Vector3, end: Vector3) {
-        var playerData: PlayerData = getPlayerData(owner.id);
-
-        const oldClaimWidth = Math.abs(claim.start.x - claim.end.x) + 1;
-        const oldClaimLength = Math.abs(claim.start.z - claim.end.z) + 1;
-
-        const newClaimWidth = Math.abs(start.x - end.x) + 1;
-        const newClaimLength = Math.abs(start.z - end.z) + 1;
-
-        const blockDifference = (oldClaimLength * oldClaimWidth) - (newClaimLength * newClaimWidth)
-
-
-
-        const form = new MessageFormData()
-            .title("ui.claim.resize:title")
-            .body({
-                "rawtext": [
-                    { "translate": "ui.claim.resize:body" },
-                    { "text": `§l\n\n${blockDifference < 0 ? "§c-" : "§a+"}${blockDifference} ` },
-                    { "translate": "ui.manage.resize:label:claim_blocks" }
-                ]
-            })
-            .button1("ui.claim.resize.button:cancel")
-            .button2("ui.claim.resize.button:resize")
-
-        form.show(owner).then((response) => {
-            // if claim resized
-            if (response.selection == 1) {
-                claim.setStart(start);
-                claim.setEnd(end);
-
-                // notify player
-                sendNotification(owner, "chat.claim:resized")
-                playSound(owner, AddonSounds.Global.POSITIVE_EVENT);
-
-                //add/subtract the blocks from players balance
-                playerData.claimBlocks.incrementAmount(blockDifference);
-
-            }
-        });
-    }
-
-    static managePage(owner: Player) {
-        var playerData: PlayerData = getPlayerData(owner.id);
-
-        const form = new ActionFormData()
-            .title("ui.manage:title")
-
-        for (var c of playerData.claims) {
-
-            var claimWidth = Math.abs(c.start.x - c.end.x) + 1;
-            var claimLength = Math.abs(c.start.z - c.end.z) + 1;
-
-            form.button(
-                {
-                    "rawtext": [
-                        { "text": `${c.name}§r\n§c${claimWidth}§8x§9${claimLength} ` }
-                    ]
-                }, c.icon);
-        }
-
-        form.button("ui.global.button:back")
-
-        form.show(owner).then((response) => {
-            if (response.selection == playerData.claims.length) {
-                // return to previous menu
-                this.main(owner);
-            }
-            else {
-                this.manageClaim(owner, playerData.claims[response.selection]);
-            }
-        });
-    }
-
-    static manageClaim(owner: Player, claim: Claim) {
-
-        const form = new ActionFormData()
-            .title({
-                "rawtext": [
-                    { "translate": "ui.manage:title" },
-                    { "text": `: ${claim.name}` }
-                ]
-            })
-            .body({
-                "rawtext": [
-                    { "text": "\n" },
-                    { "translate": "ui.manage.body:claim_start" },
-                    { "text": `:  §cX§r=${claim.start.x} §9Z§r=${claim.start.z}\n\n` },
-                    { "translate": "ui.manage.body:claim_end" },
-                    { "text": `: §cX§r=${claim.end.x} §9Z§r=${claim.end.z}\n ` }
-                ]
-            })
-            .button("ui.manage.button:config", "textures/ui/debug_glyph_color.png")
-            .button("ui.manage.button:public_permissions", "textures/ui/icon_multiplayer.png")
-            .button("ui.manage.button:player_permissions", "textures/ui/icon_steve.png")
-            .button("ui.manage.button:view", "textures/ui/magnifyingGlass.png")
-            .button("ui.manage.button:remove", "textures/ui/icon_trash.png")
-            .button("ui.global.button:back")
-
-        form.show(owner).then((response) => {
-            if (response.selection == 0) {
-                this.claimConfig(owner, claim);
-            }
-            else if (response.selection == 1) {
-                this.managePermissions(owner, claim);
-            }
-            else if (response.selection == 2) {
-                this.playerPermissionsList(owner, claim);
-            }
-            else if (response.selection == 3) {
-                this.viewClaim(owner, claim);
-            }
-            else if (response.selection == 4) {
-                this.removeClaim(owner, claim);
-            }
-            else if (response.selection == 5) {
-                // return to previous menu
-                this.managePage(owner);
-            }
-        });
-    }
-
-    static playerPermissionsList(owner: Player, claim: Claim) {
-
-        const form = new ActionFormData()
-            .title({
-                "rawtext": [
-                    { "translate": "ui.manage.permissions.player.selection:title" },
-                    { "text": `: ${claim.name}` }
-                ]
-            })
-            .body("ui.manage.permissions.player.selection:body");
-
-        for (var playerPermissions of claim.playerPermissionsList) {
-            form.button(playerPermissions.name, "textures/ui/profile_glyph_color.png");
-        }
-
-        form.button("ui.manage.permissions.player.selection:add_player", "textures/ui/realms_slot_check.png");
-        form.button("ui.manage.permissions.player.selection:remove_player", "textures/ui/redX1.png");
-        form.button("ui.global.button:back");
-
-        form.show(owner).then((response) => {
-            if (response.selection == claim.playerPermissionsList.length) {
-                // open add player menu
-                this.playerPermissionsListModify(owner, claim, true);
-            }
-            else if (response.selection == claim.playerPermissionsList.length + 1) {
-                // open remove player menu
-                this.playerPermissionsListModify(owner, claim, false);
-            }
-            else if (response.selection == claim.playerPermissionsList.length + 2) {
-                // return to previous menu
-                this.manageClaim(owner, claim);
-            }
-            else {
-                // open player permissions menu
-                this.managePermissions(owner, claim, claim.playerPermissionsList[response.selection].id);
-            }
-        });
-    }
-    /**
-     * Creates a prompt to specify what player to add or remove from permissions list
-     * 
-     * @param owner - The player that ownes the claim
-     * 
-     * @param claim - The claim that is being updated
-     * 
-     * @param add - Wether to add or remove the selected player from the specific player permissions list
-     */
-    static playerPermissionsListModify(owner: Player, claim: Claim, add: boolean) {
-
-        // player permissions not found in the claims list
-        var unsavedPlayers: string[] = []
-
-        // get the entire list of players that have ever joined the world
-        for (var playerData of database) {
-            unsavedPlayers.push(playerData.id);
-        }
-
-        // filter players from the list, we don't want to add people who are already in it
-        unsavedPlayers = unsavedPlayers.filter((p) => {
-            for (var playerPermissions of claim.playerPermissionsList) {
-                if (p == playerPermissions.id) {
-                    return false;
-                }
-            }
-
-            // make sure to remove owner from list as well
-            if (p == owner.id) {
-                return false;
-            }
-
-            return true;
-        });
-        
-        // if no players are available to add notify the owner
-        if ((unsavedPlayers.length == 0) && add) {
-            sendNotification(owner, "chat.claim:no_players_to_add");
-            playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-            return;
-        }
-        // if no players are available to remove notify the owner
-        else if ((claim.playerPermissionsList.length == 0) && !add) {
-            sendNotification(owner, "chat.claim:no_players_to_remove");
-            playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-            return;
-        }
-
-        const form = new ModalFormData()
-            .title(add ? {
-                "rawtext": [
-                    { "translate": "ui.manage.permissions.player.selection.modify.add:title" }
-                ]
-            } :
-                {
-                    "rawtext": [
-                        { "translate": "ui.manage.permissions.player.selection.modify.remove:title" }
-                    ]
-                }
-            )
-            .dropdown("ui.manage.permissions.player.selection.modify:player_dropdown", add ? unsavedPlayers.map(id => database.filter(p => p.id == id)[0].name) : claim.playerPermissionsList.map(p => p.name));
-
-        form.show(owner).then((response) => {
-
-            if (!response.canceled) {
-                if (add) {
-                    var newPlayerPermissions = new PlayerPermissions(unsavedPlayers[response.formValues[0] as number], database.filter(p => p.id == unsavedPlayers[response.formValues[0] as number])[0].name);
-
-                    // copy public permissions to new player permissions
-                    for (var perm of Object.values(PermissionTypes)) {
-                        newPlayerPermissions.setPermission(perm, claim.getPublicPermission(perm));
-                    }
-
-                    // save new player permission to list
-                    claim.addPlayerPermissions(newPlayerPermissions);
-                }
-                else {
-
-                    // if a players permissions have been removed/reset notify them
-                    for (var p of world.getAllPlayers()) {
-                        if (p.id == claim.playerPermissionsList[response.formValues[0] as number].id) {
-                            p.runCommandAsync(`tellraw @s {"rawtext":[{"translate":"chat.prefix"}, {"text":" ${owner.name} "}, {"translate":"chat.claim:player_permissions_reset_notif"}, {"translate":"claim:name_color"}, {"text":" ${claim.name}"}]}`);
-                            playSound(p, AddonSounds.Global.POSITIVE_EVENT);
-                            break;
-                        }
-                    }
-
-                    // remove player from list
-                    claim.removePlayerPermissions(response.formValues[0] as number);
-                }
-            }
-
-            // return to previous menu
-            this.playerPermissionsList(owner, claim)
-
-        });
-
-    }
-
-    /**
-    * A page for editing a claims permissions.
-    * If the player parameter is not specified the form will edit the claims global permissions.
-    * 
-    * @param owner - The player that ownes the claim
-    * 
-    * @param claim - The claim that is being updated
-    * 
-    * @param playerID - The entity id of the player to manage permissions for.
-    */
-    static managePermissions(owner: Player, claim: Claim, playerID?: string) {
-
-        if (playerID) {
-            for (var p of claim.playerPermissionsList) {
-                if (p.id == playerID) {
-                    var playerPermissions = p;
-                    break;
-                }
-            }
-        }
-
-        const form = new ModalFormData()
-            .title(playerID ? {
-                "rawtext": [
-                    { "text": `${playerPermissions.name}` },
-                    { "translate": "ui.manage.permissions.player:title" },
-                    { "text": `: ${claim.name}` }
-                ]
-            } :
-                {
-                    "rawtext": [
-                        { "translate": "ui.manage.permissions.public:title" },
-                        { "text": `: ${claim.name}` }
-                    ]
-                }
-            )
-            .toggle("ui.manage.permissions:enter_claim", playerID ? playerPermissions.getPermission(PermissionTypes.ENTER_CLAIM) : claim.getPublicPermission(PermissionTypes.ENTER_CLAIM))
-            .toggle("ui.manage.permissions:break_blocks", playerID ? playerPermissions.getPermission(PermissionTypes.BREAK_BLOCKS) : claim.getPublicPermission(PermissionTypes.BREAK_BLOCKS))
-            .toggle("ui.manage.permissions:use_items_on_blocks", playerID ? playerPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS) : claim.getPublicPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS))
-            .toggle("ui.manage.permissions:hurt_entities", playerID ? playerPermissions.getPermission(PermissionTypes.HURT_ENTITIES) : claim.getPublicPermission(PermissionTypes.HURT_ENTITIES))
-            .toggle("ui.manage.permissions:interact_with_entities", playerID ? playerPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES) : claim.getPublicPermission(PermissionTypes.INTERACT_WITH_ENTITIES))
-            .toggle("ui.manage.permissions:use_doors", playerID ? playerPermissions.getPermission(PermissionTypes.USE_DOORS) : claim.getPublicPermission(PermissionTypes.USE_DOORS))
-            .toggle("ui.manage.permissions:use_switches", playerID ? playerPermissions.getPermission(PermissionTypes.USE_SWITCHES) : claim.getPublicPermission(PermissionTypes.USE_SWITCHES))
-            .toggle("ui.manage.permissions:use_beds", playerID ? playerPermissions.getPermission(PermissionTypes.USE_BEDS) : claim.getPublicPermission(PermissionTypes.USE_BEDS))
-            .toggle("ui.manage.permissions:open_containers", playerID ? playerPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS) : claim.getPublicPermission(PermissionTypes.OPEN_CONTAINERS))
-            .toggle("ui.manage.permissions:edit_signs", playerID ? playerPermissions.getPermission(PermissionTypes.EDIT_SIGNS) : claim.getPublicPermission(PermissionTypes.EDIT_SIGNS))
-
-        if (!playerID) {
-            form.toggle("ui.manage.permissions:use_tnt", claim.getPublicPermission(PermissionTypes.USE_TNT));
-        }
-
-        form.show(owner).then((response) => {
-
-            if (!response.canceled) {
-
-                // save data
-                if (playerID) {
-                    playerPermissions.setPermission(PermissionTypes.ENTER_CLAIM, response.formValues[0] as boolean);
-                    playerPermissions.setPermission(PermissionTypes.BREAK_BLOCKS, response.formValues[1] as boolean);
-                    playerPermissions.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, response.formValues[2] as boolean);
-                    playerPermissions.setPermission(PermissionTypes.HURT_ENTITIES, response.formValues[3] as boolean);
-                    playerPermissions.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, response.formValues[4] as boolean);
-                    playerPermissions.setPermission(PermissionTypes.USE_DOORS, response.formValues[5] as boolean);
-                    playerPermissions.setPermission(PermissionTypes.USE_SWITCHES, response.formValues[6] as boolean);
-                    playerPermissions.setPermission(PermissionTypes.USE_BEDS, response.formValues[7] as boolean);
-                    playerPermissions.setPermission(PermissionTypes.OPEN_CONTAINERS, response.formValues[8] as boolean);
-                    playerPermissions.setPermission(PermissionTypes.EDIT_SIGNS, response.formValues[9] as boolean);
-
-                }
-                else {
-                    claim.setPublicPermission(PermissionTypes.ENTER_CLAIM, response.formValues[0] as boolean);
-                    claim.setPublicPermission(PermissionTypes.BREAK_BLOCKS, response.formValues[1] as boolean);
-                    claim.setPublicPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, response.formValues[2] as boolean);
-                    claim.setPublicPermission(PermissionTypes.HURT_ENTITIES, response.formValues[3] as boolean);
-                    claim.setPublicPermission(PermissionTypes.INTERACT_WITH_ENTITIES, response.formValues[4] as boolean);
-                    claim.setPublicPermission(PermissionTypes.USE_DOORS, response.formValues[5] as boolean);
-                    claim.setPublicPermission(PermissionTypes.USE_SWITCHES, response.formValues[6] as boolean);
-                    claim.setPublicPermission(PermissionTypes.USE_BEDS, response.formValues[7] as boolean);
-                    claim.setPublicPermission(PermissionTypes.OPEN_CONTAINERS, response.formValues[8] as boolean);
-                    claim.setPublicPermission(PermissionTypes.EDIT_SIGNS, response.formValues[9] as boolean);
-                    claim.setPublicPermission(PermissionTypes.USE_TNT, response.formValues[10] as boolean);
-                }
-
-                sendNotification(owner, "chat.claim:permissions_updated");
-                playSound(owner, AddonSounds.Claim.SAVE);
-
-                for (var p of world.getAllPlayers()) {
-                    var playerData: PlayerData = getPlayerData(p.id);
-
-                    // if a players permissions have been updated notify them
-                    if (playerID && p.id == playerID) {
-                        sendNotification(p, {
-                            "rawtext": [
-                                {"text":`${owner.name} `},
-                                {"translate":"chat.claim:player_permissions_updated_notif"},
-                                {"translate":"claim:name_color"},
-                                {"text":` ${claim.name}`}
-                            ]
-                        })
-                        playSound(p, AddonSounds.Claim.SAVE);
-                    }
-
-                    // if the claims global permissions have been updated notify all players in the claim
-                    if (!playerID && claim.isOverlap(p.location, p.location) && (playerData.id != owner.id)) {
-                        sendNotification(p, {
-                            "rawtext": [
-                                {"text":`${owner.name} `},
-                                {"translate":"chat.claim:public_permissions_updated_notif"},
-                                {"translate":"claim:name_color"},
-                                {"text":` ${claim.name}`}
-                            ]
-                        })
-                        playSound(p, AddonSounds.Claim.SAVE);
-                    }
-
-                    // if a players enter claim permission has been removed while they are in the claim, notify the owner
-                    if (!claim.hasPermission(PermissionTypes.ENTER_CLAIM, p) && claim.isOverlap(p.location, p.location) && (playerData.id != owner.id) && (playerID ? (playerData.id == playerID) : true)) {
-                        
-                        // set flag so the player is not ejected from the claim
-                        playerData.setPendingEntranceDisallow(true);
-
-                        // notify owner
-                        sendNotification(owner, {
-                            "rawtext": [
-                                { "text": `${playerData.name}` },
-                                { "translate": "chat.claim:pending_entrance_disallow" }]
-                        })
-                    }
-                }
-            }
-
-        });
-    }
-
-    /*
-    Uses the camera command to circle around the specified claim.
-    */
-    static viewClaim(owner: Player, claim: Claim) {
-
-        // only run if player is in overworld
-        if (owner.dimension == world.getDimension("overworld")) {
-
-            var playerData = getPlayerData(owner.id);
-
-            // set flag
-            playerData.setViewingClaim(true);
-
-            // disable player movement, besides sneaking which is used to cancel the view
-            owner.inputPermissions.cameraEnabled = false;
-            owner.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement, false);
-
-            // hide hud
-            owner.onScreenDisplay.setHudVisibility(HudVisibility.Hide);
-
-            // fade parameters
-            var transition: CameraFadeOptions = {
-                "fadeColor": {
-                    "red": 0,
-                    "green": 0,
-                    "blue": 0
-                },
-                "fadeTime": {
-                    "fadeInTime": 0.5,
-                    "fadeOutTime": 1,
-                    "holdTime": 5
-                }
-            }
-
-            // load the claim, make sure to remove old ticking area if it exsists
-            owner.runCommandAsync("tickingarea remove claimView"); // this will not break other players viewing session, their chunnk will still be rendered until the camera is gone
-            owner.runCommandAsync(`tickingarea add ${claim.start.x} ${claim.start.y} ${claim.start.z} ${claim.end.x} ${claim.end.y} ${claim.end.z} claimView`);
-
-            // all 4 points of the claim
-            var points = [
-                [claim.start.x, claim.start.z],
-                [claim.start.x, claim.end.z],
-                [claim.end.x, claim.end.z],
-                [claim.end.x, claim.start.z]
-            ];
-
-            // get the center most block of the claim to look at
-            var centerBlock: Vector3 = {
-                "x": (claim.start.x + claim.end.x) / 2,
-                "y": (claim.start.y + claim.end.y) / 2,
-                "z": (claim.start.z + claim.end.z) / 2
-            }
-
-            // find a reasonable height to position the camera at
-            var width = Math.abs(claim.start.x - claim.end.x);
-            var length = Math.abs(claim.start.z - claim.end.z);
-            var height = Math.sqrt((width ** 2) + (length ** 2)) / 2;
-
-            // camera parameters
-            var cornerView: CameraSetPosOptions = {
-                "facingLocation": centerBlock,
-                "location": {
-                    "x": points[3][0],
-                    "y": centerBlock.y + height,
-                    "z": points[3][1]
-                }
-            }
-
-            // called recursively to cycle through all points
-            const nextCorner = function(index) {
-
-                // the very first point should be set without a delay
-                if (index == 0) {
-                    var delay = 0;
-                }
-                else {
-                    var delay = 60;
-                }
-
-                system.runTimeout(() => {
-                    // check if player has canceled the viewing session
-                    if (playerData.viewingClaim) {
-
-                        cornerView.easeOptions = {
-                            "easeTime": 3,
-                            "easeType": EasingType.InOutSine
-                        };
-                        cornerView.location.x = points[index][0];
-                        cornerView.location.z = points[index][1];
-                        owner.camera.setCamera("minecraft:free", cornerView);
-
-                        // next corner
-                        if (index < 3) {
-                            nextCorner(index + 1);
-                        }
-                        // animation is over, return to first person
-                        else {
-                            system.runTimeout(() => {
-                                if (playerData.viewingClaim) {
-                                    Ui.exitClaimView(owner);
-                                }
-                            }, 60);
-                        }
-                    }
-                }, delay);
-            };
-
-            // start transition
-            owner.camera.fade(transition);
-            playSound(owner, AddonSounds.Claim.VIEW);
-
-            // goto the first corner and start the animation
-            system.runTimeout(() => {
-                // show title to player
-                owner.onScreenDisplay.setTitle({ "translate": "ui.manage.view:loading" });
-                owner.onScreenDisplay.updateSubtitle({ "translate": "ui.manage.view:loading_subtitle" });
-
-                owner.camera.setCamera("minecraft:free", cornerView);
-                system.runTimeout(() => {
-                    nextCorner(0);
-                }, 100)
-            }, 20);
-        }
-        // player is not in the right dimension
-        else {
-            playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-            sendNotification(owner, "chat.claim:view");
-        }
-    }
-
-    static exitClaimView(owner: Player) {
-        var playerData = getPlayerData(owner.id);
-
-        // fade parameters
-        var transition: CameraFadeOptions = {
-            "fadeColor": {
-                "red": 0,
-                "green": 0,
-                "blue": 0
-            },
-            "fadeTime": {
-                "fadeInTime": 0.5,
-                "fadeOutTime": 1,
-                "holdTime": 5
-            }
-        }
-
-        // unload the claim
-        owner.runCommandAsync("tickingarea remove claimView");
-                    
-        transition.fadeTime.holdTime = 1;
-        owner.camera.fade(transition);
-        system.runTimeout(() => {
-            owner.camera.clear();
-
-            // set flag back to false
-            playerData.setViewingClaim(false);
-
-            // enable player movement again
-            owner.inputPermissions.cameraEnabled = true;
-            owner.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement, true);
-
-            // show hud
-            owner.onScreenDisplay.setHudVisibility(HudVisibility.Reset);
-
-        }, 30);
-    };
-
-    static removeClaim(owner: Player, claim: Claim) {
-        var playerData: PlayerData = getPlayerData(owner.id);
-
-        var claimWidth = Math.abs(claim.start.x - claim.end.x) + 1;
-        var claimLength = Math.abs(claim.start.z - claim.end.z) + 1;
-
-        var playerData = getPlayerData(owner.id);
-
-        const form = new MessageFormData()
-            .title("ui.manage.remove:title")
-            .body({
-                "rawtext": [
-                    { "translate": "ui.manage.remove:body" },
-                    { "text": `§l\n\n§a+${claimWidth * claimLength} ` },
-                    { "translate": "ui.manage.remove:label:claim_blocks" }
-                ]
-            })
-            .button1("ui.manage.remove.button:cancel")
-            .button2("ui.manage.remove.button:confirm")
-
-        form.show(owner).then((response) => {
-            // if deletion canceled
-            if (response.selection == 0) {
-
-                // return to previous page on menu
-                this.manageClaim(owner, claim);
-            }
-            else if (response.selection == 1) {
-
-                // delete claim
-                playerData.removeClaim(claim);
-
-                sendNotification(owner, "chat.claim:removed")
-                playSound(owner, AddonSounds.Claim.DELETE);
-
-                // add the claim blocks to the players balance
-                playerData.claimBlocks.incrementAmount(claimWidth * claimLength);
-
-            }
-        });
-    }
-
-    static claimConfig(owner: Player, claim: Claim) {
-
-        const form = new ModalFormData()
-            .title({
-                "rawtext": [
-                    { "translate": "ui.manage.config:title" },
-                    { "text": `: ${claim.name}` }
-                ]
-            })
-            .textField("ui.claim.config.textbox:name", "ui.claim.config:name_placeholder", claim.name)
-            .dropdown("ui.claim.config.dropdown:icon", Object.keys(claimIcons), Object.values(claimIcons).indexOf(claim.icon))
-            .toggle("ui.claim.config.toggle:border_particles", claim.particlesEnabled)
-
-        form.show(owner).then((response) => {
-
-            if (!response.canceled) {
-
-                var name = response.formValues[0].toString();
-                var iconPath = claimIcons[Object.keys(claimIcons)[response.formValues[1].toString()]];
-                var showBorderParticles = response.formValues[2] as boolean;
-
-                if (name.length == 0) {
-                    sendNotification(owner, "chat.claim:name_required")
-                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-                }
-                else {
-
-                    // update data
-                    claim.setName(name);
-                    claim.setIcon(iconPath);
-                    claim.setParticlesEnabled(showBorderParticles);
-
-                    sendNotification(owner, "chat.claim:updated")
-                    playSound(owner, AddonSounds.Claim.SAVE);
-                }
-            }
-
-        });
-    }
-}
-
 world.afterEvents.playerJoin.subscribe((data) => {
 
     system.runTimeout(() => {
@@ -873,7 +90,7 @@ world.afterEvents.playerJoin.subscribe((data) => {
 
 world.afterEvents.playerLeave.subscribe((data) => {
 
-    var playerData = getPlayerData(data.playerId);
+    var playerData = PlayerData.fromId(data.playerId);
 
     // remove claim view ticking area if player left while viewing a claim
     if (playerData.viewingClaim) {
@@ -887,20 +104,20 @@ world.afterEvents.playerSpawn.subscribe((data) => {
     data.player.runCommandAsync(`execute if entity @s[hasitem = { item=${shovelID}, quantity = 0}] run give @s ${shovelID} 1 0 { "keep_on_death": { }, "item_lock": { "mode": "lock_in_inventory" } } `);
 
     // set flag to false since all camera positions will be reset upon rejoining
-    getPlayerData(data.player.id).setViewingClaim(false);
+    PlayerData.fromId(data.player.id).setViewingClaim(false);
 });
 
 // open menu when claim shovel is used
 world.afterEvents.itemUse.subscribe((data) => {
     if (data.itemStack.typeId == shovelID) {
-        Ui.main(data.source);
+        ShovelUI.main(data.source);
     };
 });
 
 // Set/adjust claim points if player is sneaking
 world.beforeEvents.playerBreakBlock.subscribe((data) => {
 
-    var playerData = getPlayerData(data.player.id);
+    var playerData = PlayerData.fromId(data.player.id);
 
     // handle creating claims by setting first and second point
     if ((data.itemStack != undefined) && (data.itemStack.typeId == shovelID)) {
@@ -955,15 +172,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                                 playerData.setOppositeCorner({ "x": points[aIndex ^ 1][bIndex ^ 1][0], "y": data.block.y, "z": points[aIndex ^ 1][bIndex ^ 1][1] });
                                 playerData.setResizingClaimName(claim.name);
 
-                                data.player.sendMessage({
-                                    "rawtext": [
-                                        { "translate": "chat.prefix" },
-                                        { "text": " " },
-                                        { "translate": "chat.point.resize:selected" },
-                                        { "text": `: [§c${data.block.x}§r, §a${data.block.y}§r, §9${data.block.z}§r]\n` },
-                                        { "translate": "chat.point.resize:hint" }
-                                    ]
-                                });
+                                sendNotification(data.player, "chat.point.resize:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
 
                                 playSound(data.player, AddonSounds.Shovel.RESIZE);
 
@@ -975,16 +184,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                     });
 
                     if (!isResize) {
-                        data.player.sendMessage({
-                            "rawtext": [
-                                { "translate": "chat.prefix" },
-                                { "text": " " },
-                                { "translate": "chat.point.new:selected" },
-                                { "text": `: [§c${data.block.x}§r, §a${data.block.y}§r, §9${data.block.z}§r]\n` },
-                                { "translate": "chat.point.new:hint" }
-                            ]
-                        });
-
+                        sendNotification(data.player, "chat.point.new:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
                         playSound(data.player, AddonSounds.Shovel.SELECT);
                     }
                 }
@@ -1035,18 +235,18 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         }
                         // claim isn't wide enough warning message, cancel resize
                         else if (newClaimWidth < settings.claimMinimumWidth || newClaimLength < settings.claimMinimumWidth) {
-                            sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:width1" }, { "text": ` ${settings.claimMinimumWidth} ` }, { "translate": "chat.claim:width2" }] });
+                            sendNotification(data.player, "chat.claim:blocks_resize", settings.claimMinimumWidth.toString());
                             playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // not enough claim blocks warning message, cancel resize
                         else if (playerData.claimBlocks.amount < blockDifference) {
-                            sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:blocks1" }, { "text": ` ${(blockDifference) - playerData.claimBlocks.amount} ` }, { "translate": "chat.claim:blocks3" }] });
+                            sendNotification(data.player, "chat.claim:blocks_new", ((blockDifference) - playerData.claimBlocks.amount).toString());
                             playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // all requirements met, open the claim resizing ui
                         else {
                             playSound(data.player, AddonSounds.Shovel.SELECT);
-                            Ui.resizeClaim(data.player, resizingClaim, playerData.oppositeCorner, secondPoint);
+                            ShovelUI.resizeClaim(data.player, resizingClaim, playerData.oppositeCorner, secondPoint);
                         }
                     }
                     // not resizing, create a new claim
@@ -1082,19 +282,19 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         }
                         // claim is not wide enough warning message, cancel creation
                         else if (claimWidth < settings.claimMinimumWidth || claimLength < settings.claimMinimumWidth) {
-                            sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:width1" }, { "text": ` ${settings.claimMinimumWidth} ` }, { "translate": "chat.claim:width2" }] });
+                            sendNotification(data.player, "chat.claim:width", settings.claimMinimumWidth.toString());
                             playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // not enough claim blocks warning message, cancel creation
                         else if (playerData.claimBlocks.amount < (claimWidth * claimLength)) {
-                            sendNotification(data.player, { "rawtext": [{ "translate": "chat.claim:blocks1" }, { "text": ` ${(claimWidth * claimLength) - playerData.claimBlocks.amount} ` }, { "translate": "chat.claim:blocks2" }] });
+                            sendNotification(data.player, "chat.claim:blocks_new", ((claimWidth * claimLength) - playerData.claimBlocks.amount).toString());
                             playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // all requirements are met, open the claim creation ui
                         else {
                             system.run(() => {
                                 playSound(data.player, AddonSounds.Shovel.SELECT);
-                                Ui.newClaim(data.player, playerData.firstPoint, secondPoint);
+                                ShovelUI.newClaim(data.player, playerData.firstPoint, secondPoint);
                             });
                         }
                     }
@@ -1243,10 +443,10 @@ world.afterEvents.pistonActivate.subscribe((data) => {
 
 world.beforeEvents.itemUse.subscribe((data) => {
 
-    getPlayerData(data.source.id).setItemCharged(true);
+    PlayerData.fromId(data.source.id).setItemCharged(true);
 
     // disallow player from using items while viewing claim
-    if (getPlayerData(data.source.id).viewingClaim) {
+    if (PlayerData.fromId(data.source.id).viewingClaim) {
         data.cancel = true;
     }
 
@@ -1272,7 +472,7 @@ world.beforeEvents.itemUse.subscribe((data) => {
 });
 
 world.afterEvents.itemReleaseUse.subscribe((data) => {
-    getPlayerData(data.source.id).setItemCharged(false);
+    PlayerData.fromId(data.source.id).setItemCharged(false);
 });
 
 world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
@@ -1334,7 +534,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
     const placedBlock = faces[data.blockFace] as Vector3;
 
     // disable input when viewing a claim
-    if (getPlayerData(data.player.id).viewingClaim) {
+    if (PlayerData.fromId(data.player.id).viewingClaim) {
         data.cancel = true;
     }
 
@@ -1491,7 +691,7 @@ system.runInterval(() => {
 
     for (var p of world.getAllPlayers()) {
 
-        var playerData = getPlayerData(p.id);
+        var playerData = PlayerData.fromId(p.id);
 
         // only run if player is in overworld
         if (p.dimension == world.getDimension("overworld")) {
@@ -1504,7 +704,7 @@ system.runInterval(() => {
 
             // if player is crouching set viewing claim flag to false to cancel it and return to first person
             if (p.isSneaking && playerData.viewingClaim) {
-                Ui.exitClaimView(p);
+                ShovelUI.exitClaimView(p);
             }
 
             runInAllClaims((playerID, playerName, claim) => {
@@ -1760,7 +960,7 @@ system.runInterval(() => {
 system.runInterval(() => {
     for (var p of world.getAllPlayers()) {
 
-        var playerData = getPlayerData(p.id);
+        var playerData = PlayerData.fromId(p.id);
 
         // decrement timer by 1
         playerData.claimBlocks.decrementPaymentTime();
@@ -1768,12 +968,7 @@ system.runInterval(() => {
         // if time is up reward blocks and reset timer
         if (playerData.claimBlocks.paymentTimeRemaining <= 0) {
             playerData.claimBlocks.incrementAmount(settings.claimBlockHourlyPayment);
-            sendNotification(p, {
-                "rawtext": [
-                    { "translate": "chat.blocks:payment1" },
-                    { "text": ` ${settings.claimBlockHourlyPayment} ` },
-                    { "translate": "chat.blocks:payment2" }]
-            })
+            sendNotification(p, "chat.blocks:payment", settings.claimBlockHourlyPayment.toString());
             playSound(p, AddonSounds.Global.POSITIVE_EVENT);
 
             playerData.claimBlocks.resetPaymentTime();

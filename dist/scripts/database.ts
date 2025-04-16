@@ -247,7 +247,7 @@ export class Claim {
     }
 
     // Get a specific public permission
-    getPublicPermission(permission: PermissionTypes): boolean {
+    getPermission(permission: PermissionTypes): boolean {
         // check if the permission is valid
         if (this._publicPermissions[permission] != undefined) {
             return this._publicPermissions[permission];
@@ -259,7 +259,7 @@ export class Claim {
     }
 
     // Set a specific public permission
-    setPublicPermission(permission: PermissionTypes, value: boolean): void {
+    setPermission(permission: PermissionTypes, value: boolean): void {
         // check if the permission is valid
         if (this._publicPermissions[permission] != undefined) {
             this._publicPermissions[permission] = value;
@@ -325,17 +325,17 @@ export class Claim {
         );
 
         claim._publicPermissions = {
-            enterClaim: data._publicPermissions?.enterClaim !== undefined ? data._publicPermissions.enterClaim : defaultClaim.getPublicPermission(PermissionTypes.ENTER_CLAIM),
-            breakBlocks: data._publicPermissions?.breakBlocks !== undefined ? data._publicPermissions.breakBlocks : defaultClaim.getPublicPermission(PermissionTypes.BREAK_BLOCKS),
-            useItemsOnBlocks: data._publicPermissions?.useItemsOnBlocks !== undefined ? data._publicPermissions.useItemsOnBlocks : defaultClaim.getPublicPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS),
-            hurtEntities: data._publicPermissions?.hurtEntities !== undefined ? data._publicPermissions.hurtEntities : defaultClaim.getPublicPermission(PermissionTypes.HURT_ENTITIES),
-            useTNT: data._publicPermissions?.useTNT !== undefined ? data._publicPermissions.useTNT : defaultClaim.getPublicPermission(PermissionTypes.USE_TNT),
-            interactWithEntities: data._publicPermissions?.interactWithEntities !== undefined ? data._publicPermissions.interactWithEntities : defaultClaim.getPublicPermission(PermissionTypes.INTERACT_WITH_ENTITIES),
-            useDoors: data._publicPermissions?.useDoors !== undefined ? data._publicPermissions.useDoors : defaultClaim.getPublicPermission(PermissionTypes.USE_DOORS),
-            useSwitches: data._publicPermissions?.useSwitches !== undefined ? data._publicPermissions.useSwitches : defaultClaim.getPublicPermission(PermissionTypes.USE_SWITCHES),
-            useBeds: data._publicPermissions?.useBeds !== undefined ? data._publicPermissions.useBeds : defaultClaim.getPublicPermission(PermissionTypes.USE_BEDS),
-            openContainers: data._publicPermissions?.openContainers !== undefined ? data._publicPermissions.openContainers : defaultClaim.getPublicPermission(PermissionTypes.OPEN_CONTAINERS),
-            editSigns: data._publicPermissions?.editSigns !== undefined ? data._publicPermissions.editSigns : defaultClaim.getPublicPermission(PermissionTypes.EDIT_SIGNS)
+            enterClaim: data._publicPermissions?.enterClaim !== undefined ? data._publicPermissions.enterClaim : defaultClaim.getPermission(PermissionTypes.ENTER_CLAIM),
+            breakBlocks: data._publicPermissions?.breakBlocks !== undefined ? data._publicPermissions.breakBlocks : defaultClaim.getPermission(PermissionTypes.BREAK_BLOCKS),
+            useItemsOnBlocks: data._publicPermissions?.useItemsOnBlocks !== undefined ? data._publicPermissions.useItemsOnBlocks : defaultClaim.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS),
+            hurtEntities: data._publicPermissions?.hurtEntities !== undefined ? data._publicPermissions.hurtEntities : defaultClaim.getPermission(PermissionTypes.HURT_ENTITIES),
+            useTNT: data._publicPermissions?.useTNT !== undefined ? data._publicPermissions.useTNT : defaultClaim.getPermission(PermissionTypes.USE_TNT),
+            interactWithEntities: data._publicPermissions?.interactWithEntities !== undefined ? data._publicPermissions.interactWithEntities : defaultClaim.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES),
+            useDoors: data._publicPermissions?.useDoors !== undefined ? data._publicPermissions.useDoors : defaultClaim.getPermission(PermissionTypes.USE_DOORS),
+            useSwitches: data._publicPermissions?.useSwitches !== undefined ? data._publicPermissions.useSwitches : defaultClaim.getPermission(PermissionTypes.USE_SWITCHES),
+            useBeds: data._publicPermissions?.useBeds !== undefined ? data._publicPermissions.useBeds : defaultClaim.getPermission(PermissionTypes.USE_BEDS),
+            openContainers: data._publicPermissions?.openContainers !== undefined ? data._publicPermissions.openContainers : defaultClaim.getPermission(PermissionTypes.OPEN_CONTAINERS),
+            editSigns: data._publicPermissions?.editSigns !== undefined ? data._publicPermissions.editSigns : defaultClaim.getPermission(PermissionTypes.EDIT_SIGNS)
         };
 
         claim._playerPermissionsList = data._playerPermissionsList 
@@ -616,6 +616,20 @@ export class PlayerData {
             ? data._claims.map(Claim.fromJSON).filter(claim => claim._name != "Undefined") 
             : defaultPlayerData.claims;
         return playerData;
+    }
+
+    /**
+     * Returns the players data including claims
+     * 
+     * @param playerId - The entity id of the player
+     */
+    static fromId(playerId: string): PlayerData {
+    
+        for (var player of database) {
+            if (playerId == player.id) {
+                return player;
+            }
+        }
     }
 }
 
