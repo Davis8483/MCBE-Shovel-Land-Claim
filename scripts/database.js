@@ -1,3 +1,15 @@
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
+var e_1, _a;
 import { world } from "@minecraft/server";
 /**
  * An object containing global settings for the addon
@@ -226,7 +238,7 @@ var Claim = /** @class */ (function () {
         configurable: true
     });
     // Get a specific public permission
-    Claim.prototype.getPublicPermission = function (permission) {
+    Claim.prototype.getPermission = function (permission) {
         // check if the permission is valid
         if (this._publicPermissions[permission] != undefined) {
             return this._publicPermissions[permission];
@@ -237,7 +249,7 @@ var Claim = /** @class */ (function () {
         }
     };
     // Set a specific public permission
-    Claim.prototype.setPublicPermission = function (permission, value) {
+    Claim.prototype.setPermission = function (permission, value) {
         // check if the permission is valid
         if (this._publicPermissions[permission] != undefined) {
             this._publicPermissions[permission] = value;
@@ -276,6 +288,12 @@ var Claim = /** @class */ (function () {
         this._playerPermissionsList.splice(index, 1);
         saveDb();
     };
+    Claim.prototype.getSize = function () {
+        var width = Math.abs(this._start.x - this._end.x) + 1;
+        var length = Math.abs(this._start.z - this._end.z) + 1;
+        var area = width * length;
+        return { width: width, length: length, area: area };
+    };
     /**
      * Returns a Claim object loaded from JSON, if a key is missing it will be replaced with the default value.
      * Claim name is required, if it is not found it will be replaced with "Undefined" and should be removed by the caller.
@@ -289,17 +307,17 @@ var Claim = /** @class */ (function () {
         var defaultClaim = new Claim("Undefined", { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, "textures/ui/icon_recipe_nature.png");
         var claim = new Claim(data._name || defaultClaim.name, data._start || defaultClaim.start, data._end || defaultClaim.end, data._icon || defaultClaim.icon, data._particlesEnabled !== undefined ? data._particlesEnabled : defaultClaim.particlesEnabled);
         claim._publicPermissions = {
-            enterClaim: ((_a = data._publicPermissions) === null || _a === void 0 ? void 0 : _a.enterClaim) !== undefined ? data._publicPermissions.enterClaim : defaultClaim.getPublicPermission(PermissionTypes.ENTER_CLAIM),
-            breakBlocks: ((_b = data._publicPermissions) === null || _b === void 0 ? void 0 : _b.breakBlocks) !== undefined ? data._publicPermissions.breakBlocks : defaultClaim.getPublicPermission(PermissionTypes.BREAK_BLOCKS),
-            useItemsOnBlocks: ((_c = data._publicPermissions) === null || _c === void 0 ? void 0 : _c.useItemsOnBlocks) !== undefined ? data._publicPermissions.useItemsOnBlocks : defaultClaim.getPublicPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS),
-            hurtEntities: ((_d = data._publicPermissions) === null || _d === void 0 ? void 0 : _d.hurtEntities) !== undefined ? data._publicPermissions.hurtEntities : defaultClaim.getPublicPermission(PermissionTypes.HURT_ENTITIES),
-            useTNT: ((_e = data._publicPermissions) === null || _e === void 0 ? void 0 : _e.useTNT) !== undefined ? data._publicPermissions.useTNT : defaultClaim.getPublicPermission(PermissionTypes.USE_TNT),
-            interactWithEntities: ((_f = data._publicPermissions) === null || _f === void 0 ? void 0 : _f.interactWithEntities) !== undefined ? data._publicPermissions.interactWithEntities : defaultClaim.getPublicPermission(PermissionTypes.INTERACT_WITH_ENTITIES),
-            useDoors: ((_g = data._publicPermissions) === null || _g === void 0 ? void 0 : _g.useDoors) !== undefined ? data._publicPermissions.useDoors : defaultClaim.getPublicPermission(PermissionTypes.USE_DOORS),
-            useSwitches: ((_h = data._publicPermissions) === null || _h === void 0 ? void 0 : _h.useSwitches) !== undefined ? data._publicPermissions.useSwitches : defaultClaim.getPublicPermission(PermissionTypes.USE_SWITCHES),
-            useBeds: ((_j = data._publicPermissions) === null || _j === void 0 ? void 0 : _j.useBeds) !== undefined ? data._publicPermissions.useBeds : defaultClaim.getPublicPermission(PermissionTypes.USE_BEDS),
-            openContainers: ((_k = data._publicPermissions) === null || _k === void 0 ? void 0 : _k.openContainers) !== undefined ? data._publicPermissions.openContainers : defaultClaim.getPublicPermission(PermissionTypes.OPEN_CONTAINERS),
-            editSigns: ((_l = data._publicPermissions) === null || _l === void 0 ? void 0 : _l.editSigns) !== undefined ? data._publicPermissions.editSigns : defaultClaim.getPublicPermission(PermissionTypes.EDIT_SIGNS)
+            enterClaim: ((_a = data._publicPermissions) === null || _a === void 0 ? void 0 : _a.enterClaim) !== undefined ? data._publicPermissions.enterClaim : defaultClaim.getPermission(PermissionTypes.ENTER_CLAIM),
+            breakBlocks: ((_b = data._publicPermissions) === null || _b === void 0 ? void 0 : _b.breakBlocks) !== undefined ? data._publicPermissions.breakBlocks : defaultClaim.getPermission(PermissionTypes.BREAK_BLOCKS),
+            useItemsOnBlocks: ((_c = data._publicPermissions) === null || _c === void 0 ? void 0 : _c.useItemsOnBlocks) !== undefined ? data._publicPermissions.useItemsOnBlocks : defaultClaim.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS),
+            hurtEntities: ((_d = data._publicPermissions) === null || _d === void 0 ? void 0 : _d.hurtEntities) !== undefined ? data._publicPermissions.hurtEntities : defaultClaim.getPermission(PermissionTypes.HURT_ENTITIES),
+            useTNT: ((_e = data._publicPermissions) === null || _e === void 0 ? void 0 : _e.useTNT) !== undefined ? data._publicPermissions.useTNT : defaultClaim.getPermission(PermissionTypes.USE_TNT),
+            interactWithEntities: ((_f = data._publicPermissions) === null || _f === void 0 ? void 0 : _f.interactWithEntities) !== undefined ? data._publicPermissions.interactWithEntities : defaultClaim.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES),
+            useDoors: ((_g = data._publicPermissions) === null || _g === void 0 ? void 0 : _g.useDoors) !== undefined ? data._publicPermissions.useDoors : defaultClaim.getPermission(PermissionTypes.USE_DOORS),
+            useSwitches: ((_h = data._publicPermissions) === null || _h === void 0 ? void 0 : _h.useSwitches) !== undefined ? data._publicPermissions.useSwitches : defaultClaim.getPermission(PermissionTypes.USE_SWITCHES),
+            useBeds: ((_j = data._publicPermissions) === null || _j === void 0 ? void 0 : _j.useBeds) !== undefined ? data._publicPermissions.useBeds : defaultClaim.getPermission(PermissionTypes.USE_BEDS),
+            openContainers: ((_k = data._publicPermissions) === null || _k === void 0 ? void 0 : _k.openContainers) !== undefined ? data._publicPermissions.openContainers : defaultClaim.getPermission(PermissionTypes.OPEN_CONTAINERS),
+            editSigns: ((_l = data._publicPermissions) === null || _l === void 0 ? void 0 : _l.editSigns) !== undefined ? data._publicPermissions.editSigns : defaultClaim.getPermission(PermissionTypes.EDIT_SIGNS)
         };
         claim._playerPermissionsList = data._playerPermissionsList
             ? data._playerPermissionsList
@@ -316,16 +334,26 @@ var Claim = /** @class */ (function () {
      * @param player - Optional; The player you would like to check the permission for
     */
     Claim.prototype.hasPermission = function (permission, player) {
+        var e_2, _a;
         // check if player is in specific permissions list
         if (player) {
             var playerPermissions = undefined;
-            // find the players permissions
-            for (var _i = 0, _a = this._playerPermissionsList; _i < _a.length; _i++) {
-                var p = _a[_i];
-                if (p.id == player.id) {
-                    playerPermissions = p;
-                    break;
+            try {
+                // find the players permissions
+                for (var _b = __values(this._playerPermissionsList), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var p = _c.value;
+                    if (p.id == player.id) {
+                        playerPermissions = p;
+                        break;
+                    }
                 }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_2) throw e_2.error; }
             }
         }
         // if player is not in the list, use public permissions
@@ -581,31 +609,73 @@ var PlayerData = /** @class */ (function () {
             : defaultPlayerData.claims;
         return playerData;
     };
+    /**
+     * Returns the players data including claims
+     *
+     * @param playerId - The entity id of the player
+     */
+    PlayerData.fromId = function (playerId) {
+        var e_3, _a;
+        try {
+            for (var database_1 = __values(database), database_1_1 = database_1.next(); !database_1_1.done; database_1_1 = database_1.next()) {
+                var player = database_1_1.value;
+                if (playerId == player.id) {
+                    return player;
+                }
+            }
+        }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        finally {
+            try {
+                if (database_1_1 && !database_1_1.done && (_a = database_1.return)) _a.call(database_1);
+            }
+            finally { if (e_3) throw e_3.error; }
+        }
+    };
     return PlayerData;
 }());
 export { PlayerData };
 export var database = [];
-// compile database into a dict
-for (var _i = 0, _a = world.getDynamicPropertyIds(); _i < _a.length; _i++) {
-    var id = _a[_i];
-    var property = world.getDynamicProperty(id);
-    if (id.includes("db.")) {
-        var parsedData = JSON.parse(property.toString());
-        // player id and name is required make sure it exists
-        if (Object.keys(parsedData).includes("_id") && Object.keys(parsedData).includes("_name")) {
-            var validatedData = PlayerData.fromJSON(parsedData);
-            database.push(validatedData);
+try {
+    // compile database into a dict
+    for (var _b = __values(world.getDynamicPropertyIds()), _c = _b.next(); !_c.done; _c = _b.next()) {
+        var id = _c.value;
+        var property = world.getDynamicProperty(id);
+        if (id.includes("db.")) {
+            var parsedData = JSON.parse(property.toString());
+            // player id and name is required make sure it exists
+            if (Object.keys(parsedData).includes("_id") && Object.keys(parsedData).includes("_name")) {
+                var validatedData = PlayerData.fromJSON(parsedData);
+                database.push(validatedData);
+            }
         }
     }
+}
+catch (e_1_1) { e_1 = { error: e_1_1 }; }
+finally {
+    try {
+        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+    }
+    finally { if (e_1) throw e_1.error; }
 }
 /**
  * Transfers the database from memory into long term storage using dynamic world properties
  */
 function saveDb() {
-    for (var _i = 0, database_1 = database; _i < database_1.length; _i++) {
-        var playerData = database_1[_i];
-        // deconstruct database to save each players data as an individual dynamic property
-        world.setDynamicProperty("db.".concat(playerData.id), JSON.stringify(playerData));
+    var e_4, _a;
+    try {
+        for (var database_2 = __values(database), database_2_1 = database_2.next(); !database_2_1.done; database_2_1 = database_2.next()) {
+            var playerData = database_2_1.value;
+            // deconstruct database to save each players data as an individual dynamic property
+            world.setDynamicProperty("db.".concat(playerData.id), JSON.stringify(playerData));
+        }
+    }
+    catch (e_4_1) { e_4 = { error: e_4_1 }; }
+    finally {
+        try {
+            if (database_2_1 && !database_2_1.done && (_a = database_2.return)) _a.call(database_2);
+        }
+        finally { if (e_4) throw e_4.error; }
     }
 }
 //# sourceMappingURL=database.js.map
