@@ -51,58 +51,8 @@ export class ShovelUI {
     static newClaim(owner: Player, start: Vector3, end: Vector3) {
         var playerData: PlayerData = PlayerData.fromId(owner.id);
 
-        const form = new ModalFormData()
-            .title("ui.claim.new:title")
-            .textField("ui.claim.config.textbox:name", "ui.claim.config:name_placeholder")
-            .dropdown("ui.claim.config.dropdown:icon", Object.keys(this.claimIcons))
-            .toggle("ui.claim.config.toggle:border_particles", true)
-            .submitButton("ui.claim.new.button:submit")
+        this.claimConfig(owner, new Claim("", start, end, this.claimIcons[Object.keys(this.claimIcons)[0]]), true);
 
-        form.show(owner).then((response) => {
-
-            if (!response.canceled) {
-
-                const name = response.formValues[0].toString();
-                const iconPath = this.claimIcons[Object.keys(this.claimIcons)[response.formValues[1].toString()]];
-                const showBorderParticles = response.formValues[2] as boolean;
-                const claimWidth = Math.abs(start.x - end.x) + 1;
-                const claimLength = Math.abs(start.z - end.z) + 1;
-
-                var isUniqueName = true;
-
-                // names are used to identify claims, make sure player is using a unique name
-                for (var c of playerData.claims) {
-                    if (c.name == name) {
-                        isUniqueName = false;
-                    }
-                }
-
-                if (name.length == 0) {
-                    sendNotification(owner, "chat.claim:name_required")
-                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-                }
-                else if (!isUniqueName) {
-                    sendNotification(owner, "chat.claim:use_unique_name")
-                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-                }
-                // passed all the checks, now make the claim
-                else {
-
-                    // subtract claim blocks
-                    playerData.claimBlocks.decrementAmount(claimWidth * claimLength);
-
-                    // create a new claim
-                    playerData.addClaim(new Claim(name, start, end, iconPath, showBorderParticles));
-
-                    // notify player
-                    sendNotification(owner, "chat.claim:created")
-                    playSound(owner, AddonSounds.Global.POSITIVE_EVENT);
-
-                    // Reset resizingClaimName to avoid incorrect resizing behavior
-                    playerData.setResizingClaimName("");
-                }
-            }
-        });
     }
 
     static resizeClaim(owner: Player, claim: Claim, start: Vector3, end: Vector3) {
@@ -115,8 +65,6 @@ export class ShovelUI {
         const newClaimLength = Math.abs(start.z - end.z) + 1;
 
         const blockDifference = (oldClaimLength * oldClaimWidth) - (newClaimLength * newClaimWidth)
-
-
 
         const form = new MessageFormData()
             .title("ui.claim.resize:title")
@@ -155,13 +103,10 @@ export class ShovelUI {
 
         for (var c of playerData.claims) {
 
-            var claimWidth = Math.abs(c.start.x - c.end.x) + 1;
-            var claimLength = Math.abs(c.start.z - c.end.z) + 1;
-
             form.button(
                 {
                     "rawtext": [
-                        { "text": `${c.name}§r\n§c${claimWidth}§8x§9${claimLength} ` }
+                        { "text": `${c.name}§r\n§c${c.getSize().width}§8x§9${c.getSize().length} ` }
                     ]
                 }, c.icon, () => {this.manageClaim(owner, playerData.claims.filter(cl => cl.name == c.name)[0])});
         }
@@ -596,17 +541,12 @@ export class ShovelUI {
     static removeClaim(owner: Player, claim: Claim) {
         var playerData: PlayerData = PlayerData.fromId(owner.id);
 
-        var claimWidth = Math.abs(claim.start.x - claim.end.x) + 1;
-        var claimLength = Math.abs(claim.start.z - claim.end.z) + 1;
-
-        var playerData = PlayerData.fromId(owner.id);
-
         const form = new MessageFormData()
             .title("ui.manage.remove:title")
             .body({
                 "rawtext": [
                     { "translate": "ui.manage.remove:body" },
-                    { "text": `§l\n\n§a+${claimWidth * claimLength} ` },
+                    { "text": `§l\n\n§a+${claim.getSize().width * claim.getSize().length} ` },
                     { "translate": "ui.manage.remove:label:claim_blocks" }
                 ]
             })
@@ -629,24 +569,33 @@ export class ShovelUI {
                 playSound(owner, AddonSounds.Claim.DELETE);
 
                 // add the claim blocks to the players balance
-                playerData.claimBlocks.incrementAmount(claimWidth * claimLength);
+                playerData.claimBlocks.incrementAmount(claim.getSize().width * claim.getSize().length);
 
             }
         });
     }
 
-    static claimConfig(owner: Player, claim: Claim) {
+    /**
+     * Creates a form to edit the claims name, icon and border particles.
+     * 
+     * @param owner - The player that owns the claim
+     * @param claim - The claim to edit
+     * @param newClaim - Whether this is a new claim or an existing one. This influences text that is displayed.
+     */
+    static claimConfig(owner: Player, claim: Claim, newClaim: boolean = false) {
+        var playerData: PlayerData = PlayerData.fromId(owner.id);
 
         const form = new ModalFormData()
             .title({
                 "rawtext": [
-                    { "translate": "ui.manage.config:title" },
-                    { "text": `: ${claim.name}` }
+                    { "translate": newClaim ? "ui.claim.new:title" : "ui.claim.config:title" },
+                    { "text": newClaim ? "" : `: ${claim.name}` }
                 ]
             })
             .textField("ui.claim.config.textbox:name", "ui.claim.config:name_placeholder", claim.name)
             .dropdown("ui.claim.config.dropdown:icon", Object.keys(this.claimIcons), Object.values(this.claimIcons).indexOf(claim.icon))
             .toggle("ui.claim.config.toggle:border_particles", claim.particlesEnabled)
+            .submitButton(newClaim ? "ui.claim.new:submit" : "ui.claim.config.submit");
 
         form.show(owner).then((response) => {
 
@@ -656,19 +605,63 @@ export class ShovelUI {
                 var iconPath = this.claimIcons[Object.keys(this.claimIcons)[response.formValues[1].toString()]];
                 var showBorderParticles = response.formValues[2] as boolean;
 
+                var isUniqueName = true;
+
+                // names are used to identify claims, make sure player is using a unique name
+                for (var c of playerData.claims) {
+                    if ((c.name == name) && (claim != c)) {
+                        isUniqueName = false;
+                    }
+                }
+
                 if (name.length == 0) {
                     sendNotification(owner, "chat.claim:name_required")
                     playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
                 }
-                else {
+                else if (!isUniqueName) {
+                    sendNotification(owner, "chat.claim:use_unique_name")
+                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
+                }
+                // save new claim data
+                else if (newClaim) {
+                    // subtract claim blocks
+                    playerData.claimBlocks.decrementAmount(claim.getSize().area);
 
-                    // update data
+                    // create a new claim
+                    playerData.addClaim(claim);
+
+                    // notify player
+                    sendNotification(owner, "chat.claim:created")
+                    playSound(owner, AddonSounds.Global.POSITIVE_EVENT);
+
+                    // Reset resizingClaimName to avoid incorrect resizing behavior
+                    playerData.setResizingClaimName("");
+                }
+                // update claim data
+                else {
                     claim.setName(name);
                     claim.setIcon(iconPath);
                     claim.setParticlesEnabled(showBorderParticles);
 
-                    sendNotification(owner, "chat.claim:updated")
-                    playSound(owner, AddonSounds.Claim.SAVE);
+                    if (newClaim){
+                        // subtract claim blocks
+                        playerData.claimBlocks.decrementAmount(claim.getSize().area);
+
+                        // save new claim to database
+                        playerData.addClaim(claim);
+
+                        // notify player
+                        sendNotification(owner, "chat.claim:created")
+                        playSound(owner, AddonSounds.Global.POSITIVE_EVENT);
+
+                        // Reset resizingClaimName to avoid incorrect resizing behavior
+                        playerData.setResizingClaimName("");
+                    }
+                    else {
+                        // notify player
+                        sendNotification(owner, "chat.claim:updated")
+                        playSound(owner, AddonSounds.Claim.SAVE);
+                    }
                 }
             }
 
