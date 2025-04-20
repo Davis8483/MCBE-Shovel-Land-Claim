@@ -410,18 +410,6 @@ export class Claim {
         // player permissions not found in the claims list
         var unsavedPlayers: string[] = []
 
-        // find id of the owner of the claim
-        var owner: Player = undefined;
-
-        for (var p of world.getPlayers()) {
-            var playerData: PlayerData = PlayerData.fromId(p.id);
-
-            if (playerData.claims.includes(this)) {
-                owner = p;
-                break;
-            }
-        }
-
         // get the entire list of players that have ever joined the world
         for (var playerData of database) {
             unsavedPlayers.push(playerData.id);
@@ -436,7 +424,7 @@ export class Claim {
             }
 
             // make sure to remove owner from list as well
-            if (p == owner.id) {
+            if (p == this.getOwnerData().id) {
                 return false;
             }
 
@@ -444,6 +432,23 @@ export class Claim {
         });
 
         return unsavedPlayers;
+    }
+
+    /**
+     * Returns the PlayerData object of the owner of the claim
+     * 
+     * @returns - The PlayerData object of the owner of the claim
+     */
+    getOwnerData(): PlayerData {
+
+        for (var pd of database){
+            if (pd.claims.includes(this)) {
+                return pd;
+            }
+        }
+
+        return undefined;
+
     }
 }
 

@@ -6,8 +6,10 @@ import { playSound, AddonSounds } from './sounds.js';
 import { sendNotification } from './notifications.js';
 
 export class ShovelUI {
+    private player: Player;
+
     // player selected icons for their claims
-    static claimIcons = {
+    private claimIcons = {
         // name: path
         "ui.claim.icons:land": "textures/ui/icon_recipe_nature.png",
         "ui.claim.icons:bed": "textures/ui/icon_recipe_item.png",
@@ -16,13 +18,17 @@ export class ShovelUI {
         "ui.claim.icons:flowers": "textures/ui/icon_spring.png"
     };
 
+    constructor(player: Player) {
+        this.player = player;
+    }
+
     /**
      * Main menu for the shovel land claim addon.
      * 
      * @param player - The player to show the form to
      */
-    static main(player: Player) {
-        var playerData: PlayerData = PlayerData.fromId(player.id);
+    public main() {
+        var playerData: PlayerData = PlayerData.fromId(this.player.id);
 
         const form = new CallbackActionFormData()
             .title({"translate": "ui.main:title"})
@@ -43,35 +49,59 @@ export class ShovelUI {
             // conditionally show the manage claims button if the player has any claims
             if (playerData.claims.length > 0){
                 form.button({"translate": "ui.main.button:manage"}, "textures/ui/icon_setting.png", () => {
-                    this.claimsList(player);
-                }
+                    this.claimsList(this.player.id);
+                });
+            }
+
+            form.button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/icon_multiplayer.png", () => {
+                
+            })
+            if (this.player.hasTag("shovel.op")) {
+                form.button({"translate": "ui.main.button:op_panel"}, "textures/ui/permissions_op_crown.png", () => {
+                    this.opPanel();
+                })
+            }
+            form.button({"translate": "ui.main.button:addon_info"}, "textures/ui/infobulb.png", () => {
+                this.addonInfo();
             })
             .button({"translate": "ui.main.button:close"})
 
-        form.show(player);
+        form.show(this.player);
+    }
+
+    private opPanel() {
+        const form = new CallbackActionFormData()
+            .title({"translate": "ui.op_panel:title"})
+            .button({"translate": "ui.global.button:back"}, undefined, () => {this.main()})
+            .show(this.player);
+    }
+
+    private addonInfo() {
+        const form = new CallbackActionFormData()
+            .title({"translate": "ui.addon_info:title"})
+            .button({"translate": "ui.global.button:back"}, undefined, () => {this.main()})
+            .show(this.player);
     }
 
     /**
      * New claim creation page, uses the claimConfig page under the hood.
      * 
-     * @param owner - The player that will own the claim
      * @param start - The starting Vector3 of the claim
      * @param end - The ending Vector3 of the claim
      */
-    static newClaim(owner: Player, start: Vector3, end: Vector3) {
-        this.claimConfig(owner, new Claim("", start, end, this.claimIcons[Object.keys(this.claimIcons)[0]]), true);
+    public newClaim(start: Vector3, end: Vector3) {
+        this.claimConfig(new Claim("", start, end, this.claimIcons[Object.keys(this.claimIcons)[0]]));
     }
 
     /**
      * Popup to confirm resizing a claim.
      * 
-     * @param owner - The player that owns the claim
      * @param claim - The claim to resize
      * @param start - The starting Vector3 of the claim
      * @param end - The ending Vector3 of the claim
      */
-    static resizeClaim(owner: Player, claim: Claim, start: Vector3, end: Vector3) {
-        var playerData: PlayerData = PlayerData.fromId(owner.id);
+    public resizeClaim(claim: Claim, start: Vector3, end: Vector3) {
+        var playerData: PlayerData = claim.getOwnerData();
 
         const oldClaimWidth = Math.abs(claim.start.x - claim.end.x) + 1;
         const oldClaimLength = Math.abs(claim.start.z - claim.end.z) + 1;
@@ -93,15 +123,15 @@ export class ShovelUI {
             .button1("ui.claim.resize.button:cancel")
             .button2("ui.claim.resize.button:resize")
 
-        form.show(owner).then((response) => {
+        form.show(this.player).then((response) => {
             // if claim resized
             if (response.selection == 1) {
                 claim.setStart(start);
                 claim.setEnd(end);
 
                 // notify player
-                sendNotification(owner, "chat.claim:resized")
-                playSound(owner, AddonSounds.Global.POSITIVE_EVENT);
+                sendNotification(this.player, "chat.claim:resized")
+                playSound(this.player, AddonSounds.Global.POSITIVE_EVENT);
 
                 //add/subtract the blocks from players balance
                 playerData.claimBlocks.incrementAmount(blockDifference);
@@ -113,10 +143,10 @@ export class ShovelUI {
     /**
      * Shows a list of claims the player owns.
      * 
-     * @param owner - The player that owns the claims
+     * @param ownerId - The entity id of the player that owns the claims
      */
-    static claimsList(owner: Player) {
-        var playerData: PlayerData = PlayerData.fromId(owner.id);
+    private claimsList(ownerId: string) {
+        var playerData: PlayerData = PlayerData.fromId(ownerId);
 
         const form = new CallbackActionFormData()
             .title({"translate": "ui.manage:title"})
@@ -128,20 +158,19 @@ export class ShovelUI {
                     "rawtext": [
                         { "text": `${c.name}§r\n§c${c.getSize().width}§8x§9${c.getSize().length} ` }
                     ]
-                }, c.icon, () => {this.manageClaim(owner, c)});
+                }, c.icon, () => {this.manageClaim(c)});
         }
 
-        form.button({"translate": "ui.global.button:back"}, undefined, () => {this.main(owner)});
-        form.show(owner)
+        form.button({"translate": "ui.global.button:back"}, undefined, () => {this.main()});
+        form.show(this.player);
     }
 
     /**
      * A form with options to manage a claim. These options include, configuring the claim, managing permissions, viewing the claim and removing it.
      * 
-     * @param owner - The player that owns the claim
      * @param claim - The claim to manage
      */
-    static manageClaim(owner: Player, claim: Claim) {
+    private manageClaim(claim: Claim) {
 
         const form = new CallbackActionFormData()
             .title({
@@ -159,17 +188,17 @@ export class ShovelUI {
                     { "text": "\n " }
                 ]
             })
-            .button({"translate": "ui.manage.button:config"}, "textures/ui/debug_glyph_color.png", () => {this.claimConfig(owner, claim)})
-            .button({"translate": "ui.manage.button:public_permissions"}, "textures/ui/icon_multiplayer.png", () => {this.managePermissions(owner, claim)})
-            .button({"translate": "ui.manage.button:player_permissions"}, "textures/ui/icon_steve.png", () => {this.playerPermissionsList(owner, claim)})
-            .button({"translate": "ui.manage.button:view"}, "textures/ui/magnifyingGlass.png", () => {this.viewClaim(owner, claim)})
-            .button({"translate": "ui.manage.button:remove"}, "textures/ui/icon_trash.png", () => {this.removeClaim(owner, claim)})
-            .button({"translate": "ui.global.button:back"}, undefined, () => {this.claimsList(owner)});
+            .button({"translate": "ui.manage.button:config"}, "textures/ui/debug_glyph_color.png", () => {this.claimConfig(claim)})
+            .button({"translate": "ui.manage.button:public_permissions"}, "textures/ui/icon_multiplayer.png", () => {this.managePermissions(claim)})
+            .button({"translate": "ui.manage.button:player_permissions"}, "textures/ui/icon_steve.png", () => {this.playerPermissionsList(claim)})
+            .button({"translate": "ui.manage.button:view"}, "textures/ui/magnifyingGlass.png", () => {this.viewClaim(claim)})
+            .button({"translate": "ui.manage.button:remove"}, "textures/ui/icon_trash.png", () => {this.removeClaim(claim)})
+            .button({"translate": "ui.global.button:back"}, undefined, () => {this.claimsList(claim.getOwnerData().id)});
 
-        form.show(owner);
+        form.show(this.player);
     }
 
-    static playerPermissionsList(owner: Player, claim: Claim) {
+    private playerPermissionsList(claim: Claim) {
 
         const form = new CallbackActionFormData()
             .title({
@@ -181,31 +210,29 @@ export class ShovelUI {
             .body({"translate": "ui.manage.permissions.player.selection:body"});
 
         for (var pP of claim.playerPermissionsList) {
-            form.button({"text": pP.name}, "textures/ui/profile_glyph_color.png", () => {this.managePermissions(owner, claim, pP.id)});
+            form.button({"text": pP.name}, "textures/ui/profile_glyph_color.png", () => {this.managePermissions(claim, pP.id)});
         }
 
         if (claim.getUnsavedPlayers().length > 0){
-            form.button({"translate": "ui.manage.permissions.player.selection:add_player"}, "textures/ui/realms_slot_check.png", () => {this.playerPermissionsListModify(owner, claim, true)});
+            form.button({"translate": "ui.manage.permissions.player.selection:add_player"}, "textures/ui/realms_slot_check.png", () => {this.playerPermissionsListModify(claim, true)});
         }
 
         if (claim.playerPermissionsList.length > 0){
-            form.button({"translate": "ui.manage.permissions.player.selection:remove_player"}, "textures/ui/redX1.png", () => {this.playerPermissionsListModify(owner, claim, false)});
+            form.button({"translate": "ui.manage.permissions.player.selection:remove_player"}, "textures/ui/redX1.png", () => {this.playerPermissionsListModify(claim, false)});
         }
 
-        form.button({"translate": "ui.global.button:back"}, undefined, () => {this.manageClaim(owner, claim)});
+        form.button({"translate": "ui.global.button:back"}, undefined, () => {this.manageClaim(claim)});
 
-        form.show(owner);
+        form.show(this.player);
     }
     /**
      * Creates a prompt to specify what player to add or remove from permissions list
-     * 
-     * @param owner - The player that ownes the claim
      * 
      * @param claim - The claim that is being updated
      * 
      * @param add - Wether to add or remove the selected player from the specific player permissions list
      */
-    static playerPermissionsListModify(owner: Player, claim: Claim, add: boolean) {
+    private playerPermissionsListModify(claim: Claim, add: boolean) {
 
         // get unsaved players list
         var unsavedPlayers: string[] = claim.getUnsavedPlayers();
@@ -227,7 +254,7 @@ export class ShovelUI {
                 if (add) {
                     var newPlayerPermissions = new PlayerPermissions(unsavedPlayers[response.formValues[0] as number], database.filter(p => p.id == unsavedPlayers[response.formValues[0] as number])[0].name);
 
-                    // copy public permissions to new player permissions
+                    // copy private permissions to new player permissions
                     for (var perm of Object.values(PermissionTypes)) {
                         newPlayerPermissions.setPermission(perm, claim.getPermission(perm));
                     }
@@ -236,14 +263,14 @@ export class ShovelUI {
                     claim.addPlayerPermissions(newPlayerPermissions);
 
                     // if player was added open the permissions menu for them
-                    this.managePermissions(owner, claim, newPlayerPermissions.id);
+                    this.managePermissions(claim, newPlayerPermissions.id);
                 }
                 else {
 
                     // if a players permissions have been removed/reset notify them
                     for (var p of world.getAllPlayers()) {
                         if (p.id == claim.playerPermissionsList[response.formValues[0] as number].id) {
-                            p.runCommandAsync(`tellraw @s {"rawtext":[{"translate":"chat.prefix"}, {"text":" ${owner.name} "}, {"translate":"chat.claim:player_permissions_reset_notif"}, {"translate":"claim:name_color"}, {"text":" ${claim.name}"}]}`);
+                            p.runCommandAsync(`tellraw @s {"rawtext":[{"translate":"chat.prefix"}, {"text":" ${claim.getOwnerData().name} "}, {"translate":"chat.claim:player_permissions_reset_notif"}, {"translate":"claim:name_color"}, {"text":" ${claim.name}"}]}`);
                             playSound(p, AddonSounds.Global.POSITIVE_EVENT);
                             break;
                         }
@@ -253,23 +280,21 @@ export class ShovelUI {
                     claim.removePlayerPermissions(response.formValues[0] as number);
 
                     // return to previous menu
-                    this.playerPermissionsList(owner, claim);
+                    this.playerPermissionsList(claim);
                 }
             });
-        form.show(owner)
+        form.show(this.player)
     }
 
     /**
     * A page for editing a claims permissions.
     * If the player parameter is not specified the form will edit the claims global permissions.
     * 
-    * @param owner - The player that ownes the claim
-    * 
     * @param claim - The claim that is being updated
     * 
     * @param playerID - The entity id of the player to manage permissions for.
     */
-    static managePermissions(owner: Player, claim: Claim, playerID?: string) {
+    private managePermissions(claim: Claim, playerID?: string) {
 
         if (playerID) {
             for (var p of claim.playerPermissionsList) {
@@ -353,67 +378,66 @@ export class ShovelUI {
         }
 
         form.submitButton({"translate": "ui.global.button:save"}, ()=> {
-            playSound(owner, AddonSounds.Claim.SAVE);
+            playSound(this.player, AddonSounds.Claim.SAVE);
 
             for (var p of world.getAllPlayers()) {
                 var playerData: PlayerData = PlayerData.fromId(p.id);
 
                 // if a players permissions have been updated notify them
                 if (playerID && p.id == playerID) {
-                    sendNotification(p, "chat.claim:player_permissions_updated_notif", owner.name, claim.name)
+                    sendNotification(p, "chat.claim:player_permissions_updated_notif", this.player.name, claim.name)
                     playSound(p, AddonSounds.Claim.SAVE);
                 }
 
                 // if the claims global permissions have been updated notify all players in the claim
-                if (!playerID && claim.isOverlap(p.location, p.location) && (playerData.id != owner.id)) {
-                    sendNotification(p, "chat.claim:public_permissions_updated_notif", owner.name, claim.name)
+                if (!playerID && claim.isOverlap(p.location, p.location) && (playerData.id != claim.getOwnerData().id)) {
+                    sendNotification(p, "chat.claim:public_permissions_updated_notif", this.player.name, claim.name)
                     playSound(p, AddonSounds.Claim.SAVE);
                 }
 
                 // if a players enter claim permission has been removed while they are in the claim, notify the owner
-                if (!claim.hasPermission(PermissionTypes.ENTER_CLAIM, p) && claim.isOverlap(p.location, p.location) && (playerData.id != owner.id) && (playerID ? (playerData.id == playerID) : true)) {
+                if (!claim.hasPermission(PermissionTypes.ENTER_CLAIM, p) && claim.isOverlap(p.location, p.location) && (playerData.id != claim.getOwnerData().id) && (playerID ? (playerData.id == playerID) : true)) {
                     
                     // set flag so the player is not ejected from the claim
                     playerData.setPendingEntranceDisallow(true);
 
                     // notify owner
-                    sendNotification(owner, "chat.claim:pending_entrance_disallow", playerData.name);
+                    sendNotification(this.player, "chat.claim:pending_entrance_disallow", playerData.name);
                 }
             }
 
             // return to previous menu
             if (playerID) {
-                this.playerPermissionsList(owner, claim);
+                this.playerPermissionsList(claim);
             }
             else {
-                this.manageClaim(owner, claim);
+                this.manageClaim(claim);
             }
         });
-        form.show(owner);
+        form.show(this.player);
     }
 
     /**
      * Uses the camera command to view a claim.
      * 
-     * @param owner - The player that owns the claim
      * @param claim - The claim to view
      */
-    static viewClaim(owner: Player, claim: Claim) {
+    private viewClaim(claim: Claim) {
 
         // only run if player is in overworld
-        if (owner.dimension == world.getDimension("overworld")) {
+        if (this.player.dimension == world.getDimension("overworld")) {
 
-            var playerData = PlayerData.fromId(owner.id);
+            var playerData = PlayerData.fromId(this.player.id);
 
             // set flag
             playerData.setViewingClaim(true);
 
             // disable player movement, besides sneaking which is used to cancel the view
-            owner.inputPermissions.cameraEnabled = false;
-            owner.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement, false);
+            this.player.inputPermissions.cameraEnabled = false;
+            this.player.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement, false);
 
             // hide hud
-            owner.onScreenDisplay.setHudVisibility(HudVisibility.Hide);
+            this.player.onScreenDisplay.setHudVisibility(HudVisibility.Hide);
 
             // fade parameters
             var transition: CameraFadeOptions = {
@@ -430,8 +454,8 @@ export class ShovelUI {
             }
 
             // load the claim, make sure to remove old ticking area if it exsists
-            owner.runCommandAsync("tickingarea remove claimView"); // this will not break other players viewing session, their chunnk will still be rendered until the camera is gone
-            owner.runCommandAsync(`tickingarea add ${claim.start.x} ${claim.start.y} ${claim.start.z} ${claim.end.x} ${claim.end.y} ${claim.end.z} claimView`);
+            this.player.runCommandAsync("tickingarea remove claimView"); // this will not break other players viewing session, their chunnk will still be rendered until the camera is gone
+            this.player.runCommandAsync(`tickingarea add ${claim.start.x} ${claim.start.y} ${claim.start.z} ${claim.end.x} ${claim.end.y} ${claim.end.z} claimView`);
 
             // all 4 points of the claim
             var points = [
@@ -464,7 +488,7 @@ export class ShovelUI {
             }
 
             // called recursively to cycle through all points
-            const nextCorner = function(index) {
+            const nextCorner = function(index: number, player: Player) {
 
                 // the very first point should be set without a delay
                 if (index == 0) {
@@ -484,17 +508,17 @@ export class ShovelUI {
                         };
                         cornerView.location.x = points[index][0];
                         cornerView.location.z = points[index][1];
-                        owner.camera.setCamera("minecraft:free", cornerView);
+                        player.camera.setCamera("minecraft:free", cornerView);
 
                         // next corner
                         if (index < 3) {
-                            nextCorner(index + 1);
+                            nextCorner(index + 1, player);
                         }
                         // animation is over, return to first person
                         else {
                             system.runTimeout(() => {
                                 if (playerData.viewingClaim) {
-                                    ShovelUI.exitClaimView(owner);
+                                    ShovelUI.exitClaimView(player);
                                 }
                             }, 60);
                         }
@@ -503,35 +527,35 @@ export class ShovelUI {
             };
 
             // start transition
-            owner.camera.fade(transition);
-            playSound(owner, AddonSounds.Claim.VIEW);
+            this.player.camera.fade(transition);
+            playSound(this.player, AddonSounds.Claim.VIEW);
 
             // goto the first corner and start the animation
             system.runTimeout(() => {
                 // show title to player
-                owner.onScreenDisplay.setTitle({ "translate": "ui.manage.view:loading" });
-                owner.onScreenDisplay.updateSubtitle({ "translate": "ui.manage.view:loading_subtitle" });
+                this.player.onScreenDisplay.setTitle({ "translate": "ui.manage.view:loading" });
+                this.player.onScreenDisplay.updateSubtitle({ "translate": "ui.manage.view:loading_subtitle" });
 
-                owner.camera.setCamera("minecraft:free", cornerView);
+                this.player.camera.setCamera("minecraft:free", cornerView);
                 system.runTimeout(() => {
-                    nextCorner(0);
+                    nextCorner(0, this.player);
                 }, 100)
             }, 20);
         }
         // player is not in the right dimension
         else {
-            playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-            sendNotification(owner, "chat.claim:view");
+            playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
+            sendNotification(this.player, "chat.claim:view");
         }
     }
 
     /**
      * Exits the claim view and returns the player to first person.
      * 
-     * @param owner - The player that owns the claim
+     * @param player - The player to exit the claim view for
      */
-    static exitClaimView(owner: Player) {
-        var playerData = PlayerData.fromId(owner.id);
+    static exitClaimView(player: Player) {
+        var playerData = PlayerData.fromId(player.id);
 
         // fade parameters
         var transition: CameraFadeOptions = {
@@ -548,28 +572,28 @@ export class ShovelUI {
         }
 
         // unload the claim
-        owner.runCommandAsync("tickingarea remove claimView");
+        player.runCommandAsync("tickingarea remove claimView");
                     
         transition.fadeTime.holdTime = 1;
-        owner.camera.fade(transition);
+        player.camera.fade(transition);
         system.runTimeout(() => {
-            owner.camera.clear();
+            player.camera.clear();
 
             // set flag back to false
             playerData.setViewingClaim(false);
 
             // enable player movement again
-            owner.inputPermissions.cameraEnabled = true;
-            owner.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement, true);
+            player.inputPermissions.cameraEnabled = true;
+            player.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement, true);
 
             // show hud
-            owner.onScreenDisplay.setHudVisibility(HudVisibility.Reset);
+            player.onScreenDisplay.setHudVisibility(HudVisibility.Reset);
 
         }, 30);
     };
 
-    static removeClaim(owner: Player, claim: Claim) {
-        var playerData: PlayerData = PlayerData.fromId(owner.id);
+    private removeClaim(claim: Claim) {
+        var playerData: PlayerData = claim.getOwnerData();
 
         const form = new MessageFormData()
             .title("ui.manage.remove:title")
@@ -583,23 +607,25 @@ export class ShovelUI {
             .button1("ui.manage.remove.button:cancel")
             .button2("ui.manage.remove.button:confirm")
 
-        form.show(owner).then((response) => {
+        form.show(this.player).then((response) => {
             // if deletion canceled
             if (response.selection == 0) {
 
                 // return to previous page on menu
-                this.manageClaim(owner, claim);
+                this.manageClaim(claim);
             }
             else if (response.selection == 1) {
 
                 // delete claim
                 playerData.removeClaim(claim);
 
-                sendNotification(owner, "chat.claim:removed")
-                playSound(owner, AddonSounds.Claim.DELETE);
+                playSound(this.player, AddonSounds.Claim.DELETE);
 
                 // add the claim blocks to the players balance
                 playerData.claimBlocks.incrementAmount(claim.getSize().width * claim.getSize().length);
+
+                // return to previous page on menu
+                this.claimsList(playerData.id);
 
             }
         });
@@ -608,12 +634,11 @@ export class ShovelUI {
     /**
      * Creates a form to edit the claims name, icon and border particles.
      * 
-     * @param owner - The player that owns the claim
      * @param claim - The claim to edit
-     * @param newClaim - Whether this is a new claim or an existing one. This influences text that is displayed.
      */
-    static claimConfig(owner: Player, claim: Claim, newClaim: boolean = false) {
-        var playerData: PlayerData = PlayerData.fromId(owner.id);
+    private claimConfig(claim: Claim) {
+        var playerData: PlayerData = claim.getOwnerData() || PlayerData.fromId(this.player.id);
+        var newClaim: boolean = claim.getOwnerData() == undefined; // if the claim has no owner, it is a new claim
 
         const form = new CallbackModalFormData()
             .title({
@@ -633,11 +658,11 @@ export class ShovelUI {
                 }
 
                 if ((value as String).length == 0) {
-                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
+                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
                     return new ModalDataError("ui.claim.config.error:no_name");
                 }
                 else if (!isUniqueName) {
-                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
+                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
                     return new ModalDataError("ui.claim.config.error:unique_name");
                 }
 
@@ -650,59 +675,33 @@ export class ShovelUI {
                 var iconPath = this.claimIcons[Object.keys(this.claimIcons)[response.formValues[1].toString()]];
                 var showBorderParticles = response.formValues[2] as boolean;
 
-                var isUniqueName = true;
-
-                // names are used to identify claims, make sure player is using a unique name
-                for (var c of playerData.claims) {
-                    if ((c.name == name) && (claim != c)) {
-                        isUniqueName = false;
-                    }
-                }
-
-                // save new claim data
-                if (newClaim) {
+                // update claim data
+                claim.setName(name);
+                claim.setIcon(iconPath);
+                claim.setParticlesEnabled(showBorderParticles);
+                
+                if (newClaim){
                     // subtract claim blocks
                     playerData.claimBlocks.decrementAmount(claim.getSize().area);
 
-                    // create a new claim
+                    // save new claim to database
                     playerData.addClaim(claim);
 
                     // notify player
-                    sendNotification(owner, "chat.claim:created")
-                    playSound(owner, AddonSounds.Global.POSITIVE_EVENT);
+                    sendNotification(this.player, "chat.claim:created")
+                    playSound(this.player, AddonSounds.Global.POSITIVE_EVENT);
 
                     // Reset resizingClaimName to avoid incorrect resizing behavior
                     playerData.setResizingClaimName("");
                 }
-                // update claim data
                 else {
-                    claim.setName(name);
-                    claim.setIcon(iconPath);
-                    claim.setParticlesEnabled(showBorderParticles);
+                    playSound(this.player, AddonSounds.Claim.SAVE);
 
-                    if (newClaim){
-                        // subtract claim blocks
-                        playerData.claimBlocks.decrementAmount(claim.getSize().area);
-
-                        // save new claim to database
-                        playerData.addClaim(claim);
-
-                        // notify player
-                        sendNotification(owner, "chat.claim:created")
-                        playSound(owner, AddonSounds.Global.POSITIVE_EVENT);
-
-                        // Reset resizingClaimName to avoid incorrect resizing behavior
-                        playerData.setResizingClaimName("");
-                    }
-                    else {
-                        playSound(owner, AddonSounds.Claim.SAVE);
-
-                        // return to previous menu
-                        this.manageClaim(owner, claim);
-                    }
+                    // return to previous menu
+                    this.manageClaim(claim);
                 }
             });
 
-        form.show(owner);
+        form.show(this.player);
     }
 }

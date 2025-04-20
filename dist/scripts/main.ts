@@ -110,7 +110,7 @@ world.afterEvents.playerSpawn.subscribe((data) => {
 // open menu when claim shovel is used
 world.afterEvents.itemUse.subscribe((data) => {
     if (data.itemStack.typeId == shovelID) {
-        ShovelUI.main(data.source);
+        new ShovelUI(data.source).main();
     };
 });
 
@@ -245,8 +245,10 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         }
                         // all requirements met, open the claim resizing ui
                         else {
-                            playSound(data.player, AddonSounds.Shovel.SELECT);
-                            ShovelUI.resizeClaim(data.player, resizingClaim, playerData.oppositeCorner, secondPoint);
+                            system.run(() => {
+                                playSound(data.player, AddonSounds.Shovel.SELECT);
+                                new ShovelUI(data.player).resizeClaim(resizingClaim, playerData.oppositeCorner, secondPoint);
+                            });
                         }
                     }
                     // not resizing, create a new claim
@@ -294,7 +296,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         else {
                             system.run(() => {
                                 playSound(data.player, AddonSounds.Shovel.SELECT);
-                                ShovelUI.newClaim(data.player, playerData.firstPoint, secondPoint);
+                                new ShovelUI(data.player).newClaim(playerData.firstPoint, secondPoint);
                             });
                         }
                     }
