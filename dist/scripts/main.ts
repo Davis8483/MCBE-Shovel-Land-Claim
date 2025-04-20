@@ -235,12 +235,12 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         }
                         // claim isn't wide enough warning message, cancel resize
                         else if (newClaimWidth < settings.claimMinimumWidth || newClaimLength < settings.claimMinimumWidth) {
-                            sendNotification(data.player, "chat.claim:blocks_resize", settings.claimMinimumWidth.toString());
+                            sendNotification(data.player, "chat.claim:width", settings.claimMinimumWidth.toString());
                             playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // not enough claim blocks warning message, cancel resize
                         else if (playerData.claimBlocks.amount < blockDifference) {
-                            sendNotification(data.player, "chat.claim:blocks_new", ((blockDifference) - playerData.claimBlocks.amount).toString());
+                            sendNotification(data.player, "chat.claim:blocks_resize", ((blockDifference) - playerData.claimBlocks.amount).toString());
                             playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // all requirements met, open the claim resizing ui
