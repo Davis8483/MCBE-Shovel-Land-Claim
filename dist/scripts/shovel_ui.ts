@@ -39,12 +39,10 @@ export class ShovelUI {
                     { "translate": "ui.main:body.paragraph:5", "with": [settings.claimBlockHourlyPayment.toString(), playerData.claimBlocks.paymentTimeRemaining.toString()] }
                 ]
             })
-            .button({"translate": "ui.main.button:manage"}, "textures/ui/icon_setting.png", () => {
-                if (playerData.claims.length == 0) {
-                    sendNotification(player, "chat.claim:no_claims");
-                    playSound(player, AddonSounds.Global.NEGATIVE_EVENT);
-                }
-                else {
+
+            // conditionally show the manage claims button if the player has any claims
+            if (playerData.claims.length > 0){
+                form.button({"translate": "ui.main.button:manage"}, "textures/ui/icon_setting.png", () => {
                     this.claimsList(player);
                 }
             })
@@ -186,9 +184,15 @@ export class ShovelUI {
             form.button({"text": pP.name}, "textures/ui/profile_glyph_color.png", () => {this.managePermissions(owner, claim, pP.id)});
         }
 
-        form.button({"translate": "ui.manage.permissions.player.selection:add_player"}, "textures/ui/realms_slot_check.png", () => {this.playerPermissionsListModify(owner, claim, true)})
-            .button({"translate": "ui.manage.permissions.player.selection:remove_player"}, "textures/ui/redX1.png", () => {this.playerPermissionsListModify(owner, claim, false)})
-            .button({"translate": "ui.global.button:back"}, undefined, () => {this.manageClaim(owner, claim)});
+        if (claim.getUnsavedPlayers().length > 0){
+            form.button({"translate": "ui.manage.permissions.player.selection:add_player"}, "textures/ui/realms_slot_check.png", () => {this.playerPermissionsListModify(owner, claim, true)});
+        }
+
+        if (claim.playerPermissionsList.length > 0){
+            form.button({"translate": "ui.manage.permissions.player.selection:remove_player"}, "textures/ui/redX1.png", () => {this.playerPermissionsListModify(owner, claim, false)});
+        }
+
+        form.button({"translate": "ui.global.button:back"}, undefined, () => {this.manageClaim(owner, claim)});
 
         form.show(owner);
     }
@@ -203,42 +207,8 @@ export class ShovelUI {
      */
     static playerPermissionsListModify(owner: Player, claim: Claim, add: boolean) {
 
-        // player permissions not found in the claims list
-        var unsavedPlayers: string[] = []
-
-        // get the entire list of players that have ever joined the world
-        for (var playerData of database) {
-            unsavedPlayers.push(playerData.id);
-        }
-
-        // filter players from the list, we don't want to add people who are already in it
-        unsavedPlayers = unsavedPlayers.filter((p) => {
-            for (var playerPermissions of claim.playerPermissionsList) {
-                if (p == playerPermissions.id) {
-                    return false;
-                }
-            }
-
-            // make sure to remove owner from list as well
-            if (p == owner.id) {
-                return false;
-            }
-
-            return true;
-        });
-        
-        // if no players are available to add notify the owner
-        if ((unsavedPlayers.length == 0) && add) {
-            sendNotification(owner, "chat.claim:no_players_to_add");
-            playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-            return;
-        }
-        // if no players are available to remove notify the owner
-        else if ((claim.playerPermissionsList.length == 0) && !add) {
-            sendNotification(owner, "chat.claim:no_players_to_remove");
-            playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-            return;
-        }
+        // get unsaved players list
+        var unsavedPlayers: string[] = claim.getUnsavedPlayers();
 
         const form = new CallbackModalFormData()
             .title(add ? {
@@ -264,6 +234,9 @@ export class ShovelUI {
 
                     // save new player permission to list
                     claim.addPlayerPermissions(newPlayerPermissions);
+
+                    // if player was added open the permissions menu for them
+                    this.managePermissions(owner, claim, newPlayerPermissions.id);
                 }
                 else {
 
@@ -278,10 +251,10 @@ export class ShovelUI {
 
                     // remove player from list
                     claim.removePlayerPermissions(response.formValues[0] as number);
-                }
 
-                // return to previous menu
-                this.playerPermissionsList(owner, claim)
+                    // return to previous menu
+                    this.playerPermissionsList(owner, claim);
+                }
             });
         form.show(owner)
     }
@@ -380,7 +353,6 @@ export class ShovelUI {
         }
 
         form.submitButton({"translate": "ui.global.button:save"}, ()=> {
-            sendNotification(owner, "chat.claim:permissions_updated");
             playSound(owner, AddonSounds.Claim.SAVE);
 
             for (var p of world.getAllPlayers()) {
@@ -407,6 +379,14 @@ export class ShovelUI {
                     // notify owner
                     sendNotification(owner, "chat.claim:pending_entrance_disallow", playerData.name);
                 }
+            }
+
+            // return to previous menu
+            if (playerID) {
+                this.playerPermissionsList(owner, claim);
+            }
+            else {
+                this.manageClaim(owner, claim);
             }
         });
         form.show(owner);
@@ -654,11 +634,11 @@ export class ShovelUI {
 
                 if ((value as String).length == 0) {
                     playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-                    return new ModalDataError("chat.claim:name_required");
+                    return new ModalDataError("ui.claim.config.error:no_name");
                 }
                 else if (!isUniqueName) {
                     playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-                    return new ModalDataError("chat.claim:use_unique_name");
+                    return new ModalDataError("ui.claim.config.error:unique_name");
                 }
 
                 return new ModalDataCorrect();
@@ -715,9 +695,10 @@ export class ShovelUI {
                         playerData.setResizingClaimName("");
                     }
                     else {
-                        // notify player
-                        sendNotification(owner, "chat.claim:updated")
                         playSound(owner, AddonSounds.Claim.SAVE);
+
+                        // return to previous menu
+                        this.manageClaim(owner, claim);
                     }
                 }
             });

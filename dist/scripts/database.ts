@@ -402,6 +402,49 @@ export class Claim {
         // Check if there's no overlap on both x and y directions
         return !(rect1Right < rect2Left || rect2Right < rect1Left || rect1Top < rect2Bottom || rect2Top < rect1Bottom);
     }
+
+    /**
+     * Returns a list of player id's that are not saved in the public permissions list
+     */
+    getUnsavedPlayers(): string[] {
+        // player permissions not found in the claims list
+        var unsavedPlayers: string[] = []
+
+        // find id of the owner of the claim
+        var owner: Player = undefined;
+
+        for (var p of world.getPlayers()) {
+            var playerData: PlayerData = PlayerData.fromId(p.id);
+
+            if (playerData.claims.includes(this)) {
+                owner = p;
+                break;
+            }
+        }
+
+        // get the entire list of players that have ever joined the world
+        for (var playerData of database) {
+            unsavedPlayers.push(playerData.id);
+        }
+
+        // filter players from the list, we don't want to add people who are already in it
+        unsavedPlayers = unsavedPlayers.filter((p) => {
+            for (var playerPermissions of this.playerPermissionsList) {
+                if (p == playerPermissions.id) {
+                    return false;
+                }
+            }
+
+            // make sure to remove owner from list as well
+            if (p == owner.id) {
+                return false;
+            }
+
+            return true;
+        });
+
+        return unsavedPlayers;
+    }
 }
 
 export class PlayerClaimBlocks {
