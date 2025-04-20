@@ -514,7 +514,7 @@ export class ShovelUI {
                         else {
                             system.runTimeout(() => {
                                 if (playerData.viewingClaim) {
-                                    this.exitClaimView(owner);
+                                    ShovelUI.exitClaimView(owner);
                                 }
                             }, 60);
                         }
