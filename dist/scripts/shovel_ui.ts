@@ -1,6 +1,6 @@
-import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility } from '@minecraft/server';
-import { MessageFormData, ModalFormData } from '@minecraft/server-ui';
-import { CallbackActionFormData, CallbackModalFormData } from './ui_wrapper.js';
+import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility, RawMessage } from '@minecraft/server';
+import { MessageFormData } from '@minecraft/server-ui';
+import { CallbackActionFormData, CallbackModalFormData, ModalDataCorrect, ModalDataError } from './ui_wrapper.js';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { sendNotification } from './notifications.js';
@@ -25,7 +25,7 @@ export class ShovelUI {
         var playerData: PlayerData = PlayerData.fromId(player.id);
 
         const form = new CallbackActionFormData()
-            .title("ui.main:title")
+            .title({"translate": "ui.main:title"})
             .body({
                 "rawtext": [
                     { "translate": "ui.main:body.paragraph:1" },
@@ -39,7 +39,7 @@ export class ShovelUI {
                     { "translate": "ui.main:body.paragraph:5", "with": [settings.claimBlockHourlyPayment.toString(), playerData.claimBlocks.paymentTimeRemaining.toString()] }
                 ]
             })
-            .button("ui.main.button:manage", "textures/ui/icon_setting.png", () => {
+            .button({"translate": "ui.main.button:manage"}, "textures/ui/icon_setting.png", () => {
                 if (playerData.claims.length == 0) {
                     sendNotification(player, "chat.claim:no_claims");
                     playSound(player, AddonSounds.Global.NEGATIVE_EVENT);
@@ -48,7 +48,7 @@ export class ShovelUI {
                     this.claimsList(player);
                 }
             })
-            .button("ui.main.button:close")
+            .button({"translate": "ui.main.button:close"})
 
         form.show(player);
     }
@@ -56,7 +56,7 @@ export class ShovelUI {
     /**
      * New claim creation page, uses the claimConfig page under the hood.
      * 
-     * @param owner - The player that owns the claim
+     * @param owner - The player that will own the claim
      * @param start - The starting Vector3 of the claim
      * @param end - The ending Vector3 of the claim
      */
@@ -121,7 +121,7 @@ export class ShovelUI {
         var playerData: PlayerData = PlayerData.fromId(owner.id);
 
         const form = new CallbackActionFormData()
-            .title("ui.manage:title")
+            .title({"translate": "ui.manage:title"})
 
         for (const c of playerData.claims) {
 
@@ -133,7 +133,7 @@ export class ShovelUI {
                 }, c.icon, () => {this.manageClaim(owner, c)});
         }
 
-        form.button("ui.global.button:back", undefined, () => {this.main(owner)});
+        form.button({"translate": "ui.global.button:back"}, undefined, () => {this.main(owner)});
         form.show(owner)
     }
 
@@ -161,12 +161,12 @@ export class ShovelUI {
                     { "text": "\n " }
                 ]
             })
-            .button("ui.manage.button:config", "textures/ui/debug_glyph_color.png", () => {this.claimConfig(owner, claim)})
-            .button("ui.manage.button:public_permissions", "textures/ui/icon_multiplayer.png", () => {this.managePermissions(owner, claim)})
-            .button("ui.manage.button:player_permissions", "textures/ui/icon_steve.png", () => {this.playerPermissionsList(owner, claim)})
-            .button("ui.manage.button:view", "textures/ui/magnifyingGlass.png", () => {this.viewClaim(owner, claim)})
-            .button("ui.manage.button:remove", "textures/ui/icon_trash.png", () => {this.removeClaim(owner, claim)})
-            .button("ui.global.button:back", undefined, () => {this.claimsList(owner)});
+            .button({"translate": "ui.manage.button:config"}, "textures/ui/debug_glyph_color.png", () => {this.claimConfig(owner, claim)})
+            .button({"translate": "ui.manage.button:public_permissions"}, "textures/ui/icon_multiplayer.png", () => {this.managePermissions(owner, claim)})
+            .button({"translate": "ui.manage.button:player_permissions"}, "textures/ui/icon_steve.png", () => {this.playerPermissionsList(owner, claim)})
+            .button({"translate": "ui.manage.button:view"}, "textures/ui/magnifyingGlass.png", () => {this.viewClaim(owner, claim)})
+            .button({"translate": "ui.manage.button:remove"}, "textures/ui/icon_trash.png", () => {this.removeClaim(owner, claim)})
+            .button({"translate": "ui.global.button:back"}, undefined, () => {this.claimsList(owner)});
 
         form.show(owner);
     }
@@ -180,15 +180,15 @@ export class ShovelUI {
                     { "text": `: ${claim.name}` }
                 ]
             })
-            .body("ui.manage.permissions.player.selection:body");
+            .body({"translate": "ui.manage.permissions.player.selection:body"});
 
         for (var pP of claim.playerPermissionsList) {
-            form.button(pP.name, "textures/ui/profile_glyph_color.png", () => {this.managePermissions(owner, claim, pP.id)});
+            form.button({"text": pP.name}, "textures/ui/profile_glyph_color.png", () => {this.managePermissions(owner, claim, pP.id)});
         }
 
-        form.button("ui.manage.permissions.player.selection:add_player", "textures/ui/realms_slot_check.png", () => {this.playerPermissionsListModify(owner, claim, true)})
-            .button("ui.manage.permissions.player.selection:remove_player", "textures/ui/redX1.png", () => {this.playerPermissionsListModify(owner, claim, false)})
-            .button("ui.global.button:back", undefined, () => {this.manageClaim(owner, claim)});
+        form.button({"translate": "ui.manage.permissions.player.selection:add_player"}, "textures/ui/realms_slot_check.png", () => {this.playerPermissionsListModify(owner, claim, true)})
+            .button({"translate": "ui.manage.permissions.player.selection:remove_player"}, "textures/ui/redX1.png", () => {this.playerPermissionsListModify(owner, claim, false)})
+            .button({"translate": "ui.global.button:back"}, undefined, () => {this.manageClaim(owner, claim)});
 
         form.show(owner);
     }
@@ -240,7 +240,7 @@ export class ShovelUI {
             return;
         }
 
-        const form = new ModalFormData()
+        const form = new CallbackModalFormData()
             .title(add ? {
                 "rawtext": [
                     { "translate": "ui.manage.permissions.player.selection.modify.add:title" }
@@ -252,11 +252,8 @@ export class ShovelUI {
                     ]
                 }
             )
-            .dropdown("ui.manage.permissions.player.selection.modify:player_dropdown", add ? unsavedPlayers.map(id => database.filter(p => p.id == id)[0].name) : claim.playerPermissionsList.map(p => p.name));
-
-        form.show(owner).then((response) => {
-
-            if (!response.canceled) {
+            .dropdown({"translate": "ui.manage.permissions.player.selection.modify:player_dropdown"}, add ? unsavedPlayers.map(id => ({"text": database.filter(p => p.id == id)[0].name})) : claim.playerPermissionsList.map(p => ({"text": p.name})))
+            .submitButton(add ? {"translate": "ui.manage.permissions.player.selection.modify.add:submit"} : {"translate": "ui.manage.permissions.player.selection.modify.remove:submit"}, (response) => {
                 if (add) {
                     var newPlayerPermissions = new PlayerPermissions(unsavedPlayers[response.formValues[0] as number], database.filter(p => p.id == unsavedPlayers[response.formValues[0] as number])[0].name);
 
@@ -282,13 +279,11 @@ export class ShovelUI {
                     // remove player from list
                     claim.removePlayerPermissions(response.formValues[0] as number);
                 }
-            }
 
-            // return to previous menu
-            this.playerPermissionsList(owner, claim)
-
-        });
-
+                // return to previous menu
+                this.playerPermissionsList(owner, claim)
+            });
+        form.show(owner)
     }
 
     /**
@@ -325,44 +320,66 @@ export class ShovelUI {
                     ]
                 }
             )
-            .toggle("ui.manage.permissions:enter_claim", playerID ? playerPermissions.getPermission(PermissionTypes.ENTER_CLAIM) : claim.getPermission(PermissionTypes.ENTER_CLAIM), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:enter_claim"}, playerID ? playerPermissions.getPermission(PermissionTypes.ENTER_CLAIM) : claim.getPermission(PermissionTypes.ENTER_CLAIM), (value)=> {
                 target.setPermission(PermissionTypes.ENTER_CLAIM, value);
+
+                return new ModalDataCorrect();
             })
-            .toggle("ui.manage.permissions:break_blocks", playerID ? playerPermissions.getPermission(PermissionTypes.BREAK_BLOCKS) : claim.getPermission(PermissionTypes.BREAK_BLOCKS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:break_blocks"}, playerID ? playerPermissions.getPermission(PermissionTypes.BREAK_BLOCKS) : claim.getPermission(PermissionTypes.BREAK_BLOCKS), (value)=> {
                 target.setPermission(PermissionTypes.BREAK_BLOCKS, value);
+
+                return new ModalDataCorrect();
             })
-            .toggle("ui.manage.permissions:use_items_on_blocks", playerID ? playerPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS) : claim.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:use_items_on_blocks"}, playerID ? playerPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS) : claim.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS), (value)=> {
                 target.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, value);
+
+                return new ModalDataCorrect();
             })
-            .toggle("ui.manage.permissions:hurt_entities", playerID ? playerPermissions.getPermission(PermissionTypes.HURT_ENTITIES) : claim.getPermission(PermissionTypes.HURT_ENTITIES), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:hurt_entities"}, playerID ? playerPermissions.getPermission(PermissionTypes.HURT_ENTITIES) : claim.getPermission(PermissionTypes.HURT_ENTITIES), (value)=> {
                 target.setPermission(PermissionTypes.HURT_ENTITIES, value);
+
+                return new ModalDataCorrect();
             })
-            .toggle("ui.manage.permissions:interact_with_entities", playerID ? playerPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES) : claim.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:interact_with_entities"}, playerID ? playerPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES) : claim.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES), (value)=> {
                 target.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, value);
+
+                return new ModalDataCorrect();
             })
-            .toggle("ui.manage.permissions:use_doors", playerID ? playerPermissions.getPermission(PermissionTypes.USE_DOORS) : claim.getPermission(PermissionTypes.USE_DOORS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:use_doors"}, playerID ? playerPermissions.getPermission(PermissionTypes.USE_DOORS) : claim.getPermission(PermissionTypes.USE_DOORS), (value)=> {
                 target.setPermission(PermissionTypes.USE_DOORS, value);
+
+                return new ModalDataCorrect();
             })
-            .toggle("ui.manage.permissions:use_switches", playerID ? playerPermissions.getPermission(PermissionTypes.USE_SWITCHES) : claim.getPermission(PermissionTypes.USE_SWITCHES), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:use_switches"}, playerID ? playerPermissions.getPermission(PermissionTypes.USE_SWITCHES) : claim.getPermission(PermissionTypes.USE_SWITCHES), (value)=> {
                 target.setPermission(PermissionTypes.USE_SWITCHES, value);
+
+                return new ModalDataCorrect();
             })
-            .toggle("ui.manage.permissions:use_beds", playerID ? playerPermissions.getPermission(PermissionTypes.USE_BEDS) : claim.getPermission(PermissionTypes.USE_BEDS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:use_beds"}, playerID ? playerPermissions.getPermission(PermissionTypes.USE_BEDS) : claim.getPermission(PermissionTypes.USE_BEDS), (value)=> {
                 target.setPermission(PermissionTypes.USE_BEDS, value);
+
+                return new ModalDataCorrect();
             })
-            .toggle("ui.manage.permissions:open_containers", playerID ? playerPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS) : claim.getPermission(PermissionTypes.OPEN_CONTAINERS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:open_containers"}, playerID ? playerPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS) : claim.getPermission(PermissionTypes.OPEN_CONTAINERS), (value)=> {
                 target.setPermission(PermissionTypes.OPEN_CONTAINERS, value);
+
+                return new ModalDataCorrect();
             })
-            .toggle("ui.manage.permissions:edit_signs", playerID ? playerPermissions.getPermission(PermissionTypes.EDIT_SIGNS) : claim.getPermission(PermissionTypes.EDIT_SIGNS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:edit_signs"}, playerID ? playerPermissions.getPermission(PermissionTypes.EDIT_SIGNS) : claim.getPermission(PermissionTypes.EDIT_SIGNS), (value)=> {
                 target.setPermission(PermissionTypes.EDIT_SIGNS, value);
+
+                return new ModalDataCorrect();
             })
 
         if (!playerID) {
-            form.toggle("ui.manage.permissions:use_tnt", claim.getPermission(PermissionTypes.USE_TNT), (value)=> {
+            form.toggle({"translate": "ui.manage.permissions:use_tnt"}, claim.getPermission(PermissionTypes.USE_TNT), (value)=> {
                 claim.setPermission(PermissionTypes.USE_TNT, value);
+
+                return new ModalDataCorrect();
             });
         }
 
-        form.submitButton("ui.global.button:save", ()=> {
+        form.submitButton({"translate": "ui.global.button:save"}, ()=> {
             sendNotification(owner, "chat.claim:permissions_updated");
             playSound(owner, AddonSounds.Claim.SAVE);
 
@@ -618,22 +635,37 @@ export class ShovelUI {
     static claimConfig(owner: Player, claim: Claim, newClaim: boolean = false) {
         var playerData: PlayerData = PlayerData.fromId(owner.id);
 
-        const form = new ModalFormData()
+        const form = new CallbackModalFormData()
             .title({
                 "rawtext": [
                     { "translate": newClaim ? "ui.claim.new:title" : "ui.claim.config:title" },
                     { "text": newClaim ? "" : `: ${claim.name}` }
                 ]
             })
-            .textField("ui.claim.config.textbox:name", "ui.claim.config:name_placeholder", claim.name)
-            .dropdown("ui.claim.config.dropdown:icon", Object.keys(this.claimIcons), Object.values(this.claimIcons).indexOf(claim.icon))
-            .toggle("ui.claim.config.toggle:border_particles", claim.particlesEnabled)
-            .submitButton(newClaim ? "ui.claim.new:submit" : "ui.claim.config.submit");
+            .textField({"translate": "ui.claim.config.textbox:name"}, {"translate": "ui.claim.config:name_placeholder"}, claim.name, (value) => {
+                var isUniqueName = true;
 
-        form.show(owner).then((response) => {
+                // names are used to identify claims, make sure player is using a unique name
+                for (var c of playerData.claims) {
+                    if ((c.name == value) && (claim != c)) {
+                        isUniqueName = false;
+                    }
+                }
 
-            if (!response.canceled) {
+                if ((value as String).length == 0) {
+                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
+                    return new ModalDataError("chat.claim:name_required");
+                }
+                else if (!isUniqueName) {
+                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
+                    return new ModalDataError("chat.claim:use_unique_name");
+                }
 
+                return new ModalDataCorrect();
+            })
+            .dropdown({"translate": "ui.claim.config.dropdown:icon"}, Object.keys(this.claimIcons).map((i)=>({"translate": i} as RawMessage)), Object.values(this.claimIcons).indexOf(claim.icon))
+            .toggle({"translate": "ui.claim.config.toggle:border_particles"}, claim.particlesEnabled)
+            .submitButton({"translate": newClaim ? "ui.claim.new:submit" : "ui.claim.config.submit"}, (response) => {
                 var name = response.formValues[0].toString();
                 var iconPath = this.claimIcons[Object.keys(this.claimIcons)[response.formValues[1].toString()]];
                 var showBorderParticles = response.formValues[2] as boolean;
@@ -647,16 +679,8 @@ export class ShovelUI {
                     }
                 }
 
-                if (name.length == 0) {
-                    sendNotification(owner, "chat.claim:name_required")
-                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-                }
-                else if (!isUniqueName) {
-                    sendNotification(owner, "chat.claim:use_unique_name")
-                    playSound(owner, AddonSounds.Global.NEGATIVE_EVENT);
-                }
                 // save new claim data
-                else if (newClaim) {
+                if (newClaim) {
                     // subtract claim blocks
                     playerData.claimBlocks.decrementAmount(claim.getSize().area);
 
@@ -696,8 +720,8 @@ export class ShovelUI {
                         playSound(owner, AddonSounds.Claim.SAVE);
                     }
                 }
-            }
+            });
 
-        });
+        form.show(owner);
     }
 }

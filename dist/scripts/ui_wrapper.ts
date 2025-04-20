@@ -1,5 +1,5 @@
 import { Player, RawMessage } from '@minecraft/server';
-import { ActionFormData, ModalFormData } from '@minecraft/server-ui';
+import { ActionFormData, ModalFormData, ModalFormResponse } from '@minecraft/server-ui';
 
 /**
  * A wrapper class for ActionFormData that allows for callback functions to be passed in for button actions.
@@ -18,7 +18,7 @@ export class CallbackActionFormData {
      * @param titleText - The title of the form.
      * @return - The current instance of the form for method chaining.
      */
-    public title(titleText: RawMessage | string): this {
+    public title(titleText: RawMessage): this {
         this.form.title(titleText);
         return this;
     }
@@ -31,7 +31,7 @@ export class CallbackActionFormData {
      * @param callback - The function to call when the button is pressed (optional).
      * @returns - The current instance of the form for method chaining.
      */
-    public button(text: RawMessage | string, iconPath?: string, callback?: () => void): this {
+    public button(text: RawMessage, iconPath?: string, callback?: () => void): this {
         this.callbacks.push({ callback: callback || (() => {}) });
         this.form.button(text, iconPath);
         return this;
@@ -43,7 +43,7 @@ export class CallbackActionFormData {
      * @param text - The text to set as the body of the form.
      * @returns - The current instance of the form for method chaining.
      */
-    public body(text: RawMessage | string): this {
+    public body(text: RawMessage): this {
         this.form.body(text);
         return this;
     }
@@ -63,12 +63,31 @@ export class CallbackActionFormData {
 }
 
 /**
+ * A class representing that a modal form field was filled out incorrectly.
+ * 
+ * @param errorMessage - The error message to display above the field. Should be a translation key.
+ */
+export class ModalDataError {
+    public errorMessage: string;
+
+    constructor(errorMessage: string) {
+        this.errorMessage = errorMessage;
+    }
+}
+
+/**
+ * A class representing that a modal form field was filled out correctly.
+ */
+export class ModalDataCorrect {}
+
+/**
  * A wrapper class for ModalFormData that allows for callback functions to be passed in for button actions.
  */
 export class CallbackModalFormData {
     private form: ModalFormData;
-    private callbacks: Array<{ callback: (formValue: string | RawMessage | number | boolean) => void }> = [];
-    private submitCallback: (() => void) = () => {};
+    private formConstruction: Array<{ data: Array<any>, callback: (data: any) => void, isInputField: boolean}> = []; // Logs all methods used to create the form so it can be recreated if theres an error in fields.
+    private callbacks: Array<{ callback: (formValue: string | RawMessage | number | boolean) => ModalDataCorrect | ModalDataError }> = [];
+    private submitCallback: ((response: ModalFormResponse) => void) = () => {};
 
     constructor() {
         this.form = new ModalFormData();
@@ -80,8 +99,9 @@ export class CallbackModalFormData {
      * @param titleText - The title of the form.
      * @return - The current instance of the form for method chaining.
      */
-    public title(titleText: RawMessage | string): this {
+    public title(titleText: RawMessage): this {
         this.form.title(titleText);
+        this.formConstruction.push({ data: [titleText], callback: (data) => this.title(data[0]), isInputField: false });
         return this;
     }
 
@@ -94,9 +114,10 @@ export class CallbackModalFormData {
      * @param callback - The function to call when the button is pressed (optional).
      * @returns - The current instance of the form for method chaining.
      */
-    public textField(label: RawMessage | string, placeholder: RawMessage | string, defaultValue?: RawMessage | string, callback?: (value: RawMessage | string) => void): this {
-        this.callbacks.push({ callback: callback || (() => {}) });
+    public textField(label: RawMessage, placeholder: RawMessage, defaultValue?: string, callback?: (value: string | RawMessage) => ModalDataCorrect | ModalDataError): this {
+        this.callbacks.push({ callback: callback || (() => new ModalDataCorrect()) });
         this.form.textField(label, placeholder, defaultValue);
+        this.formConstruction.push({ data: [label, placeholder, defaultValue], callback: (data) => this.textField(data[0], data[1], data[2], callback), isInputField: true });
         return this;
     }
 
@@ -108,9 +129,10 @@ export class CallbackModalFormData {
      * @param callback - The function to call when the button is pressed (optional).
      * @returns - The current instance of the form for method chaining.
      */
-    public toggle(label: RawMessage | string, defaultValue?: boolean, callback?: (value: boolean) => void): this {
-        this.callbacks.push({ callback: callback || (() => {}) });
+    public toggle(label: RawMessage, defaultValue?: boolean, callback?: (value: boolean) => ModalDataCorrect | ModalDataError): this {
+        this.callbacks.push({ callback: callback || (() => new ModalDataCorrect()) });
         this.form.toggle(label, defaultValue);
+        this.formConstruction.push({ data: [label, defaultValue], callback: (data) => this.toggle(data[0], data[1], callback), isInputField: true });
         return this;
     }
 
@@ -123,9 +145,10 @@ export class CallbackModalFormData {
      * @param callback - The function to call when the button is pressed (optional).
      * @returns - The current instance of the form for method chaining.
      */
-    public dropdown(label: RawMessage | string, options: (RawMessage | string)[], defaultValueIndex?: number, callback?: (value: RawMessage | string) => void): this {
-        this.callbacks.push({ callback: callback || (() => {}) });
+    public dropdown(label: RawMessage, options: RawMessage[], defaultValueIndex?: number, callback?: (value: RawMessage) => ModalDataCorrect | ModalDataError): this {
+        this.callbacks.push({ callback: callback || (() => new ModalDataCorrect()) });
         this.form.dropdown(label, options, defaultValueIndex);
+        this.formConstruction.push({ data: [label, options, defaultValueIndex], callback: (data) => this.dropdown(data[0], data[1], data[2], callback), isInputField: true });
         return this;
     }
 
@@ -140,9 +163,10 @@ export class CallbackModalFormData {
      * @param defaultValue - The default value for the slider (optional).
      * @returns - The current instance of the form for method chaining.
      */
-    public slider(label: RawMessage | string, minimumValue: number, maximumValue: number, valueStep: number, defaultValue?: number, callback?: (value: number) => void): this {
-        this.callbacks.push({ callback: callback || (() => {}) });
+    public slider(label: RawMessage, minimumValue: number, maximumValue: number, valueStep: number, defaultValue?: number, callback?: (value: number) => ModalDataCorrect | ModalDataError): this {
+        this.callbacks.push({ callback: callback || (() => new ModalDataCorrect()) });
         this.form.slider(label, minimumValue, maximumValue, valueStep, defaultValue);
+        this.formConstruction.push({ data: [label, minimumValue, maximumValue, valueStep, defaultValue], callback: (data) => this.slider(data[0], data[1], data[2], data[3], data[4], callback), isInputField: true });
         return this;
     }
 
@@ -151,9 +175,10 @@ export class CallbackModalFormData {
      *
      * * @param text - The text to display on the button.
      */
-    public submitButton(text: RawMessage | string, callback?: () => void): this {
+    public submitButton(text: RawMessage, callback?: (response: ModalFormResponse) => void) {
         this.form.submitButton(text);
-        this.submitCallback = callback || (() => {});
+        this.submitCallback = callback || ((ModalFormResponse) => {});
+        this.formConstruction.push({ data: [text], callback: (data) => this.submitButton(data[0], callback), isInputField: false });
         return this;
     }
 
@@ -163,13 +188,41 @@ export class CallbackModalFormData {
      * @param player - The player to show the form to.
      */
     public show(player: Player): void {
-        this.form.show(player).then((result) => {
-            if (!result.canceled) {
-                for (var i = 0; i < result.formValues.length; i++) {
-                    const value = result.formValues[i];
-                    this.callbacks[i].callback(value);
+        this.form.show(player).then((response) => {
+            var hasError = false;
+
+            if (!response.canceled) {
+                for (var i = 0; i < response.formValues.length; i++) {
+                    const value = response.formValues[i];
+                    const fieldReturnState = this.callbacks[i].callback(value);
+
+                    if (fieldReturnState instanceof ModalDataError) {
+                        hasError = true; // set flag to reshow form
+                        var label = this.formConstruction.filter(field => field.isInputField)[i].data[0] as RawMessage; // get label of field
+                        
+                        // adds error message to the field label as a newline
+                        this.formConstruction.filter(field => field.isInputField)[i].data[0] = { 
+                            "rawtext": [
+                                label, // Assuming `label` is already a valid RawMessage
+                                { "text": "\n" } as RawMessage,
+                                { "translate": fieldReturnState.errorMessage } as RawMessage
+                            ] 
+                        };
+
+                    }
                 }
-                this.submitCallback();
+                // if any field returned an error, reshow the form with the error messages
+                if (hasError) {
+                    this.form = new ModalFormData(); // reset form
+                    this.formConstruction.forEach((field) => {
+                        field.callback(field.data);
+                    });
+                    this.show(player); // reshow form
+                    return;
+                }
+                else {
+                    this.submitCallback(response);
+                }
             }
         });
     }
