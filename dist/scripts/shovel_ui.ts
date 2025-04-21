@@ -173,8 +173,32 @@ export class ShovelUI {
             form.button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/icon_multiplayer.png", () => {
                 
             })
+            form.button({"translate": "ui.op_manage_player.button:delete_player_data"}, "textures/ui/redX1.png", () => {
+                this.opDeletePlayerConfirm(playerId);
+            })
             .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
 
+
+        form.show(this.player);
+    }
+
+    private opDeletePlayerConfirm(playerId: string) {
+        const form = new CallbackMessageFormData(() => this.opDeletePlayerConfirm(playerId))
+            .title({"translate": "ui.op_delete_player:title"})
+            .body({"translate": "ui.op_delete_player:body"})
+            .button1({"translate": "ui.op_delete_player.button:cancel"}, () => {
+                // return to previous menu
+                navigateBack();
+            })
+            .button2({"translate": "ui.op_delete_player.button:confirm"}, () => {
+                // remove player from database
+                PlayerData.fromId(playerId).delete();
+                playSound(this.player, AddonSounds.Claim.DELETE);
+
+                // return to previous menu
+                popNavigationStack(); // remove the player list menu from the stack
+                navigateBack();
+            });
 
         form.show(this.player);
     }
@@ -408,7 +432,7 @@ export class ShovelUI {
                     }
 
                     // remove player from list
-                    claim.removePlayerPermissions(response.formValues[0] as number);
+                    claim.removePlayerPermissions(claim.playerPermissionsList[response.formValues[0] as number].id);
 
                     // return to previous menu
                     navigateBack();

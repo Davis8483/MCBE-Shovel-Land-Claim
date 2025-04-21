@@ -301,8 +301,20 @@ export class Claim {
         saveDb();
     }
 
-    removePlayerPermissions(index: number) {
-        this._playerPermissionsList.splice(index, 1);
+    removePlayerPermissions(playerId: string) {
+
+        // find the player permissions object
+        var playerPermissions: PlayerPermissions = undefined;
+
+        for (var p of this._playerPermissionsList) {
+            if (p.id == playerId) {
+                playerPermissions = p;
+                break;
+            }
+        }
+
+        this._playerPermissionsList.splice(this._playerPermissionsList.indexOf(playerPermissions), 1);
+        
         saveDb();
     }
 
@@ -651,6 +663,26 @@ export class PlayerData {
 
     getClaim(claimName: string): Claim | undefined {
         return this._claims.find((c) => c.name === claimName);
+    }
+
+    /**
+     * Deletes this PlayerData object from the database.
+     */
+    delete(): void {
+        // remove player from database
+        database = database.filter((p) => p.id !== this._id);
+
+        // remove player from world dynamic properties
+        world.setDynamicProperty(`db.${this._id}`, undefined);
+
+        // recursively remove players permissions from all claims
+        for (var pData of database) {
+            for (var claim of pData.claims) {
+                claim.removePlayerPermissions(this._id);
+            }
+        }
+
+        saveDb();
     }
 
     static fromJSON(data: any): PlayerData {
