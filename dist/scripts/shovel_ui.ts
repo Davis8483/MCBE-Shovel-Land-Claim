@@ -106,13 +106,55 @@ export class ShovelUI {
     }
 
     private opAddonSettings() {
-        const form = new CallbackActionFormData(() => this.opAddonSettings())
+        const form = new CallbackModalFormData(() => this.opAddonSettings())
             .title({"translate": "ui.op_panel.addon_settings:title"})
-            .button({"translate": "ui.op_panel.addon_settings.button:claim_block_payment"}, undefined, () => {
-                // open claim block payment settings
+            .textField({"translate": "ui.op_panel.addon_settings.textbox:claim_block_payment"}, {"translate": "ui.op_panel.addon_settings.textbox:claim_block_payment_placeholder"}, settings.claimBlockHourlyPayment.toString(), (value) => {
+                var newClaimBlockPayment = parseInt(value as string);
+
+                if (isNaN(newClaimBlockPayment) || newClaimBlockPayment < 0) {
+                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
+                    return new ModalDataError("ui.op_panel.addon_settings.error:must_be_positive_number");
+                }
+                else {
+                    // update claim block payment
+                    settings.claimBlockHourlyPayment = newClaimBlockPayment;
+
+                    return new ModalDataCorrect();
+                }
             })
-            .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();})
-            .show(this.player);
+            .textField({"translate": "ui.op_panel.addon_settings.textbox:starting_claim_blocks"}, {"translate": "ui.op_panel.addon_settings.textbox:starting_claim_blocks_placeholder"}, settings.startingClaimBlocks.toString(), (value) => {
+                var newStartingClaimBlocks = parseInt(value as string);
+
+                if (isNaN(newStartingClaimBlocks) || newStartingClaimBlocks < 0) {
+                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
+                    return new ModalDataError("ui.op_panel.addon_settings.error:must_be_positive_number");
+                }
+                else {
+                    // update claim block starting amount
+                    settings.startingClaimBlocks = newStartingClaimBlocks;
+
+                    return new ModalDataCorrect();
+                }
+            })
+            .textField({"translate": "ui.op_panel.addon_settings.textbox:claim_min_width"}, {"translate": "ui.op_panel.addon_settings.textbox:claim_min_width_placeholder"}, settings.claimMinimumWidth.toString(), (value) => {
+                var newClaimMinimumWidth = parseInt(value as string);
+
+                if (isNaN(newClaimMinimumWidth) || newClaimMinimumWidth < 0) {
+                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
+                    return new ModalDataError("ui.op_panel.addon_settings.error:must_be_positive_number");
+                }
+                else {
+                    // update claim minimum width
+                    settings.claimMinimumWidth = newClaimMinimumWidth;
+
+                    return new ModalDataCorrect();
+                }
+            })
+            .submitButton({"translate": "ui.op_panel.addon_settings.button:save"}, (response) => {
+                playSound(this.player, AddonSounds.Claim.SAVE);
+                navigateBack();
+            });
+        form.show(this.player);
     }
 
     private opManagePlayer(playerId: string) {
@@ -146,9 +188,9 @@ export class ShovelUI {
             .textField({"translate": "ui.op_edit_claim_blocks.textbox:claim_blocks"}, {"translate": "ui.op_edit_claim_blocks.textbox:claim_blocks_placeholder"}, claimBlocks.toString(), (value) => {
                 var newClaimBlocks = parseInt(value as string);
 
-                if (isNaN(newClaimBlocks)) {
+                if (isNaN(newClaimBlocks) || newClaimBlocks < 0) {
                     playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
-                    return new ModalDataError("ui.op_edit_claim_blocks.error:must_be_number");
+                    return new ModalDataError("ui.op_edit_claim_blocks.error:must_be_positive_number");
                 }
                 else {
                     // update claim blocks
