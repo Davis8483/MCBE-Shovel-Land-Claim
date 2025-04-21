@@ -59,7 +59,7 @@ export class ShovelUI {
                 });
             }
 
-            form.button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/icon_multiplayer.png", () => {
+            form.button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/worldsIcon.png", () => {
                 
             })
             if (this.player.hasTag("shovel.op")) {
@@ -85,7 +85,8 @@ export class ShovelUI {
 
         const form = new CallbackActionFormData(() => this.opPanel())
             .title({"translate": "ui.op_panel:title"})
-            .button({"translate": "ui.op_panel.button:manage_players"}, undefined, () => {this.opPlayerList()})
+            .button({"translate": "ui.op_panel.button:manage_players"}, "textures/ui/multiplayer_glyph_color.png", () => {this.opPlayerList()})
+            .button({"translate": "ui.op_panel.button:addon_config"}, "textures/ui/icon_setting.png", () => {this.opAddonSettings()})
             .button({"translate": "ui.global.button:back"}, undefined, () => {this.opModeActive = false; navigateBack();})
             .show(this.player);
     }
@@ -95,11 +96,23 @@ export class ShovelUI {
             .title({"translate": "ui.op_panel.player_list:title"})
 
         for (const p of database) {
-            form.button({"text": p.name}, "textures/ui/profile_glyph_color.png", () => {this.opManagePlayer(p.id)});
+            var isOnline = world.getAllPlayers().filter(player => player.id == p.id).length > 0 ? true : false;
+
+            form.button({"rawtext": [{"text": p.name + "\n"}, {"translate": isOnline? "ui.op_panel.player_list.online": "ui.op_panel.player_list.offline"}]}, isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.opManagePlayer(p.id)});
         }
 
         form.button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();})
         form.show(this.player);
+    }
+
+    private opAddonSettings() {
+        const form = new CallbackActionFormData(() => this.opAddonSettings())
+            .title({"translate": "ui.op_panel.addon_settings:title"})
+            .button({"translate": "ui.op_panel.addon_settings.button:claim_block_payment"}, undefined, () => {
+                // open claim block payment settings
+            })
+            .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();})
+            .show(this.player);
     }
 
     private opManagePlayer(playerId: string) {
@@ -233,7 +246,7 @@ export class ShovelUI {
             })
             .button({"translate": "ui.manage.button:config"}, "textures/ui/debug_glyph_color.png", () => {this.claimConfig(claim)})
             .button({"translate": "ui.manage.button:public_permissions"}, "textures/ui/icon_multiplayer.png", () => {this.managePermissions(claim)})
-            .button({"translate": "ui.manage.button:player_permissions"}, "textures/ui/icon_steve.png", () => {this.playerPermissionsList(claim)})
+            .button({"translate": "ui.manage.button:player_permissions"}, "textures/ui/friend1_black_outline_2x.png", () => {this.playerPermissionsList(claim)})
             .button({"translate": "ui.manage.button:view"}, "textures/ui/magnifyingGlass.png", () => {this.viewClaim(claim)})
             .button({"translate": "ui.manage.button:remove"}, "textures/ui/icon_trash.png", () => {this.removeClaim(claim)})
             .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
@@ -253,7 +266,9 @@ export class ShovelUI {
             .body({"translate": "ui.manage.permissions.player.selection:body"});
 
         for (var pP of claim.playerPermissionsList) {
-            form.button({"text": pP.name}, "textures/ui/profile_glyph_color.png", () => {this.managePermissions(claim, pP.id)});
+            var isOnline = world.getAllPlayers().filter(player => player.id == pP.id).length > 0 ? true : false;
+
+            form.button({"rawtext": [{"text": pP.name + "\n"}, {"translate": isOnline? "ui.manage.permissions.player.selection.online": "ui.manage.permissions.player.selection.offline"}]}, isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.managePermissions(claim, pP.id)});
         }
 
         if (claim.getUnsavedPlayers().length > 0){
