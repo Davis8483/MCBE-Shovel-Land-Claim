@@ -1,12 +1,12 @@
 import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility, RawMessage } from '@minecraft/server';
-import { MessageFormData } from '@minecraft/server-ui';
-import { CallbackActionFormData, CallbackModalFormData, ModalDataCorrect, ModalDataError } from './ui_wrapper.js';
+import { CallbackActionFormData, CallbackModalFormData, CallbackMessageFormData, clearNavigationStack, ModalDataCorrect, ModalDataError, navigateBack, popNavigationStack } from './ui_wrapper.js';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { sendNotification } from './notifications.js';
 
 export class ShovelUI {
     private player: Player;
+    private opModeActive: boolean = false; // if the player is in op mode or not
 
     // player selected icons for their claims
     private claimIcons = {
@@ -18,19 +18,25 @@ export class ShovelUI {
         "ui.claim.icons:flowers": "textures/ui/icon_spring.png"
     };
 
+    /**
+     * Creates a new ShovelUI object.
+     * 
+     * @param player - The player to show the UI to
+     */
     constructor(player: Player) {
         this.player = player;
+        this.opModeActive = false; // set to false by default
+
+        clearNavigationStack();
     }
 
     /**
      * Main menu for the shovel land claim addon.
-     * 
-     * @param player - The player to show the form to
      */
     public main() {
         var playerData: PlayerData = PlayerData.fromId(this.player.id);
 
-        const form = new CallbackActionFormData()
+        const form = new CallbackActionFormData(() => this.main())
             .title({"translate": "ui.main:title"})
             .body({
                 "rawtext": [
@@ -49,7 +55,7 @@ export class ShovelUI {
             // conditionally show the manage claims button if the player has any claims
             if (playerData.claims.length > 0){
                 form.button({"translate": "ui.main.button:manage"}, "textures/ui/icon_setting.png", () => {
-                    this.claimsList(this.player.id);
+                    this.claimsList(playerData.id);
                 });
             }
 
@@ -61,25 +67,67 @@ export class ShovelUI {
                     this.opPanel();
                 })
             }
+    
             form.button({"translate": "ui.main.button:addon_info"}, "textures/ui/infobulb.png", () => {
                 this.addonInfo();
             })
             .button({"translate": "ui.main.button:close"})
+        
 
         form.show(this.player);
     }
 
+    /**
+     * Menu for managing players and addon settings.
+     */
     private opPanel() {
-        const form = new CallbackActionFormData()
+        this.opModeActive = true; // set to true when in op mode
+
+        const form = new CallbackActionFormData(() => this.opPanel())
             .title({"translate": "ui.op_panel:title"})
-            .button({"translate": "ui.global.button:back"}, undefined, () => {this.main()})
+            .button({"translate": "ui.op_panel.button:manage_players"}, undefined, () => {this.opPlayerList()})
+            .button({"translate": "ui.global.button:back"}, undefined, () => {this.opModeActive = false; navigateBack();})
             .show(this.player);
     }
 
+    private opPlayerList() {
+        const form = new CallbackActionFormData(() => this.opPlayerList())
+            .title({"translate": "ui.op_panel.player_list:title"})
+
+        for (const p of database) {
+            form.button({"text": p.name}, "textures/ui/profile_glyph_color.png", () => {this.opManagePlayer(p.id)});
+        }
+
+        form.button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();})
+        form.show(this.player);
+    }
+
+    private opManagePlayer(playerId: string) {
+        var playerData: PlayerData = PlayerData.fromId(playerId || this.player.id);
+
+        const form = new CallbackActionFormData(() => this.opManagePlayer(playerId))
+            .title(this.opModeActive? {"translate": "ui.main.op_mode:title", "with": [playerData.name]} : {"translate": "ui.main:title"})
+
+            // conditionally show the manage claims button if the player has any claims
+            if (playerData.claims.length > 0){
+                form.button({"translate": "ui.main.button:manage"}, "textures/ui/icon_setting.png", () => {
+                    this.claimsList(playerData.id);
+                });
+            }
+
+            form.button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/icon_multiplayer.png", () => {
+                
+            })
+            .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
+
+
+        form.show(this.player);
+    }
+
     private addonInfo() {
-        const form = new CallbackActionFormData()
+        const form = new CallbackActionFormData(() => this.addonInfo())
             .title({"translate": "ui.addon_info:title"})
-            .button({"translate": "ui.global.button:back"}, undefined, () => {this.main()})
+            .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();})
             .show(this.player);
     }
 
@@ -111,8 +159,8 @@ export class ShovelUI {
 
         const blockDifference = (oldClaimLength * oldClaimWidth) - (newClaimLength * newClaimWidth)
 
-        const form = new MessageFormData()
-            .title("ui.claim.resize:title")
+        const form = new CallbackMessageFormData(()=> this.resizeClaim(claim, start, end))
+            .title({"translate": "ui.claim.resize:title"})
             .body({
                 "rawtext": [
                     { "translate": "ui.claim.resize:body" },
@@ -120,12 +168,8 @@ export class ShovelUI {
                     { "translate": "ui.manage.resize:label:claim_blocks" }
                 ]
             })
-            .button1("ui.claim.resize.button:cancel")
-            .button2("ui.claim.resize.button:resize")
-
-        form.show(this.player).then((response) => {
-            // if claim resized
-            if (response.selection == 1) {
+            .button1({"translate": "ui.claim.resize.button:cancel"})
+            .button2({"translate": "ui.claim.resize.button:resize"}, ()=> {
                 claim.setStart(start);
                 claim.setEnd(end);
 
@@ -135,9 +179,9 @@ export class ShovelUI {
 
                 //add/subtract the blocks from players balance
                 playerData.claimBlocks.incrementAmount(blockDifference);
+            });
 
-            }
-        });
+        form.show(this.player);
     }
 
     /**
@@ -148,7 +192,7 @@ export class ShovelUI {
     private claimsList(ownerId: string) {
         var playerData: PlayerData = PlayerData.fromId(ownerId);
 
-        const form = new CallbackActionFormData()
+        const form = new CallbackActionFormData(() => this.claimsList(ownerId))
             .title({"translate": "ui.manage:title"})
 
         for (const c of playerData.claims) {
@@ -161,7 +205,7 @@ export class ShovelUI {
                 }, c.icon, () => {this.manageClaim(c)});
         }
 
-        form.button({"translate": "ui.global.button:back"}, undefined, () => {this.main()});
+        form.button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
         form.show(this.player);
     }
 
@@ -171,8 +215,7 @@ export class ShovelUI {
      * @param claim - The claim to manage
      */
     private manageClaim(claim: Claim) {
-
-        const form = new CallbackActionFormData()
+        const form = new CallbackActionFormData(() => this.manageClaim(claim))
             .title({
                 "rawtext": [
                     { "translate": "ui.manage:title" },
@@ -193,14 +236,14 @@ export class ShovelUI {
             .button({"translate": "ui.manage.button:player_permissions"}, "textures/ui/icon_steve.png", () => {this.playerPermissionsList(claim)})
             .button({"translate": "ui.manage.button:view"}, "textures/ui/magnifyingGlass.png", () => {this.viewClaim(claim)})
             .button({"translate": "ui.manage.button:remove"}, "textures/ui/icon_trash.png", () => {this.removeClaim(claim)})
-            .button({"translate": "ui.global.button:back"}, undefined, () => {this.claimsList(claim.getOwnerData().id)});
+            .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
 
         form.show(this.player);
     }
 
     private playerPermissionsList(claim: Claim) {
 
-        const form = new CallbackActionFormData()
+        const form = new CallbackActionFormData(() => this.playerPermissionsList(claim))
             .title({
                 "rawtext": [
                     { "translate": "ui.manage.permissions.player.selection:title" },
@@ -221,7 +264,7 @@ export class ShovelUI {
             form.button({"translate": "ui.manage.permissions.player.selection:remove_player"}, "textures/ui/redX1.png", () => {this.playerPermissionsListModify(claim, false)});
         }
 
-        form.button({"translate": "ui.global.button:back"}, undefined, () => {this.manageClaim(claim)});
+        form.button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
 
         form.show(this.player);
     }
@@ -237,7 +280,7 @@ export class ShovelUI {
         // get unsaved players list
         var unsavedPlayers: string[] = claim.getUnsavedPlayers();
 
-        const form = new CallbackModalFormData()
+        const form = new CallbackModalFormData(() => this.playerPermissionsListModify(claim, add))
             .title(add ? {
                 "rawtext": [
                     { "translate": "ui.manage.permissions.player.selection.modify.add:title" }
@@ -263,6 +306,7 @@ export class ShovelUI {
                     claim.addPlayerPermissions(newPlayerPermissions);
 
                     // if player was added open the permissions menu for them
+                    popNavigationStack(); // remove the player permissions list menu from the stack
                     this.managePermissions(claim, newPlayerPermissions.id);
                 }
                 else {
@@ -280,7 +324,7 @@ export class ShovelUI {
                     claim.removePlayerPermissions(response.formValues[0] as number);
 
                     // return to previous menu
-                    this.playerPermissionsList(claim);
+                    navigateBack();
                 }
             });
         form.show(this.player)
@@ -306,7 +350,7 @@ export class ShovelUI {
         }
 
         const target = playerID ? playerPermissions : claim; // target is either the claim or the player permissions object
-        const form = new CallbackModalFormData()
+        const form = new CallbackModalFormData(() => this.managePermissions(claim, playerID))
             .title(playerID ? {
                 "rawtext": [
                     { "translate": "ui.manage.permissions.player:title", "with": [playerPermissions.name, claim.name] },
@@ -407,12 +451,7 @@ export class ShovelUI {
             }
 
             // return to previous menu
-            if (playerID) {
-                this.playerPermissionsList(claim);
-            }
-            else {
-                this.manageClaim(claim);
-            }
+            navigateBack();
         });
         form.show(this.player);
     }
@@ -595,8 +634,8 @@ export class ShovelUI {
     private removeClaim(claim: Claim) {
         var playerData: PlayerData = claim.getOwnerData();
 
-        const form = new MessageFormData()
-            .title("ui.manage.remove:title")
+        const form = new CallbackMessageFormData(() => this.removeClaim(claim))
+            .title({"translate": "ui.manage.remove:title"})
             .body({
                 "rawtext": [
                     { "translate": "ui.manage.remove:body" },
@@ -604,18 +643,11 @@ export class ShovelUI {
                     { "translate": "ui.manage.remove:label:claim_blocks" }
                 ]
             })
-            .button1("ui.manage.remove.button:cancel")
-            .button2("ui.manage.remove.button:confirm")
-
-        form.show(this.player).then((response) => {
-            // if deletion canceled
-            if (response.selection == 0) {
-
+            .button1({"translate": "ui.manage.remove.button:cancel"}, () => {
                 // return to previous page on menu
-                this.manageClaim(claim);
-            }
-            else if (response.selection == 1) {
-
+                navigateBack();
+            })
+            .button2({"translate": "ui.manage.remove.button:confirm"}, () => {
                 // delete claim
                 playerData.removeClaim(claim);
 
@@ -625,10 +657,11 @@ export class ShovelUI {
                 playerData.claimBlocks.incrementAmount(claim.getSize().width * claim.getSize().length);
 
                 // return to previous page on menu
-                this.claimsList(playerData.id);
+                popNavigationStack(); // remove the manage claim menu from the stack
+                navigateBack();
+            });
 
-            }
-        });
+        form.show(this.player);
     }
 
     /**
@@ -640,7 +673,7 @@ export class ShovelUI {
         var playerData: PlayerData = claim.getOwnerData() || PlayerData.fromId(this.player.id);
         var newClaim: boolean = claim.getOwnerData() == undefined; // if the claim has no owner, it is a new claim
 
-        const form = new CallbackModalFormData()
+        const form = new CallbackModalFormData(() => this.claimConfig(claim))
             .title({
                 "rawtext": [
                     { "translate": newClaim ? "ui.claim.new:title" : "ui.claim.config:title" },
@@ -698,7 +731,7 @@ export class ShovelUI {
                     playSound(this.player, AddonSounds.Claim.SAVE);
 
                     // return to previous menu
-                    this.manageClaim(claim);
+                    navigateBack();
                 }
             });
 

@@ -1,14 +1,48 @@
 import { Player, RawMessage } from '@minecraft/server';
-import { ActionFormData, ModalFormData, ModalFormResponse } from '@minecraft/server-ui';
+import { ActionFormData, ModalFormData, ModalFormResponse, MessageFormData } from '@minecraft/server-ui';
+
+var navigationStack: (() => void)[] = []; // Stack to manage back navigation
+
+/**
+ * Used to navigate to the previous menu in the stack.
+ */
+export function navigateBack(): void {
+    if (navigationStack.length > 0) { 
+        navigationStack.pop(); // Remove the last screen from the stack
+
+        const previousScreen = navigationStack.pop(); // Get the previous screen
+        if (previousScreen) {
+            previousScreen(); // Call the function to show the previous screen
+        }
+    }
+}
+
+/**
+ * Removes the last screen from the navigation stack.
+ */
+export function popNavigationStack(): void {
+    navigationStack.pop(); // Remove the last screen from the stack
+}
+
+/**
+ * Clears the navigation stack.
+ */
+export function clearNavigationStack(): void {
+    navigationStack = []; // Clear the navigation stack
+};
 
 /**
  * A wrapper class for ActionFormData that allows for callback functions to be passed in for button actions.
  */
 export class CallbackActionFormData {
     private form: ActionFormData;
-    private callbacks: Array<{ callback: () => void }> = [];
+    private callbacks: Array<{callback: () => void}> = [];
 
-    constructor() {
+    /**
+     * @param navigationCallback - The callback function to navigate back to this menu.
+     */
+    constructor(navigationCallback: () => void) {
+        navigationStack.push(navigationCallback); // Push the return callback to the stack
         this.form = new ActionFormData();
     }
 
@@ -89,7 +123,11 @@ export class CallbackModalFormData {
     private callbacks: Array<{ callback: (formValue: string | RawMessage | number | boolean) => ModalDataCorrect | ModalDataError }> = [];
     private submitCallback: ((response: ModalFormResponse) => void) = () => {};
 
-    constructor() {
+    /**
+     * @param backCallback - The callback function to navigate back to this menu.
+     */
+    constructor(backCallback: () => void) {
+        navigationStack.push(backCallback); // Push the return callback to the stack
         this.form = new ModalFormData();
     }
 
@@ -223,6 +261,82 @@ export class CallbackModalFormData {
                 else {
                     this.submitCallback(response);
                 }
+            }
+        });
+    }
+}
+
+export class CallbackMessageFormData {
+    private form: MessageFormData;
+    private callbacks: Array<{ callback: () => void }> = [];
+
+    /**
+     * * A wrapper class for MessageFormData that allows for callback functions to be passed in for button actions.
+     * 
+     * @param navigationCallback - The callback function to navigate back to this menu.
+     */
+    constructor(navigationCallback: () => void) {
+        navigationStack.push(navigationCallback); // Push the return callback to the stack
+        this.form = new MessageFormData();
+    }
+
+    /**
+     * Adds the form title.
+     * 
+     * @param titleText - The title of the form.
+     * @returns - The current instance of the form for method chaining.
+     */
+    public title(titleText: RawMessage): this {
+        this.form.title(titleText);
+        return this;
+    }
+
+    /**
+     * Adds the form body.
+     * 
+     * @param text - The text to display in the body of the form.
+     * @returns - The current instance of the form for method chaining.
+     */
+    public body(text: RawMessage): this {
+        this.form.body(text);
+        return this;
+    }
+
+    /**
+     * Adds a button to the form with a callback function.
+     * 
+     * @param text - The text to display on the button.
+     * @param callback - The function to call when the button is pressed (optional).
+     * @returns - The current instance of the form for method chaining.
+     */
+    public button1(text: RawMessage, callback?: () => void): this {
+        this.callbacks.push({ callback: callback || (() => {}) });
+        this.form.button1(text);
+        return this;
+    }
+
+    /**
+     * Adds a button to the form with a callback function.
+     * 
+     * @param text - The text to display on the button.
+     * @param callback - The function to call when the button is pressed (optional).
+     * @returns - The current instance of the form for method chaining.
+     */
+    public button2(text: RawMessage, callback?: () => void): this {
+        this.callbacks.push({ callback: callback || (() => {}) });
+        this.form.button2(text);
+        return this;
+    }
+
+    /**
+     * Shows the message form to the player.
+     * 
+     * @param player - The player to show the form to.
+     */
+    public show(player: Player): void {
+        this.form.show(player).then((result) => {
+            if (!result.canceled) {
+                this.callbacks[result.selection].callback();
             }
         });
     }
