@@ -127,7 +127,7 @@ export class ShovelUI {
                     this.claimsList(playerData.id);
                 });
             }
-
+            form.button({"translate": "ui.op_manage_player.button:edit_claim_blocks", "with": [playerData.claimBlocks.amount.toString()]}, "textures/ui/pencil_edit_icon.png", () => {this.opEditClaimBlocks(playerId)})
             form.button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/icon_multiplayer.png", () => {
                 
             })
@@ -135,6 +135,36 @@ export class ShovelUI {
 
 
         form.show(this.player);
+    }
+
+    private opEditClaimBlocks(playerId: string) {
+        var playerData: PlayerData = PlayerData.fromId(playerId || this.player.id);
+        var claimBlocks = playerData.claimBlocks.amount;
+
+        const form = new CallbackModalFormData(() => this.opEditClaimBlocks(playerId))
+            .title({"translate": "ui.op_edit_claim_blocks:title"})
+            .textField({"translate": "ui.op_edit_claim_blocks.textbox:claim_blocks"}, {"translate": "ui.op_edit_claim_blocks.textbox:claim_blocks_placeholder"}, claimBlocks.toString(), (value) => {
+                var newClaimBlocks = parseInt(value as string);
+
+                if (isNaN(newClaimBlocks)) {
+                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
+                    return new ModalDataError("ui.op_edit_claim_blocks.error:must_be_number");
+                }
+                else {
+                    // update claim blocks
+                    playerData.claimBlocks.setAmount(newClaimBlocks);
+
+                    return new ModalDataCorrect();
+                }
+            })
+            .submitButton({"translate": "ui.global.button:save"}, (response) => {
+
+                playSound(this.player, AddonSounds.Claim.SAVE);
+
+                // navigate back to the previous menu
+                navigateBack();
+            })
+    form.show(this.player);
     }
 
     private addonInfo() {
