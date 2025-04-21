@@ -6,21 +6,14 @@ chat.shovel:dimension_warning=§cYou can only create claims in the overworld§r
 
 chat.world:disabled_item=§cThis item/block has been disabled by your admin!§r
 
-chat.claim:name_required=§cYou must provide a name!§r
-chat.claim:use_unique_name=§cYou can't use the name of an existing claim!§r
-chat.claim:no_players_to_add=§cAt least one other player must join your world!§r
-chat.claim:no_players_to_remove=§cThere are no players to remove!§r
 chat.claim:created=§aClaim created!§r
-chat.claim:no_claims=§cYou don't have any claims!§r
 chat.claim:removed=§cClaim removed.§r
 chat.claim:claim_intersecting=§cA claim is already here!§r
 chat.claim:player_intersecting=§cA player is in the way!§r
 chat.claim:width=§cYou're claim must be at least %s blocks wide!§r
 chat.claim:blocks_new=§cYou need %s more block(s) to create this claim!§r
 chat.claim:blocks_resize=§cYou need %s more block(s) to resize this claim!§r
-chat.claim:updated=§aClaim config has been saved!§r
 chat.claim:resized=§aClaim has been resized!§r
-chat.claim:permissions_updated=§aClaim permissions have been updated!§r
 chat.claim:player_permissions_updated_notif=§a%s has updated your permissions for [claim:name_color]%s§r
 chat.claim:public_permissions_updated_notif=§a%s has updated the public permissions for [claim:name_color]%s§r
 chat.claim:player_permissions_reset_notif=§bhas reset your permissions for§r
@@ -51,6 +44,7 @@ ui.global.button:back=Back
 ui.global.button:save=Save
 
 ui.main:title=§5Shovel§r Land Claim
+ui.main.op_mode:title=Manage Player: %s
 ui.main:body.paragraph:1=Welcome to Land Claim!
 ui.main:body.paragraph:2=§bCreate a claim§r by breaking two opposite corners.
 ui.main:body.paragraph:3=§dResize a claim§r by breaking any corner and specifying a new one.
@@ -63,6 +57,8 @@ ui.main.button:addon_info=Addon Info
 ui.main.button:close=Close
 
 ui.op_panel:title=Operator Panel
+ui.op_panel.button:manage_players=Manage Players
+
 
 ui.addon_info:title=Addon Info
 
@@ -104,6 +100,8 @@ ui.manage.permissions.player.selection:remove_player=§cRemove Player§r
 ui.manage.permissions.player.selection.modify.add:title=Add Player
 ui.manage.permissions.player.selection.modify.remove:title=Remove Player
 ui.manage.permissions.player.selection.modify:player_dropdown=Player
+ui.manage.permissions.player.selection.modify.add:submit=Add Player
+ui.manage.permissions.player.selection.modify.remove:submit=Remove Player
 
 ui.manage.view:loading=Loading...
 ui.manage.view:loading_subtitle=§dcrouch to cancel
@@ -123,6 +121,8 @@ ui.claim.config:name_placeholder=Ex: Home
 ui.claim.config.dropdown:icon=Icon 
 ui.claim.config.toggle:border_particles=Border Particles
 ui.claim.config.submit=Save Config
+ui.claim.config.error:no_name=§cYou must provide a name!§r
+ui.claim.config.error:unique_name=§cYou can't use the name of an existing claim!§r
 
 ui.claim.icons:land=Land
 ui.claim.icons:bed=Bed
