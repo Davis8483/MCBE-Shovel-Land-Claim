@@ -252,7 +252,17 @@ export class CallbackModalFormData {
                 // if any field returned an error, reshow the form with the error messages
                 if (hasError) {
                     this.form = new ModalFormData(); // reset form
-                    this.formConstruction.forEach((field) => {
+
+                    // make a copy of the form construction array
+                    const formConstructionCopy = this.formConstruction.map((field) => {
+                        return { ...field };
+                    });
+
+                    // reset the form construction array
+                    this.formConstruction = [];
+
+                    // recreate the form using the copied array
+                    formConstructionCopy.forEach((field) => {
                         field.callback(field.data);
                     });
                     this.show(player); // reshow form
