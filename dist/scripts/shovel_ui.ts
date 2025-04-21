@@ -85,8 +85,9 @@ export class ShovelUI {
 
         const form = new CallbackActionFormData(() => this.opPanel())
             .title({"translate": "ui.op_panel:title"})
-            .button({"translate": "ui.op_panel.button:manage_players"}, "textures/ui/multiplayer_glyph_color.png", () => {this.opPlayerList()})
             .button({"translate": "ui.op_panel.button:addon_config"}, "textures/ui/icon_setting.png", () => {this.opAddonSettings()})
+            .button({"translate": "ui.op_panel.button:manage_players"}, "textures/ui/multiplayer_glyph_color.png", () => {this.opPlayerList()})
+            .button({"translate": "ui.op_panel.button:disallowed_blocks"}, "textures/blocks/barrier.png", () => {this.opDisallowedBlocks()})
             .button({"translate": "ui.global.button:back"}, undefined, () => {this.opModeActive = false; navigateBack();})
             .show(this.player);
     }
@@ -117,7 +118,7 @@ export class ShovelUI {
                 }
                 else {
                     // update claim block payment
-                    settings.claimBlockHourlyPayment = newClaimBlockPayment;
+                    settings.setClaimBlockHourlyPayment(newClaimBlockPayment);
 
                     return new ModalDataCorrect();
                 }
@@ -131,7 +132,7 @@ export class ShovelUI {
                 }
                 else {
                     // update claim block starting amount
-                    settings.startingClaimBlocks = newStartingClaimBlocks;
+                    settings.setStartingClaimBlocks(newStartingClaimBlocks);
 
                     return new ModalDataCorrect();
                 }
@@ -145,7 +146,7 @@ export class ShovelUI {
                 }
                 else {
                     // update claim minimum width
-                    settings.claimMinimumWidth = newClaimMinimumWidth;
+                    settings.setClaimMinimumWidth(newClaimMinimumWidth);
 
                     return new ModalDataCorrect();
                 }
@@ -231,6 +232,73 @@ export class ShovelUI {
                 navigateBack();
             })
     form.show(this.player);
+    }
+
+    /**
+     * Shows the disallowed blocks menu for the OP panel.
+     */
+    private opDisallowedBlocks() {
+        const form = new CallbackActionFormData(() => this.opDisallowedBlocks())
+            .title({"translate": "ui.op_disallowed_blocks:title"});
+
+        for (const bId of settings.disallowedBlocks) {
+            form.button({"text": bId }, "textures/blocks/structure_void.png", () => {popNavigationStack(); this.opDisallowedBlocks()});
+        }
+
+        form.button({"translate": "ui.op_disallowed_blocks.button:add_block"}, "textures/ui/realms_slot_check.png", () => {this.opEditDisallowedBlocks(true)})
+            .button({"translate": "ui.op_disallowed_blocks.button:remove_block"}, "textures/ui/redX1.png", () => {this.opEditDisallowedBlocks(false)})
+            .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
+
+        form.show(this.player);
+    }
+
+    /**
+     * Adds or removes a block from the disallowed blocks list.
+     * 
+     * @param add - Wether to add or remove the block from the disallowed blocks list
+     */
+    private opEditDisallowedBlocks(add: boolean) {
+        const form = new CallbackModalFormData(() => this.opEditDisallowedBlocks(add))
+            .title({"translate": "ui.op_edit_disallowed_blocks:title"})
+
+        if (add) {
+            form.textField({"translate": "ui.op_edit_disallowed_blocks.textbox:block_id"}, {"translate": "ui.op_edit_disallowed_blocks.textbox:block_id_placeholder"}, "", (value) => {
+                var blockId = value as string;
+
+                if (blockId == "") {
+                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
+                    return new ModalDataError("ui.op_edit_disallowed_blocks.error:must_not_be_empty");
+                }
+                else if (settings.disallowedBlocks.includes(blockId)) {
+                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
+                    return new ModalDataError("ui.op_edit_disallowed_blocks.error:block_already_disallowed");
+                }
+                else {
+                    // add the block to the disallowed blocks list
+                    settings.disallowedBlocks.push(blockId);
+
+                    return new ModalDataCorrect();
+                }
+            })
+        }
+        else {
+            form.dropdown({"translate": "ui.op_edit_disallowed_blocks.dropdown:block_id"}, settings.disallowedBlocks.map(b => ({"text": b})), undefined, (value) => {
+
+                // remove the block from the disallowed blocks list
+                settings.removeDisallowedBlock(settings.disallowedBlocks[value as number]);
+
+                return new ModalDataCorrect();
+            })
+        }
+
+        form.submitButton({"translate": "ui.global.button:save"}, (response) => {
+            playSound(this.player, AddonSounds.Claim.SAVE);
+
+            // navigate back to the previous menu
+            navigateBack();
+        });
+
+        form.show(this.player);
     }
 
     private addonInfo() {

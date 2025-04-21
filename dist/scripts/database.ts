@@ -4,19 +4,19 @@ import { world, Vector3, Player } from "@minecraft/server";
  * An object containing global settings for the addon
  */
 export class Settings{
-    claimBlockHourlyPayment: number;
-    startingClaimBlocks: number;
-    claimMinimumWidth: number;
-    disallowedBlocks: string[];
+    private _claimBlockHourlyPayment: number;
+    private _startingClaimBlocks: number;
+    private _claimMinimumWidth: number;
+    private _disallowedBlocks: string[];
 
     /**
      * Creates a new Settings object with default values
      */
     constructor(){
-        this.claimBlockHourlyPayment = 100;
-        this.startingClaimBlocks = 200;
-        this.claimMinimumWidth = 10;
-        this.disallowedBlocks = [
+        this._claimBlockHourlyPayment = 100;
+        this._startingClaimBlocks = 200;
+        this._claimMinimumWidth = 10;
+        this._disallowedBlocks = [
             // "minecraft:bedrock",
             // "minecraft:barrier",
             // "minecraft:command_block",
@@ -29,6 +29,51 @@ export class Settings{
             "minecraft:sculk_catalyst" // can be used for griefing
         ];
     }
+
+    get claimBlockHourlyPayment(): number {
+        return this._claimBlockHourlyPayment;
+    }
+    get startingClaimBlocks(): number {
+        return this._startingClaimBlocks;
+    }
+    get claimMinimumWidth(): number {
+        return this._claimMinimumWidth;
+    }
+    get disallowedBlocks(): string[] {
+        return this._disallowedBlocks;
+    }
+
+    setClaimBlockHourlyPayment(value: number) {
+        this._claimBlockHourlyPayment = value;
+        saveSettings();
+    }
+    setStartingClaimBlocks(value: number) {
+        this._startingClaimBlocks = value;
+        saveSettings();
+    }
+    setClaimMinimumWidth(value: number) {
+        this._claimMinimumWidth = value;
+        saveSettings();
+    }
+    /**
+     * Adds a block to the disallowed blocks list
+     * 
+     * @param blockId - The block to add to the disallowed blocks list
+     */
+    addDisallowedBlock(blockId: string) {
+        this._disallowedBlocks.push(blockId);
+        saveSettings();
+    }
+
+    /**
+     * Removes a block from the disallowed blocks list
+     * 
+     * @param blockId - The block to remove from the disallowed blocks list
+     */
+    removeDisallowedBlock(blockId: string) {
+        this._disallowedBlocks = this._disallowedBlocks.filter((block) => block !== blockId);
+        saveSettings();
+    }
     
     /**
      * Returns a Settings object loaded from JSON, if a key is missing it will be replaced with the default value.
@@ -40,10 +85,10 @@ export class Settings{
     static fromJSON(data: any): Settings {
         const defaultSettings = new Settings();
         var settings = new Settings();
-        settings.claimBlockHourlyPayment = data.claimBlockHourlyPayment || defaultSettings.claimBlockHourlyPayment;
-        settings.startingClaimBlocks = data.startingClaimBlocks || defaultSettings.startingClaimBlocks;
-        settings.claimMinimumWidth = data.claimMinimumWidth || defaultSettings.claimMinimumWidth;
-        settings.disallowedBlocks = data.disallowedBlocks || defaultSettings.disallowedBlocks;
+        settings._claimBlockHourlyPayment = data._claimBlockHourlyPayment || defaultSettings._claimBlockHourlyPayment;
+        settings._startingClaimBlocks = data._startingClaimBlocks || defaultSettings._startingClaimBlocks;
+        settings._claimMinimumWidth = data._claimMinimumWidth || defaultSettings._claimMinimumWidth;
+        settings._disallowedBlocks = data._disallowedBlocks || defaultSettings._disallowedBlocks;
         return settings;
     }
 }
@@ -314,7 +359,7 @@ export class Claim {
         }
 
         this._playerPermissionsList.splice(this._playerPermissionsList.indexOf(playerPermissions), 1);
-        
+
         saveDb();
     }
 

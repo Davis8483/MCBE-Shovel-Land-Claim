@@ -183,7 +183,7 @@ export class CallbackModalFormData {
      * @param callback - The function to call when the button is pressed (optional).
      * @returns - The current instance of the form for method chaining.
      */
-    public dropdown(label: RawMessage, options: RawMessage[], defaultValueIndex?: number, callback?: (value: RawMessage) => ModalDataCorrect | ModalDataError): this {
+    public dropdown(label: RawMessage, options: RawMessage[], defaultValueIndex?: number, callback?: (value: number) => ModalDataCorrect | ModalDataError): this {
         this.callbacks.push({ callback: callback || (() => new ModalDataCorrect()) });
         this.form.dropdown(label, options, defaultValueIndex);
         this.formConstruction.push({ data: [label, options, defaultValueIndex], callback: (data) => this.dropdown(data[0], data[1], data[2], callback), isInputField: true });
