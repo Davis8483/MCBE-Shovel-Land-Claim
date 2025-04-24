@@ -1,0 +1,6 @@
+[submodule "RP"]
+	path = RP
+	url = https://github.com/Davis8483/Shovel-Land-Claim-RP
+[submodule "BP"]
+	path = BP
+	url = https://github.com/Davis8483/Shovel-Land-Claim-BP
