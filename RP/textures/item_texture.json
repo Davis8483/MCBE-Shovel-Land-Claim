@@ -1,9 +1,0 @@
-{
-	"resource_pack_name": "Shovel Land Claim",
-	"texture_name": "atlas.items",
-	"texture_data": {
-		"lca_claim_shovel": {
-			"textures": "textures/items/claim_shovel"
-		}
-	}
-}
