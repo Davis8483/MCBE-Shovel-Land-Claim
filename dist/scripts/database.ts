@@ -560,7 +560,7 @@ export class PlayerClaimBlocks {
 }
 
 export class PlayerData {
-    readonly schemaVersion: string = "1.0.0";
+    readonly schemaVersion: number[] = [0, 1, 0]; // version 0.1.0
 
     private _id: string;
     private _name: string;
