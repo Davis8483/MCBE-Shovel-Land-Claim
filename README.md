@@ -1,4 +1,4 @@
-<img src=https://github.com/Davis8483/MCBE-Shovel-Land-Claim/blob/stable/gh_assets/SLC_Animated_Banner.png width=500vw align="left">
+<img src=gh_assets/SLC_Animated_Banner.webp width=500vw align="left">
 
 ### Welcome to Shovel Land Claim!
 ---
