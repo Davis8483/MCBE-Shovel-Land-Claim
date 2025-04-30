@@ -1,4 +1,4 @@
-<img src=gh_assets/SLC_Animated_Banner.webp width=500vw align="left">
+<img src=docs/SLC_Animated_Banner.webp width=500vw align="left">
 
 ### Welcome to Shovel Land Claim!
 ---
