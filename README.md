@@ -6,6 +6,8 @@ A Minecraft Bedrock Edition addon that allows you to protect your builds from gr
 
 <br clear="left"/>
 
+### MCPEDL release comming soon!
+
 ## Creating claims
 Use the Claim Shovel to break a block, setting the first corner of your claim. Then break another block while crouching to set the opposite corner. This will bring up the claim creation menu.
 
@@ -27,3 +29,5 @@ Gravestones can be broken by players even if they don't own the claim...
 
 Hey, so like I develop this in my free time on top of school and a part time job.\
 So if you enjoyed the addon, consider supporting me on [Buy Me A Coffee](https://buymeacoffee.com/davis8483). thx! (❤️ω❤️)
+
+<p xmlns:cc="http://creativecommons.org/ns#" xmlns:dct="http://purl.org/dc/terms/" align="center"><a property="dct:title" rel="cc:attributionURL" href="https://github.com/Davis8483/MCBE-Shovel-Land-Claim">Shovel Land Claim</a> by <span property="cc:attributionName">nDavis</span> is licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY-NC-SA 4.0<img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" alt=""><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" alt=""><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/nc.svg?ref=chooser-v1" alt=""><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1" alt=""></a></p>
