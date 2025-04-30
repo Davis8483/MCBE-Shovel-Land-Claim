@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Banner</title>
+    <style>
+        @property --rotate {
+            syntax: "<angle>";
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Full viewport height */
+            margin: 0; /* Remove default margin */
+            background-color: #ffffff00; /* Optional: Add a background color */
+        }
+
+        .gradient-border {
+            --rotate: 0deg;
+            --glow-gradient: linear-gradient(0deg, rgba(255, 255, 255, 0.3), rgba(122, 0, 221, 0.3));
+            position: relative;
+            display: inline-block;
+            border-radius: 35px; /* Rounded corners */
+            padding: 8px; /* Space for the border */
+            background: linear-gradient(var(--rotate), #ffffff, #7a00dd); /* Main gradient */
+            z-index: 1; /* Ensure it is above the glow */
+        }
+
+        .gradient-border::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border-radius: 45px; /* Slightly larger than the main border */
+            background: var(--glow-gradient); /* Glow gradient */
+            z-index: 0; /* Ensure it is behind the main border */
+            filter: blur(15px); /* Add blur for the glow effect */
+            pointer-events: none; /* Prevent interaction with the pseudo-element */
+        }
+
+        .gradient-border img {
+            display: block;
+            border-radius: 30px; /* Rounded corners for the image */
+            position: relative;
+            z-index: 2; /* Ensure the image is above everything */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="gradient-border">
+        <img src="SLC_Banner_Icon.png" alt="SLC Banner Icon">
+    </div>
+    <script>
+        // Declare the scene variable in the global scope
+        window.scene = {
+            getIterationCount: function () {
+                // Return the number of iterations for the animation
+                return 1; // Adjust this value as needed
+            },
+            getDelay: function () {
+                // Return the delay before the animation starts
+                return 0; // Adjust this value as needed
+            },
+            getPlaySpeed: function () {
+                // Return the playback speed of the animation
+                return 1; // Adjust this value as needed (1 = normal speed)
+            },
+            getDuration: function () {
+                // Return the duration of the animation in seconds
+                return 3; // Adjust this value as needed
+            },
+            setTime: function (time) {
+                // Set the current time of the animation
+                const duration = this.getDuration();
+                const progress = (time % duration) / duration; // Calculate progress as a fraction
+                const rotateValue = progress * 360; // Map progress to degrees (0 to 360)
+
+                // Update the gradient dynamically
+                const gradientBorder = document.querySelector('.gradient-border');
+                if (gradientBorder) {
+                    // Update the background for the main gradient
+                    const mainGradient = `linear-gradient(${rotateValue}deg, #ffffff, #7a00dd)`;
+                    const glowGradient = `linear-gradient(${rotateValue}deg, rgba(255, 255, 255, 0.3), rgba(122, 0, 221, 0.3))`;
+
+                    // Apply both gradients
+                    gradientBorder.style.background = mainGradient;
+                    gradientBorder.style.setProperty('--glow-gradient', glowGradient);
+
+                    // Update the pseudo-element's background via CSS variable
+                    const styleSheet = document.styleSheets[0];
+                    const ruleIndex = Array.from(styleSheet.cssRules).findIndex(rule =>
+                        rule.selectorText === '.gradient-border::before'
+                    );
+                    if (ruleIndex !== -1) {
+                        styleSheet.cssRules[ruleIndex].style.background = glowGradient;
+                    }
+                }
+            },
+            // Add other methods or properties required by @scenejs/render
+        };
+    </script>
+</body>
+</html>
