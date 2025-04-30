@@ -22,12 +22,12 @@
 
         .gradient-border {
             --rotate: 0deg;
-            --glow-gradient: linear-gradient(0deg, rgba(255, 255, 255, 0.3), rgba(122, 0, 221, 0.3));
+            --glow-gradient: conic-gradient(from 0deg, rgba(255, 255, 255, 0.3), rgba(122, 0, 221, 0.3), rgba(255, 255, 255, 0.3) 80%);
             position: relative;
             display: inline-block;
             border-radius: 35px; /* Rounded corners */
             padding: 8px; /* Space for the border */
-            background: linear-gradient(var(--rotate), #ffffff, #7a00dd); /* Main gradient */
+            background: conic-gradient(from var(--rotate), #ffffff, #7a00dd, #ffffff 80%); /* Main gradient */
             z-index: 1; /* Ensure it is above the glow */
         }
 
@@ -51,7 +51,6 @@
             position: relative;
             z-index: 2; /* Ensure the image is above everything */
         }
-
     </style>
 </head>
 <body>
@@ -87,8 +86,8 @@
                 const gradientBorder = document.querySelector('.gradient-border');
                 if (gradientBorder) {
                     // Update the background for the main gradient
-                    const mainGradient = `linear-gradient(${rotateValue}deg, #ffffff, #7a00dd)`;
-                    const glowGradient = `linear-gradient(${rotateValue}deg, rgba(255, 255, 255, 0.3), rgba(122, 0, 221, 0.3))`;
+                    const mainGradient = `conic-gradient(from ${rotateValue}deg, #ffffff, #7a00dd, #ffffff 80%)`;
+                    const glowGradient = `conic-gradient(from ${rotateValue}deg, rgba(255, 255, 255, 0.3), rgba(122, 0, 221, 0.3), rgba(255, 255, 255, 0.3) 80%)`;
 
                     // Apply both gradients
                     gradientBorder.style.background = mainGradient;
