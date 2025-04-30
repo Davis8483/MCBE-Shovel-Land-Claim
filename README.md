@@ -1,10 +1,10 @@
-<div align="center">
-  <img src=https://github.com/Davis8483/MCBE-Shovel-Land-Claim/blob/stable/gh_assets/SLC_Animated_Banner.png width=500vw>
-</div>
+<img src=https://github.com/Davis8483/MCBE-Shovel-Land-Claim/blob/stable/gh_assets/SLC_Animated_Banner.png width=500vw align="left">
 
-Shovel Land Claim is a Minecraft Bedrock Edition addon that allows you to protect your builds from griefing and looting. It works similarly to the Java Golden Shovel mod
-
+### Welcome to Shovel Land Claim!
 ---
+A Minecraft Bedrock Edition addon that allows you to protect your builds from griefing and looting. It works similarly to the Java Golden Shovel mod
+
+<br clear="left"/>
 
 ## Creating claims
 Use the Claim Shovel to break a block, setting the first corner of your claim. Then break another block while crouching to set the opposite corner. This will bring up the claim creation menu.
