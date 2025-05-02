@@ -174,10 +174,13 @@ export class ShovelUI {
             form.button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/icon_multiplayer.png", () => {
                 this.playerPermissionsList(playerData);
             })
-            form.button({"translate": "ui.op_manage_player.button:delete_player_data"}, "textures/ui/redX1.png", () => {
-                this.opDeletePlayerConfirm(playerId);
-            })
-            .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
+            // if player is offline
+            if (world.getAllPlayers().filter(p => p.id == playerId).length == 0) {
+                form.button({"translate": "ui.op_manage_player.button:delete_player_data"}, "textures/ui/redX1.png", () => {
+                    this.opDeletePlayerConfirm(playerId);
+                })
+            }
+            form.button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
 
 
         form.show(this.player);
