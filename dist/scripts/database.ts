@@ -765,11 +765,15 @@ export class PlayerData {
         // remove player from world dynamic properties
         world.setDynamicProperty(`db.${this._id}`, undefined);
 
-        // recursively remove players permissions from all claims
         for (var pData of database) {
+            // recursively remove players permissions from all claims
             for (var claim of pData.claims) {
                 claim.removePlayerPermissions(this._id);
             }
+
+            // remove players permissions from global permissions list
+            pData.removePlayerPermissions(this._id);
+
         }
 
         saveDb();
