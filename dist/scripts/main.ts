@@ -729,7 +729,7 @@ system.runInterval(() => {
                         p.onScreenDisplay.setActionBar(
                             {
                                 "rawtext": [
-                                    { "translate": "claim:name_color" },
+                                    { "translate": "actionbar.claim:name_color" },
                                     { "text": `${claim.name}§r - ${playerName}` },
                                 ]
                             });
