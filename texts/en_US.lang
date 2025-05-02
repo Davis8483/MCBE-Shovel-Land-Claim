@@ -14,9 +14,11 @@ chat.claim:width=§cYou're claim must be at least %s blocks wide!§r
 chat.claim:blocks_new=§cYou need %s more block(s) to create this claim!§r
 chat.claim:blocks_resize=§cYou need %s more block(s) to resize this claim!§r
 chat.claim:resized=§aClaim has been resized!§r
-chat.claim:player_permissions_updated_notif=§a%s has updated your permissions for [claim:name_color]%s§r
-chat.claim:public_permissions_updated_notif=§a%s has updated the public permissions for [claim:name_color]%s§r
-chat.claim:player_permissions_reset_notif=§bhas reset your permissions for§r
+chat.claim:player_permissions_updated_notif=%s §ahas updated your permissions for §5%s§r
+chat.claim:public_permissions_updated_notif=%s §ahas updated the public permissions for §5%s§r
+chat.claim:global_permissions_updated_notif=%s §ahas updated your global permissions!§r
+chat.claim:player_permissions_reset_notif=%s §bhas reset your permissions for§r §5%s§r
+chat.claim:global_player_permissions_reset_notif=%s §bhas reset your global permissions
 
 chat.point.new:selected=First block selected: [§c%s§r, §a%s§r, §9%s§r]\n§bCrouch click to set the opposite corner of the claim!§r
 chat.point.resize:selected=Claim corner selected: [§c%s§r, §a%s§r, §9%s§r]\n§dCrouch click a another block to resize the claim!§r
@@ -118,6 +120,7 @@ ui.manage.remove.button:cancel=Cancel
 
 ui.manage.permissions.public:title=Public Permissions: %s
 ui.manage.permissions.player:title=%s's Permissions: %s
+ui.manage.global_permissions.player:title=%s's Global Permissions
 ui.manage.permissions:enter_claim=Enter Claim
 ui.manage.permissions:break_blocks=Break Blocks
 ui.manage.permissions:use_items_on_blocks=Use Items On Blocks | Ex: Placing
@@ -132,11 +135,15 @@ ui.manage.permissions:edit_signs=Edit Signs
 ui.manage.permissions:use_tnt=Use Tnt
 
 ui.manage.permissions.player.selection:title=Player Permissions
+ui.manage.gloabl_permissions.player.selection:title=Global Player Permissions
+ui.manage.gloabl_permissions.player.selection:body=The following permissions apply to all of your claims...
 ui.manage.permissions.player.selection:body=The following overides public permissions...
-ui.manage.permissions.player.selection:add_player=§aAdd Player§r
+ui.manage.permissions.player.selection:add_player=§2Add Player§r
 ui.manage.permissions.player.selection:remove_player=§cRemove Player§r
-ui.manage.permissions.player.selection.online=§aOnline§r
+ui.manage.permissions.player.selection.online=§2Online§r
 ui.manage.permissions.player.selection.offline=§cOffline§r
+ui.manage.permissions.player.selection:global_online=§l§9Global§r - §2Online§r
+ui.manage.permissions.player.selection:global_offline=§l§9Global§r - §cOffline§r
 
 ui.manage.permissions.player.selection.modify.add:title=Add Player
 ui.manage.permissions.player.selection.modify.remove:title=Remove Player
@@ -171,4 +178,4 @@ ui.claim.icons:farmland=Farmland
 ui.claim.icons:weapons=Weapons
 ui.claim.icons:flowers=Flowers
 
-claim:name_color=§5
+actionbar.claim:name_color=§5
