@@ -1,8 +1,9 @@
 <img src=docs/SLC_Animated_Banner.webp width=500vw align="left">
 
 ### Welcome to Shovel Land Claim!
----
 A Minecraft Bedrock Edition addon that allows you to protect your builds from griefing and looting. It works similarly to the Java Golden Shovel mod
+
+[![](https://dcbadge.limes.pink/api/server/https://discord.gg/JGsXDubjek)](https://discord.gg/JGsXDubjek)
 
 <br clear="left"/>
 
