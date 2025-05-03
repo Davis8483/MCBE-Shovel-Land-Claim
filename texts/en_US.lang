@@ -101,6 +101,11 @@ ui.op_panel.addon_settings.textbox:claim_min_width_placeholder=Ex: 10
 ui.op_panel.addon_settings.error:must_be_positive_number=§cYou must provide a positive number!§r
 ui.op_panel.addon_settings.button:save=Save Config
 
+ui.edit_global_permissions_intent.title=Overwrite Global Permissions?
+ui.edit_global_permissions_intent.body=This player has global permissions set, would you like to overwrite them for this claim?
+ui.edit_global_permissions_intent.button:overwrite=Overwrite
+ui.edit_global_permissions_intent.button:edit=Edit §l§9Global§r Permissions
+
 ui.addon_info:title=Addon Info
 
 ui.manage:title=Manage Claim
