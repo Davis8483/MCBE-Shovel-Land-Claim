@@ -510,30 +510,61 @@ export class ShovelUI {
             )
             .dropdown({"translate": "ui.manage.permissions.player.selection.modify:player_dropdown"}, add ? unsavedPlayers.map(id => ({"text": PlayerData.fromId(id).name})) : listParent.playerPermissionsList.map(p => ({"text": p.name || ""})))
             .submitButton(add ? {"translate": "ui.manage.permissions.player.selection.modify.add:submit"} : {"translate": "ui.manage.permissions.player.selection.modify.remove:submit"}, (response) => {
+                const playerID = add ? unsavedPlayers[response.formValues[0] as number] : listParent.playerPermissionsList[response.formValues[0] as number].id;
+
                 if (add) {
 
                     // if player was added open the permissions menu for them
                     popNavigationStack(); // remove the player permissions list menu from the stack
-                    this.managePermissions(listParent, unsavedPlayers[response.formValues[0] as number]);
+                    this.managePermissions(listParent, playerID);
                 }
                 else {
 
-                    // if a players permissions have been removed/reset notify them
+                    // list of players that are set to be disallowed from entering the claim
+                    var pendingEntranceDisallowList: PlayerData[] = [];
+                    var pendingEntranceDisallowClaimName: string;
+
                     for (var p of world.getAllPlayers()) {
-                        if (p.id == listParent.playerPermissionsList[response.formValues[0] as number].id) {
+                        var playerData: PlayerData = PlayerData.fromId(p.id);
+
+                        // if a players permissions have been deleted notify them
+                        if (p.id == playerID) {
                             sendNotification(p, listParent instanceof Claim ? "chat.claim:player_permissions_reset_notif" : "chat.claim:global_player_permissions_reset_notif", this.player.name, listParent.name);
                             playSound(p, AddonSounds.Claim.SAVE);
-                            break;
+
+                            // get the claim the player is in, this will be undefined if the player is not in a claim
+                            const claim = listParent instanceof Claim ? 
+                                listParent.isOverlap(p.location, p.location) ? 
+                                    listParent : undefined
+                                : listParent.claims.filter(c => c.isOverlap(p.location, p.location))[0];
+
+                            // check if the player will lose access to the claim they are in
+                            // compares permissions of soon to be deleted player permissions to the claim permissions
+                            if (claim && !claim.permissions.getPermission(PermissionTypes.ENTER_CLAIM) && claim.hasPermission(PermissionTypes.ENTER_CLAIM, p)) {
+                                
+                                // set flag so the player is not ejected from the claim
+                                playerData.setPendingEntranceDisallow(true);
+
+                                pendingEntranceDisallowList.push(playerData);
+                                pendingEntranceDisallowClaimName = claim.name;
+
+                            }
                         }
                     }
 
                     // remove player from list
-                    listParent.removePlayerPermissions(listParent.playerPermissionsList[response.formValues[0] as number].id);
+                    listParent.removePlayerPermissions(playerID);
 
                     playSound(this.player, AddonSounds.Claim.DELETE);
 
-                    // return to previous menu
-                    navigateBack();
+                    if (pendingEntranceDisallowList.length > 0) {
+                        // notify the owner that players are pending entrance disallowed
+                        this.pendingEntranceDisallow(pendingEntranceDisallowList, pendingEntranceDisallowClaimName);
+                    }
+                    else {
+                        // return to previous menu
+                        navigateBack();
+                    }
                 }
             });
         form.show(this.player)
@@ -642,6 +673,10 @@ export class ShovelUI {
         form.submitButton({"translate": "ui.global.button:save"}, ()=> {
             playSound(this.player, AddonSounds.Claim.SAVE);
 
+            // list of players that are set to be disallowed from entering the claim
+            var pendingEntranceDisallowList: PlayerData[] = [];
+            var pendingEntranceDisallowClaimName: string;
+
             for (var p of world.getAllPlayers()) {
                 var playerData: PlayerData = PlayerData.fromId(p.id);
 
@@ -657,22 +692,56 @@ export class ShovelUI {
                     playSound(p, AddonSounds.Claim.SAVE);
                 }
 
+                // get the claim the player is in, this will be undefined if the player is not in a claim
+                const claim = listParent instanceof Claim ? 
+                    listParent.isOverlap(p.location, p.location) ? 
+                        listParent : undefined
+                    : listParent.claims.filter(c => c.isOverlap(p.location, p.location))[0];
+
                 // if a players enter claim permission has been removed while they are in the claim, notify the owner
-                if (listParent instanceof Claim && !listParent.hasPermission(PermissionTypes.ENTER_CLAIM, p) && listParent.isOverlap(p.location, p.location) && (playerData.id != listParent.getOwnerData().id) && (playerID ? (playerData.id == playerID) : true)) {
+                if (claim && !claim.hasPermission(PermissionTypes.ENTER_CLAIM, p) && (playerData.id != claim.getOwnerData().id) && (playerID ? (playerData.id == playerID) : true)) {
                     
                     // set flag so the player is not ejected from the claim
                     playerData.setPendingEntranceDisallow(true);
 
-                    // notify owner
-                    sendNotification(this.player, "chat.claim:pending_entrance_disallow", playerData.name);
+                    pendingEntranceDisallowList.push(playerData);
+                    pendingEntranceDisallowClaimName = claim.name;
+
                 }
             }
 
-            // return to previous menu
-            navigateBack();
+            if (pendingEntranceDisallowList.length > 0) {
+                // notify the owner that players are pending entrance disallowed
+                this.pendingEntranceDisallow(pendingEntranceDisallowList, pendingEntranceDisallowClaimName);
+            }
+            else {
+                // return to previous menu
+                navigateBack();
+            }
         });
         form.show(this.player);
     }
+
+    /**
+     * Shows a message form to the player that lists all players that are set to be disallowed from entering the claim.
+     * 
+     * @param players - The list of players that are pending entrance disallowed
+     * @param claimName - The name of the claim
+     */
+    private pendingEntranceDisallow(players: PlayerData[] = [], claimName: string) {
+        const form = new CallbackActionFormData(() => this.pendingEntranceDisallow(players, claimName))
+            .title({"translate": "ui.pending_entrance_disallow:title"})
+            .body({
+            "rawtext": [
+                { "translate": "ui.pending_entrance_disallow:body", "with": [claimName] },
+                { "text": "\n\n" },
+                ...players.map(p => ({"text": "§l- " + p.name + "\n "}))
+            ]})
+            .button({"translate": "ui.pending_entrance_disallow.button:ok"}, undefined, () => {popNavigationStack(); navigateBack();});
+
+            form.show(this.player);
+    }
+
 
     /**
      * Uses the camera command to view a claim.
