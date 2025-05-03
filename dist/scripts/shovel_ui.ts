@@ -422,6 +422,24 @@ export class ShovelUI {
     }
 
     /**
+     * Shows a message form asking if the player would like to either edit the global permissions or overwrite them with a local claim player permission.
+     * 
+     * @param listParent - The parent class that contains the player permissions list
+     * @param playerID - The entity id of the player to manage permissions for
+     */
+    private editGlobalPermissionIntent(listParent: Claim, playerID: string) {
+        // we're telling the navigation stack to go back to the player permissions list menu instead of this one :thumbs_up:
+        const form = new CallbackMessageFormData(() => this.playerPermissionsList(listParent))
+            .title({"translate": "ui.edit_global_permissions_intent.title"})
+            .body({"translate": "ui.edit_global_permissions_intent.body"})
+            .button1({"translate": "ui.edit_global_permissions_intent.button:overwrite"}, () => {this.managePermissions(listParent, playerID)})
+            .button2({"translate": "ui.edit_global_permissions_intent.button:edit"}, () => {this.managePermissions(listParent.getOwnerData(), playerID)});
+
+
+        form.show(this.player);
+    }
+
+    /**
      * Shows a form to manage individual player permissions.
      * 
      * @param listParent - The parent class that contains the player permissions list
@@ -437,17 +455,18 @@ export class ShovelUI {
             })
             .body({"translate": listParent instanceof Claim ? "ui.manage.permissions.player.selection:body" : "ui.manage.gloabl_permissions.player.selection:body"});
         
-        // show all global player permissions first in claim player permissions list; include an extra Global badge next to the player name
+        // show all global player permissions; include an extra Global badge next to the player name
         if (listParent instanceof Claim) {
-            for (var pP of listParent.getOwnerData().playerPermissionsList) {
+            // make sure to filter out global player permissions that are overiden in the claim
+            for (const pP of listParent.getOwnerData().playerPermissionsList.filter(p => !listParent.playerPermissionsList.some(p2 => p2.id == p.id))) {
                 var isOnline = world.getAllPlayers().filter(player => player.id == pP.id).length > 0 ? true : false;
 
-                form.button({"rawtext": [{"text": pP.name + "\n"}, {"translate": isOnline? "ui.manage.permissions.player.selection:global_online": "ui.manage.permissions.player.selection:global_offline"}]}, isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.managePermissions(listParent.getOwnerData(), pP.id)});
+                form.button({"rawtext": [{"text": pP.name + "\n"}, {"translate": isOnline? "ui.manage.permissions.player.selection:global_online": "ui.manage.permissions.player.selection:global_offline"}]}, isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.editGlobalPermissionIntent(listParent, pP.id)});
             }
         }
         
-        // show all players in the list
-        for (var pP of listParent instanceof Claim ? listParent.playerPermissionsList : listParent.playerPermissionsList) {
+        // show all local/claim specific player permissions
+        for (const pP of listParent instanceof Claim ? listParent.playerPermissionsList : listParent.playerPermissionsList) {
             var isOnline = world.getAllPlayers().filter(player => player.id == pP.id).length > 0 ? true : false;
 
             form.button({"rawtext": [{"text": pP.name + "\n"}, {"translate": isOnline? "ui.manage.permissions.player.selection.online": "ui.manage.permissions.player.selection.offline"}]}, isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.managePermissions(listParent, pP.id)});
@@ -492,19 +511,10 @@ export class ShovelUI {
             .dropdown({"translate": "ui.manage.permissions.player.selection.modify:player_dropdown"}, add ? unsavedPlayers.map(id => ({"text": PlayerData.fromId(id).name})) : listParent.playerPermissionsList.map(p => ({"text": p.name || ""})))
             .submitButton(add ? {"translate": "ui.manage.permissions.player.selection.modify.add:submit"} : {"translate": "ui.manage.permissions.player.selection.modify.remove:submit"}, (response) => {
                 if (add) {
-                    var newPlayerPermissions = new PlayerPermissions(unsavedPlayers[response.formValues[0] as number], PlayerData.fromId(unsavedPlayers[response.formValues[0] as number]).name);
-
-                    // copy private permissions to new player permissions
-                    for (var perm of Object.values(PermissionTypes)) {
-                        newPlayerPermissions.setPermission(perm, listParent instanceof Claim ? listParent.permissions.getPermission(perm) : newPlayerPermissions.getPermission(perm));
-                    }
-
-                    // save new player permission to list
-                    listParent.addPlayerPermissions(newPlayerPermissions);
 
                     // if player was added open the permissions menu for them
                     popNavigationStack(); // remove the player permissions list menu from the stack
-                    this.managePermissions(listParent, newPlayerPermissions.id);
+                    this.managePermissions(listParent, unsavedPlayers[response.formValues[0] as number]);
                 }
                 else {
 
@@ -539,6 +549,22 @@ export class ShovelUI {
     private managePermissions(listParent: Claim | PlayerData, playerID?: string) {
 
         var playerPermissions = listParent.playerPermissionsList.filter(p => p.id == playerID)[0];
+
+        // player is not in the list, so we need to create a new player permissions object
+        if (playerPermissions == undefined){
+
+            playerPermissions = new PlayerPermissions(playerID, PlayerData.fromId(playerID).name);
+
+            // if a claim, copy private permissions to new player permissions
+            if (listParent instanceof Claim) {
+                for (var perm of Object.values(PermissionTypes)) {
+                    playerPermissions.setPermission(perm, listParent.permissions.getPermission(perm));
+                }
+            }
+
+            // save new player permission to list
+            listParent.addPlayerPermissions(playerPermissions);
+        }
 
         const target = playerID ? playerPermissions : (listParent instanceof Claim ? listParent.permissions : undefined); // target is either the claim or the player permissions object
         const defaults = playerID ? playerPermissions : (listParent instanceof Claim ? listParent.permissions : undefined); // defaults is either the claim or the player permissions object
