@@ -551,7 +551,7 @@ export class ShovelUI {
         var playerPermissions = listParent.playerPermissionsList.filter(p => p.id == playerID)[0];
 
         // player is not in the list, so we need to create a new player permissions object
-        if (playerPermissions == undefined){
+        if (playerPermissions == undefined && playerID) {
 
             playerPermissions = new PlayerPermissions(playerID, PlayerData.fromId(playerID).name);
 
