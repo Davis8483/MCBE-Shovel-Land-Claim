@@ -38,7 +38,6 @@ chat.claim.permission:open_containers=§cYou're not allowed to open containers!�
 chat.claim.permission:edit_signs=§cYou're not allowed to edit signs!§r
 chat.claim:view=§cYou can only view a claim from the overworld!§r
 chat.claim:piston=§cYou can't use a piston from outside this claim!§r
-chat.claim:pending_entrance_disallow=§c%s is in the claim, the "Enter Claim" permission will not be applied until they leave!§r
 
 chat.blocks:payment=§aYou've recieved your hourly payment of %s blocks!§r
 
@@ -57,6 +56,10 @@ ui.main.button:op_panel=Operator Panel
 ui.main.button:global_player_permissions=§l§9Global§r Player Permissions
 ui.main.button:addon_info=Addon Info
 ui.main.button:close=Close
+
+ui.pending_entrance_disallow:title=Pending Entrance Disallow
+ui.pending_entrance_disallow:body=§cThe following players are in §l§5%s§r§c, the enter claim permission will not be applied to them until they leave.§r
+ui.pending_entrance_disallow.button:ok=Ok
 
 ui.op_panel:title=Operator Panel
 ui.op_panel.button:manage_players=Manage Players
