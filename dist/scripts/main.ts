@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, ItemStack, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, EntityProjectileComponent, } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, EntityProjectileComponent, MolangVariableMap, DimensionType, DimensionTypes, } from '@minecraft/server';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { sendNotification } from './notifications.js';
@@ -709,6 +709,11 @@ system.runInterval(() => {
                 ShovelUI.exitClaimView(p);
             }
 
+            // if player is no longer holding the claim shovel, set the resizing claim name to empty
+            if (!p.getComponent(EntityComponentTypes.Inventory).container.getItem(p.selectedSlotIndex)?.matches(shovelID)) {
+                playerData.setResizingClaimName("");
+            }
+
             runInAllClaims((playerID, playerName, claim) => {
 
                 // apply an offset to the player location to be more accurate with claim bounds
@@ -874,88 +879,96 @@ system.runInterval(() => {
 
 // renders claim particles every 1 second
 system.runInterval(() => {
+    const dimension = world.getDimension("overworld");
 
-    var dimension = world.getDimension("overworld");
+    for (var p of world.getAllPlayers()) {
+        const playerData = PlayerData.fromId(p.id);
 
-    runInAllClaims((playerID, playerName, claim) => {
+        if (p.dimension == dimension) {
+            runInAllClaims((playerID, playerName, claim) => {
 
-        // user defined start and end points of the claim
-        var s = claim.start;
-        var e = claim.end;
+                // user defined start and end points of the claim
+                var s = claim.start;
+                var e = claim.end;
 
-        // all 4 points of the claim
-        var points = [
-            [[s.x, s.z], [s.x, e.z]],
-            [[e.x, s.z], [e.x, e.z]]
-        ]
+                // all 4 points of the claim
+                var points = [
+                    [[s.x, s.z], [s.x, e.z]],
+                    [[e.x, s.z], [e.x, e.z]]
+                ]
 
-        var averageY = (s.y + e.y) / 2
-        var numSegments = 3 // the number of border particle segments to generate above and below the average y level
-        var segmentHeight = 10
-        var averageOffset = (segmentHeight * numSegments)
+                var claimWidth = Math.abs(s.x - e.x) + 1;
+                var claimLength = Math.abs(s.z - e.z) + 1;
 
-        var claimShovelOut = false;
+                var numSegments = 3 // the number of border particle segments to generate above and below the particleSpawnY
+                var segmentHeight = 10
+                var particleSpawnY = Math.round(p.location.y / segmentHeight) * segmentHeight; // the y level to spawn particles at; rounded to the nearest segmentHeight integer
+                var averageOffset = (segmentHeight * numSegments)
 
-        // check if claim owner has claim shovel out
-        for (var p of world.getAllPlayers()) {
-            if (p.id == playerID && p.getComponent(EntityComponentTypes.Inventory).container.getItem(p.selectedSlotIndex)?.matches(shovelID)) {
-                // set flag
-                claimShovelOut = true;
-                
-                break;
-            }
-        }
+                var claimShovelOut = false;
 
-        // only render if particles are enabled or owner has claim shovel out
-        if (claim.particlesEnabled || claimShovelOut) {
-            // loop through all claim points to determine particle type
-            for (var a = 0; a < points.length; a++) {
-                for (var b = 0; b < points[a].length; b++) {
+                if (p.id == playerID && p.getComponent(EntityComponentTypes.Inventory).container.getItem(p.selectedSlotIndex)?.matches(shovelID)) {
+                    // set flag
+                    claimShovelOut = true;
+                }
 
-                    // only render if claim point is in render distance
-                    if (dimension.getBlock({ "x": points[a][b][0], "y": averageY, "z": points[a][b][1] }) != undefined) {
+                // only render if particles are enabled or owner has claim shovel out
+                if (claim.particlesEnabled || claimShovelOut) {
+                    // loop through all claim points to determine particle type
+                    for (var a = 0; a < points.length; a++) {
+                        for (var b = 0; b < points[a].length; b++) {
 
-                        // creates sets of verticle claim particles 20 blocks below and above the claim
-                        for (var i = averageY - averageOffset; i <= averageY + averageOffset; i += segmentHeight) {
-                            if (points[a][b][0] > points[a ^ 1][b][0]) {
-                                var xParticleType = "slc:negx_claim_dust";
-                            }
-                            else {
-                                var xParticleType = "slc:posx_claim_dust";
-                            }
+                            // only render if claim point is in render distance
+                            const isLoaded = dimension.getBlock({ "x": points[a][b][0], "y": particleSpawnY, "z": points[a][b][1] }) != undefined
 
-                            if (points[a][b][1] > points[a][b ^ 1][1]) {
-                                var yParticleType = "slc:negz_claim_dust";
-                            }
-                            else {
-                                var yParticleType = "slc:posz_claim_dust";
-                            }
+                            // if player is resizing corner, only show the opposite corners particles
+                            const isResizingOppositeCorner = (points[a][b][0] == playerData.oppositeCorner.x) || (points[a][b][1] == playerData.oppositeCorner.z);
 
-                            var particlePoint: Vector3 = { "x": points[a][b][0] + 0.5, "y": i + 0.5, "z": points[a][b][1] + 0.5 };
+                            if (isLoaded && (claimShovelOut && (playerData.resizingClaimName == claim.name)) ? isResizingOppositeCorner : true) {
 
-                            try {
-                                if (claim.particlesEnabled) {
-                                    dimension.spawnParticle(xParticleType, particlePoint);
-                                    dimension.spawnParticle(yParticleType, particlePoint);
-                                    dimension.spawnParticle("slc:rising_claim_dust", particlePoint);
-                                    dimension.spawnParticle("slc:falling_claim_dust", particlePoint);
-                                } else if (claimShovelOut) {
-                                    p.spawnParticle(xParticleType, particlePoint);
-                                    p.spawnParticle(yParticleType, particlePoint);
-                                    p.spawnParticle("slc:rising_claim_dust", particlePoint);
-                                    p.spawnParticle("slc:falling_claim_dust", particlePoint);
+                                // creates sets of verticle claim particles 20 blocks below and above the claim
+                                for (var i = particleSpawnY - averageOffset; i <= particleSpawnY + averageOffset; i += segmentHeight) {
+
+                                    const xParticleOptions = new MolangVariableMap();
+                                    const zParticleOptions = new MolangVariableMap();
+
+                                    // set kill distance to half of claim width/length with a little bit of overlap
+                                    xParticleOptions.setFloat("kill_distance", claimWidth / 1.75);
+                                    zParticleOptions.setFloat("kill_distance", claimLength / 1.75);
+
+                                    // set direction of particles
+                                    xParticleOptions.setSpeedAndDirection("motion", 1, {"x": points[a][b][0] > points[a ^ 1][b][0] ? -1 : 1, "y": 0, "z": 0});
+                                    zParticleOptions.setSpeedAndDirection("motion", 1, {"x": 0, "y": 0, "z": points[a][b][1] > points[a][b ^ 1][1] ? -1 : 1});
+
+                                    var particlePoint: Vector3 = { "x": points[a][b][0] + 0.5, "y": i + 0.5, "z": points[a][b][1] + 0.5 };
+
+                                    try {
+                                        const xzParticleType = claimShovelOut ? "slc:glowing_xz_claim_dust" : "slc:xz_claim_dust"
+                                        const yParticleType = claimShovelOut ? "slc:glowing_y_claim_dust" : "slc:y_claim_dust"
+
+                                        p.spawnParticle(xzParticleType, particlePoint, xParticleOptions);
+                                        p.spawnParticle(xzParticleType, particlePoint, zParticleOptions);
+
+                                        var yParticleOptions = new MolangVariableMap();
+                                        yParticleOptions.setSpeedAndDirection("motion", 1, {"x": 0, "y": 1, "z": 0});
+                                        p.spawnParticle(yParticleType, particlePoint, yParticleOptions);
+
+                                        yParticleOptions = new MolangVariableMap();
+                                        yParticleOptions.setSpeedAndDirection("motion", 1, {"x": 0, "y": -1, "z": 0});
+                                        p.spawnParticle(yParticleType, particlePoint, yParticleOptions);
+                                    }
+                                    catch {
+                                        // do nothing
+                                    }
+
                                 }
                             }
-                            catch {
-                                // do nothing
-                            }
-
                         }
                     }
                 }
-            }
+            });
         }
-    });
+    }
 }, 20);
 
 // every minute decrement each online players time remaining until they recieve more claim blocks

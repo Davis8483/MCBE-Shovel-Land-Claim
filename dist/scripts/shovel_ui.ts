@@ -359,6 +359,8 @@ export class ShovelUI {
 
                 //add/subtract the blocks from players balance
                 playerData.claimBlocks.incrementAmount(blockDifference);
+
+                playerData.setResizingClaimName("");
             });
 
         form.show(this.player);
