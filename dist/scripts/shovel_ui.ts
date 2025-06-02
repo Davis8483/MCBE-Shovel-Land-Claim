@@ -54,7 +54,12 @@ export class ShovelUI {
 
             // conditionally show the manage claims button if the player has any claims
             if (playerData.claims.length > 0){
-                form.button({"translate": "ui.main.button:manage"}, "textures/ui/icon_setting.png", () => {
+                form.button({ 
+                    "rawtext": [
+                        {"translate": "ui.main.button:manage"},
+                        { "text": settings.maxClaimAmount > 0 ? (((playerData.claims.length >= settings.maxClaimAmount) ? " §c" : " ") + `(${playerData.claims.length}/${settings.maxClaimAmount})`) : "" }
+                    ]
+                }, "textures/ui/icon_setting.png", () => {
                     this.claimsList(playerData.id);
                 });
             }
@@ -147,6 +152,20 @@ export class ShovelUI {
                 else {
                     // update claim minimum width
                     settings.setClaimMinimumWidth(newClaimMinimumWidth);
+
+                    return new ModalDataCorrect();
+                }
+            })
+            .textField({"translate": "ui.op_panel.addon_settings.textbox:max_claim_amount"}, {"translate": "ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder"}, settings.maxClaimAmount.toString(), (value) => {
+                var newMaxClaimAmount = parseInt(value as string);
+
+                if (isNaN(newMaxClaimAmount) || newMaxClaimAmount < 0) {
+                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
+                    return new ModalDataError("ui.op_panel.addon_settings.error:must_be_positive_number");
+                }
+                else {
+                    // update max claim amount
+                    settings.setMaxClaimAmount(newMaxClaimAmount);
 
                     return new ModalDataCorrect();
                 }
@@ -375,7 +394,12 @@ export class ShovelUI {
         var playerData: PlayerData = PlayerData.fromId(ownerId);
 
         const form = new CallbackActionFormData(() => this.claimsList(ownerId))
-            .title({"translate": "ui.manage:title"})
+            .title({
+                rawtext: [
+                    {"translate": "ui.manage:title"},
+                    { "text": settings.maxClaimAmount > 0 ? (((playerData.claims.length >= settings.maxClaimAmount) ? " §c" : " ") + `(${playerData.claims.length}/${settings.maxClaimAmount})`) : "" }
+                ]
+            });
 
         for (const c of playerData.claims) {
 

@@ -8,6 +8,7 @@ export class Settings{
     private _startingClaimBlocks: number;
     private _claimMinimumWidth: number;
     private _disallowedBlocks: string[];
+    private _maxClaimAmount: number;
 
     /**
      * Creates a new Settings object with default values
@@ -28,6 +29,7 @@ export class Settings{
             // "minecraft:structure_block",
             "minecraft:sculk_catalyst" // can be used for griefing
         ];
+        this._maxClaimAmount = 0;
     }
 
     get claimBlockHourlyPayment(): number {
@@ -42,6 +44,12 @@ export class Settings{
     get disallowedBlocks(): string[] {
         return this._disallowedBlocks;
     }
+    /**
+     * The maximum number of claims a player can have, 0 means unlimited
+     */
+    get maxClaimAmount(): number {
+        return this._maxClaimAmount;
+    }
 
     setClaimBlockHourlyPayment(value: number) {
         this._claimBlockHourlyPayment = value;
@@ -53,6 +61,14 @@ export class Settings{
     }
     setClaimMinimumWidth(value: number) {
         this._claimMinimumWidth = value;
+        saveSettings();
+    }
+    /**
+     * 
+     * @param value - The maximum number of claims a player can have, 0 means unlimited
+     */
+    setMaxClaimAmount(value: number) {
+        this._maxClaimAmount = value;
         saveSettings();
     }
     /**
@@ -89,6 +105,7 @@ export class Settings{
         settings._startingClaimBlocks = data._startingClaimBlocks || defaultSettings._startingClaimBlocks;
         settings._claimMinimumWidth = data._claimMinimumWidth || defaultSettings._claimMinimumWidth;
         settings._disallowedBlocks = data._disallowedBlocks || defaultSettings._disallowedBlocks;
+        settings._maxClaimAmount = data._maxClaimAmount || defaultSettings._maxClaimAmount;
         return settings;
     }
 }

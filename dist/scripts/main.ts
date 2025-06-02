@@ -292,6 +292,11 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                             sendNotification(data.player, "chat.claim:blocks_new", ((claimWidth * claimLength) - playerData.claimBlocks.amount).toString());
                             playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
+                        // check if this new claim doesn't exceed the players max number of claims
+                        else if ((settings.maxClaimAmount > 0) && (playerData.claims.length >= settings.maxClaimAmount)) {
+                            sendNotification(data.player, "chat.claim:max_claims", playerData.claims.length.toString());
+                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                        }
                         // all requirements are met, open the claim creation ui
                         else {
                             system.run(() => {
