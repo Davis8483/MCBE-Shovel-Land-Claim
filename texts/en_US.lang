@@ -13,6 +13,7 @@ chat.claim:player_intersecting=§cA player is in the way!§r
 chat.claim:width=§cYou're claim must be at least %s blocks wide!§r
 chat.claim:blocks_new=§cYou need %s more block(s) to create this claim!§r
 chat.claim:blocks_resize=§cYou need %s more block(s) to resize this claim!§r
+chat.claim:max_claims=§cThis exceeds your max of %s claims!§r
 chat.claim:resized=§aClaim has been resized!§r
 chat.claim:player_permissions_updated_notif=%s §ahas updated your permissions for §5%s§r
 chat.claim:public_permissions_updated_notif=%s §ahas updated the public permissions for §5%s§r
@@ -101,6 +102,8 @@ ui.op_panel.addon_settings.textbox:starting_claim_blocks=Starting Claim Blocks
 ui.op_panel.addon_settings.textbox:starting_claim_blocks_placeholder=Ex: 200
 ui.op_panel.addon_settings.textbox:claim_min_width=Claim Minimum Width
 ui.op_panel.addon_settings.textbox:claim_min_width_placeholder=Ex: 10
+ui.op_panel.addon_settings.textbox:max_claim_amount=Per Player Max Claim Amount\n0 = Unlimited
+ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder=Ex: 10
 ui.op_panel.addon_settings.error:must_be_positive_number=§cYou must provide a positive number!§r
 ui.op_panel.addon_settings.button:save=Save Config
 
@@ -111,7 +114,7 @@ ui.edit_global_permissions_intent.button:edit=Edit §l§9Global§r Permissions
 
 ui.addon_info:title=Addon Info
 
-ui.manage:title=Manage Claim
+ui.manage:title=Manage Claims
 ui.manage.body:claim_start=Claim Start: §cX§r=%s §9Z§r=%s
 ui.manage.body:claim_end=Claim End: §cX§r=%s §9Z§r=%s
 ui.manage.button:config=Config
