@@ -113,8 +113,14 @@ ui.edit_global_permissions_intent.button:overwrite=Overwrite
 ui.edit_global_permissions_intent.button:edit=Edit §l§9Global§r Permissions
 
 ui.addon_info:title=Addon Info
+ui.addon_info:body.paragraph:1=§l§5Shovel§7 Land Claim§r\n§oCreated by nDavis§r
+ui.addon_info:body.paragraph:2=This addon was created as a passion project in my free time, I really hope you enjoy it! ^_^
+ui.addon_info:body.paragraph:3=If you have any questions, suggestions, or issues please feel free to reach out on github or discord.
+ui.addon_info:body.paragraph:4=§l§9GitHub§r: https://github.com/Davis8483/MCBE-Shovel-Land-Claim
+ui.addon_info:body.paragraph:5=§l§9Discord§r: https://discord.gg/JGsXDubjek
+ui.addon_info:body.paragraph:6=§oShovel Land Claim by nDavis is licensed under CC BY-NC-SA 4.0§r
 
-ui.manage:title=Manage Claims
+ui.manage:title=Manage Claim
 ui.manage.body:claim_start=Claim Start: §cX§r=%s §9Z§r=%s
 ui.manage.body:claim_end=Claim End: §cX§r=%s §9Z§r=%s
 ui.manage.button:config=Config
