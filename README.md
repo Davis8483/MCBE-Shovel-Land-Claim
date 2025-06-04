@@ -9,12 +9,12 @@ A Minecraft Bedrock Edition addon that allows you to protect your builds from gr
 
 ### MCPEDL release comming soon!
 
-## Creating claims
+## Creating Claims
 Use the Claim Shovel to break a block, setting the first corner of your claim. Then break another block while crouching to set the opposite corner. This will bring up the claim creation menu.
 
 <sup>add gif</sup>
 
-## Resizing claims
+## Resizing Claims
 While holding the Claim Shovel, break any corner of your claim, then break another block to specify the new corner. A confirmation menu will appear.
 
 <sup>add gif</sup>
@@ -22,6 +22,16 @@ While holding the Claim Shovel, break any corner of your claim, then break anoth
 ## Claim blocks
 
 This addon uses a block balance for claim creation. Your claim block balance is displayed in the main menu of the claim shovel. You will obtain x number of claim blocks(set by admin) for every hour you play.
+
+## Operator Panel
+An Operator Panel is included for managing all aspects of this addon. It can be obtained by giving yourself the `shovel.op` tag.
+
+### Options
+**Addon Config** - Allows you to change the Claim Block hourly payment, starting claim block amount, claim minimum width requirement, and max number of claims a player can have.
+
+**Manage Players** - Manage their claims, edit Claim Block balance, and edit global player permissions.
+
+**Disallowed Blocks/Items** - Edit a list of blocks/items that are not allowed to be placed anywhere in the world.
 
 ---
 
