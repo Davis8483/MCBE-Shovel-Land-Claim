@@ -20,11 +20,8 @@ While holding the Claim Shovel, break any corner of your claim, then break anoth
 <sup>add gif</sup>
 
 ## Claim blocks
-This addon uses a block balance for claim creation. Your claim block balance is displayed in the main menu of the claim shovel. You will obtain x number of claim blocks(set by admin) for every hour you play.
 
-# Compatible Marketplace Addons
-## Gravestone, by Darkosto
-Gravestones can be broken by players even if they don't own the claim...
+This addon uses a block balance for claim creation. Your claim block balance is displayed in the main menu of the claim shovel. You will obtain x number of claim blocks(set by admin) for every hour you play.
 
 ---
 
