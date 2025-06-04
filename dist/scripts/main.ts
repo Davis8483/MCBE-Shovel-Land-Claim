@@ -321,8 +321,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
         if (playerData.viewingClaim) {
             data.cancel = true;
         }
-        //                                                              *added for compatibility with gravestone addon*
-        else if (data.dimension == world.getDimension("overworld") && !(data.block.typeId == "darkosto_gravestone:gravestone")) {
+        else if (data.dimension == world.getDimension("overworld")) {
             runInAllClaims((playerID, playerName, claim) => {
                 // check if a block is broken by a player without permissions within the claim
                 if (claim.isOverlap(data.block, data.block) && (playerID != data.player.id) && !claim.hasPermission(PermissionTypes.BREAK_BLOCKS, data.player)) {
