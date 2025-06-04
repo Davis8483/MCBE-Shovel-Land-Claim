@@ -326,6 +326,22 @@ export class ShovelUI {
     private addonInfo() {
         const form = new CallbackActionFormData(() => this.addonInfo())
             .title({"translate": "ui.addon_info:title"})
+            .body({
+                "rawtext": [
+                    { "translate": "ui.addon_info:body.paragraph:1" },
+                    { "text": "\n\n" },
+                    { "translate": "ui.addon_info:body.paragraph:2" },
+                    { "text": "\n\n" },
+                    { "translate": "ui.addon_info:body.paragraph:3" },
+                    { "text": "\n\n" },
+                    { "translate": "ui.addon_info:body.paragraph:4" },
+                    { "text": "\n\n" },
+                    { "translate": "ui.addon_info:body.paragraph:5" },
+                    { "text": "\n\n" },
+                    { "translate": "ui.addon_info:body.paragraph:6" },
+                    { "text": "\n\n" }
+                ]
+            })
             .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();})
             .show(this.player);
     }
