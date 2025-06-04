@@ -45,7 +45,7 @@ chat.blocks:payment=§aYou've recieved your hourly payment of %s blocks!§r
 ui.global.button:back=<< Back
 ui.global.button:save=Save
 
-ui.main:title=§5Shovel§r Land Claim
+ui.main:title=§5Shovel§r Land Claim v1.0.0
 ui.main.op_mode:title=Manage Player: %s
 ui.main:body.paragraph:1=Welcome to Land Claim!
 ui.main:body.paragraph:2=§bCreate a claim§r by breaking two opposite corners.
