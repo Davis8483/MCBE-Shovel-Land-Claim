@@ -2,7 +2,7 @@
 	"format_version": 2,
 	"metadata": {
 		"authors": [
-			"Noah Davis"
+			"nDavis"
 		],
 		"generated_with": {
 			"bridge": [
@@ -14,8 +14,8 @@
 		}
 	},
 	"header": {
-		"name": "Shovel Land Claim",
-		"description": "",
+		"name": "Shovel Land Claim v1.0.1",
+		"description": "Welcome to Shovel Land Claim! This addon that allows you to protect your builds from griefing and looting. It works similarly to the Java Golden Shovel mod.",
 		"min_engine_version": [
 			1,
 			20,
@@ -23,9 +23,9 @@
 		],
 		"uuid": "2b221639-32d8-4f99-b64b-461337fdec3d",
 		"version": [
-			0,
 			1,
-			0
+			0,
+			1
 		]
 	},
 	"modules": [
@@ -35,7 +35,7 @@
 			"version": [
 				1,
 				0,
-				0
+				1
 			]
 		}
 	],
@@ -43,9 +43,9 @@
 		{
 			"uuid": "0590c931-dc84-4ecc-93d4-92b3f8941d31",
 			"version": [
-				0,
 				1,
-				0
+				0,
+				1
 			]
 		}
 	]

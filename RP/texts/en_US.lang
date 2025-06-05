@@ -13,10 +13,13 @@ chat.claim:player_intersecting=§cA player is in the way!§r
 chat.claim:width=§cYou're claim must be at least %s blocks wide!§r
 chat.claim:blocks_new=§cYou need %s more block(s) to create this claim!§r
 chat.claim:blocks_resize=§cYou need %s more block(s) to resize this claim!§r
+chat.claim:max_claims=§cThis exceeds your max of %s claims!§r
 chat.claim:resized=§aClaim has been resized!§r
-chat.claim:player_permissions_updated_notif=§a%s has updated your permissions for [claim:name_color]%s§r
-chat.claim:public_permissions_updated_notif=§a%s has updated the public permissions for [claim:name_color]%s§r
-chat.claim:player_permissions_reset_notif=§bhas reset your permissions for§r
+chat.claim:player_permissions_updated_notif=%s §ahas updated your permissions for §5%s§r
+chat.claim:public_permissions_updated_notif=%s §ahas updated the public permissions for §5%s§r
+chat.claim:global_permissions_updated_notif=%s §ahas updated your global permissions!§r
+chat.claim:player_permissions_reset_notif=%s §bhas reset your permissions for§r §5%s§r
+chat.claim:global_player_permissions_reset_notif=%s §bhas reset your global permissions
 
 chat.point.new:selected=First block selected: [§c%s§r, §a%s§r, §9%s§r]\n§bCrouch click to set the opposite corner of the claim!§r
 chat.point.resize:selected=Claim corner selected: [§c%s§r, §a%s§r, §9%s§r]\n§dCrouch click a another block to resize the claim!§r
@@ -36,14 +39,13 @@ chat.claim.permission:open_containers=§cYou're not allowed to open containers!�
 chat.claim.permission:edit_signs=§cYou're not allowed to edit signs!§r
 chat.claim:view=§cYou can only view a claim from the overworld!§r
 chat.claim:piston=§cYou can't use a piston from outside this claim!§r
-chat.claim:pending_entrance_disallow=§c%s is in the claim, the "Enter Claim" permission will not be applied until they leave!§r
 
 chat.blocks:payment=§aYou've recieved your hourly payment of %s blocks!§r
 
 ui.global.button:back=<< Back
 ui.global.button:save=Save
 
-ui.main:title=§5Shovel§r Land Claim
+ui.main:title=§5Shovel§r Land Claim v1.0.1
 ui.main.op_mode:title=Manage Player: %s
 ui.main:body.paragraph:1=Welcome to Land Claim!
 ui.main:body.paragraph:2=§bCreate a claim§r by breaking two opposite corners.
@@ -55,6 +57,10 @@ ui.main.button:op_panel=Operator Panel
 ui.main.button:global_player_permissions=§l§9Global§r Player Permissions
 ui.main.button:addon_info=Addon Info
 ui.main.button:close=Close
+
+ui.pending_entrance_disallow:title=Pending Entrance Disallow
+ui.pending_entrance_disallow:body=§cThe following players are in §l§5%s§r§c, the enter claim permission will not be applied to them until they leave.§r
+ui.pending_entrance_disallow.button:ok=Ok
 
 ui.op_panel:title=Operator Panel
 ui.op_panel.button:manage_players=Manage Players
@@ -96,10 +102,23 @@ ui.op_panel.addon_settings.textbox:starting_claim_blocks=Starting Claim Blocks
 ui.op_panel.addon_settings.textbox:starting_claim_blocks_placeholder=Ex: 200
 ui.op_panel.addon_settings.textbox:claim_min_width=Claim Minimum Width
 ui.op_panel.addon_settings.textbox:claim_min_width_placeholder=Ex: 10
+ui.op_panel.addon_settings.textbox:max_claim_amount=Per Player Max Claim Amount\n0 = Unlimited
+ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder=Ex: 10
 ui.op_panel.addon_settings.error:must_be_positive_number=§cYou must provide a positive number!§r
 ui.op_panel.addon_settings.button:save=Save Config
 
+ui.edit_global_permissions_intent.title=Overwrite Global Permissions?
+ui.edit_global_permissions_intent.body=This player has global permissions set, would you like to overwrite them for this claim?
+ui.edit_global_permissions_intent.button:overwrite=Overwrite
+ui.edit_global_permissions_intent.button:edit=Edit §l§9Global§r Permissions
+
 ui.addon_info:title=Addon Info
+ui.addon_info:body.paragraph:1=§l§5Shovel§7 Land Claim§r\n§oCreated by nDavis§r
+ui.addon_info:body.paragraph:2=This addon was created as a passion project in my free time, I really hope you enjoy it! ^_^
+ui.addon_info:body.paragraph:3=If you have any questions, suggestions, or issues please feel free to reach out on github or discord.
+ui.addon_info:body.paragraph:4=§l§9GitHub§r: https://github.com/Davis8483/MCBE-Shovel-Land-Claim
+ui.addon_info:body.paragraph:5=§l§9Discord§r: https://discord.gg/JGsXDubjek
+ui.addon_info:body.paragraph:6=§oShovel Land Claim by nDavis is licensed under CC BY-NC-SA 4.0§r
 
 ui.manage:title=Manage Claim
 ui.manage.body:claim_start=Claim Start: §cX§r=%s §9Z§r=%s
@@ -118,6 +137,7 @@ ui.manage.remove.button:cancel=Cancel
 
 ui.manage.permissions.public:title=Public Permissions: %s
 ui.manage.permissions.player:title=%s's Permissions: %s
+ui.manage.global_permissions.player:title=%s's Global Permissions
 ui.manage.permissions:enter_claim=Enter Claim
 ui.manage.permissions:break_blocks=Break Blocks
 ui.manage.permissions:use_items_on_blocks=Use Items On Blocks | Ex: Placing
@@ -132,11 +152,15 @@ ui.manage.permissions:edit_signs=Edit Signs
 ui.manage.permissions:use_tnt=Use Tnt
 
 ui.manage.permissions.player.selection:title=Player Permissions
+ui.manage.gloabl_permissions.player.selection:title=Global Player Permissions
+ui.manage.gloabl_permissions.player.selection:body=The following permissions apply to all of your claims...
 ui.manage.permissions.player.selection:body=The following overides public permissions...
-ui.manage.permissions.player.selection:add_player=§aAdd Player§r
+ui.manage.permissions.player.selection:add_player=§2Add Player§r
 ui.manage.permissions.player.selection:remove_player=§cRemove Player§r
-ui.manage.permissions.player.selection.online=§aOnline§r
+ui.manage.permissions.player.selection.online=§2Online§r
 ui.manage.permissions.player.selection.offline=§cOffline§r
+ui.manage.permissions.player.selection:global_online=§l§9Global§r - §2Online§r
+ui.manage.permissions.player.selection:global_offline=§l§9Global§r - §cOffline§r
 
 ui.manage.permissions.player.selection.modify.add:title=Add Player
 ui.manage.permissions.player.selection.modify.remove:title=Remove Player
@@ -171,4 +195,4 @@ ui.claim.icons:farmland=Farmland
 ui.claim.icons:weapons=Weapons
 ui.claim.icons:flowers=Flowers
 
-claim:name_color=§5
+actionbar.claim:name_color=§5
