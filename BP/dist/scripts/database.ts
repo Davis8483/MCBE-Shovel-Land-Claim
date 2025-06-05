@@ -8,6 +8,7 @@ export class Settings{
     private _startingClaimBlocks: number;
     private _claimMinimumWidth: number;
     private _disallowedBlocks: string[];
+    private _maxClaimAmount: number;
 
     /**
      * Creates a new Settings object with default values
@@ -28,6 +29,7 @@ export class Settings{
             // "minecraft:structure_block",
             "minecraft:sculk_catalyst" // can be used for griefing
         ];
+        this._maxClaimAmount = 0;
     }
 
     get claimBlockHourlyPayment(): number {
@@ -42,6 +44,12 @@ export class Settings{
     get disallowedBlocks(): string[] {
         return this._disallowedBlocks;
     }
+    /**
+     * The maximum number of claims a player can have, 0 means unlimited
+     */
+    get maxClaimAmount(): number {
+        return this._maxClaimAmount;
+    }
 
     setClaimBlockHourlyPayment(value: number) {
         this._claimBlockHourlyPayment = value;
@@ -53,6 +61,14 @@ export class Settings{
     }
     setClaimMinimumWidth(value: number) {
         this._claimMinimumWidth = value;
+        saveSettings();
+    }
+    /**
+     * 
+     * @param value - The maximum number of claims a player can have, 0 means unlimited
+     */
+    setMaxClaimAmount(value: number) {
+        this._maxClaimAmount = value;
         saveSettings();
     }
     /**
@@ -89,6 +105,7 @@ export class Settings{
         settings._startingClaimBlocks = data._startingClaimBlocks || defaultSettings._startingClaimBlocks;
         settings._claimMinimumWidth = data._claimMinimumWidth || defaultSettings._claimMinimumWidth;
         settings._disallowedBlocks = data._disallowedBlocks || defaultSettings._disallowedBlocks;
+        settings._maxClaimAmount = data._maxClaimAmount || defaultSettings._maxClaimAmount;
         return settings;
     }
 }
@@ -122,33 +139,14 @@ export enum PermissionTypes {
 }
 
 /**
- * Represents a player's permissions in a claim.
+ * Represents global player permissions, claim public, and claim global permissisons
  */
-export class PlayerPermissions {
-    /**
-     * The entity id of the player
-     */
-    private _id: string;
-
-    /**
-     * The name of the player; do not use for identification as it can change.
-     */
-    private _name: string;
-
+export class Permissions {
     /**
      * The permissions the player has for the claim
      */
     private _permissions: {
-        enterClaim: boolean;
-        breakBlocks: boolean;
-        useItemsOnBlocks: boolean;
-        hurtEntities: boolean;
-        interactWithEntities: boolean;
-        useDoors: boolean;
-        useSwitches: boolean;
-        useBeds: boolean;
-        openContainers: boolean;
-        editSigns: boolean;
+        [key in PermissionTypes]: boolean;
     }
 
     /**
@@ -158,14 +156,13 @@ export class PlayerPermissions {
      * 
      * @param name - The name of the player
      */
-    constructor(id: string, name: string) {
-        this._id = id;
-        this._name = name;
+    constructor() {
         this._permissions = {
             [PermissionTypes.ENTER_CLAIM]: true,
             [PermissionTypes.BREAK_BLOCKS]: false,
             [PermissionTypes.USE_ITEMS_ON_BLOCKS]: false,
             [PermissionTypes.HURT_ENTITIES]: false,
+            [PermissionTypes.USE_TNT]: false,
             [PermissionTypes.INTERACT_WITH_ENTITIES]: false,
             [PermissionTypes.USE_DOORS]: true,
             [PermissionTypes.USE_SWITCHES]: true,
@@ -175,21 +172,13 @@ export class PlayerPermissions {
         };
     }
 
-    get id(): string {
-        return this._id;
-    }
-
-    get name(): string {
-        return this._name;
-    }
-
     getPermission(permission: PermissionTypes): boolean {
         // check if the permission is valid
         if (this._permissions[permission] != undefined) {
             return this._permissions[permission];
         }
         else {
-            console.log(`Invalid permission: ${permission} for player: ${this._name}`);
+            console.log(`Invalid permission: ${permission}`);
             return false;
         }
     }
@@ -201,9 +190,67 @@ export class PlayerPermissions {
             this._permissions[permission] = value;
         }
         else {
-            console.log(`Invalid permission: ${permission} for player: ${this._name}`);
+            console.log(`Invalid permission: ${permission}`);
         }
         saveDb();
+    }
+
+    /**
+     * Returns a PlayerPermissions object loaded from JSON, if a key is missing it will be replaced with the default value.
+     * 
+     * @param data - The JSON object to load the PlayerPermissions object from
+     * 
+     * @return - The PlayerPermissions object loaded from the JSON object
+     */
+    static fromJSON(data: any): Permissions {
+        const defaultPermissions = new Permissions();
+        const permissions = new Permissions();
+        permissions.setPermission(PermissionTypes.ENTER_CLAIM, data._permissions?.enterClaim !== undefined ? data._permissions.enterClaim : defaultPermissions.getPermission(PermissionTypes.ENTER_CLAIM));
+        permissions.setPermission(PermissionTypes.BREAK_BLOCKS, data._permissions?.breakBlocks !== undefined ? data._permissions.breakBlocks : defaultPermissions.getPermission(PermissionTypes.BREAK_BLOCKS));
+        permissions.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data._permissions?.useItemsOnBlocks !== undefined ? data._permissions.useItemsOnBlocks : defaultPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS));
+        permissions.setPermission(PermissionTypes.HURT_ENTITIES, data._permissions?.hurtEntities !== undefined ? data._permissions.hurtEntities : defaultPermissions.getPermission(PermissionTypes.HURT_ENTITIES));
+        permissions.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data._permissions?.interactWithEntities !== undefined ? data._permissions.interactWithEntities : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES));
+        permissions.setPermission(PermissionTypes.USE_DOORS, data._permissions?.useDoors !== undefined ? data._permissions.useDoors : defaultPermissions.getPermission(PermissionTypes.USE_DOORS));
+        permissions.setPermission(PermissionTypes.USE_SWITCHES, data._permissions?.useSwitches !== undefined ? data._permissions.useSwitches : defaultPermissions.getPermission(PermissionTypes.USE_SWITCHES));
+        permissions.setPermission(PermissionTypes.USE_BEDS, data._permissions?.useBeds !== undefined ? data._permissions.useBeds : defaultPermissions.getPermission(PermissionTypes.USE_BEDS));
+        permissions.setPermission(PermissionTypes.OPEN_CONTAINERS, data._permissions?.openContainers !== undefined ? data._permissions.openContainers : defaultPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS));
+        permissions.setPermission(PermissionTypes.EDIT_SIGNS, data._permissions?.editSigns !== undefined ? data._permissions.editSigns : defaultPermissions.getPermission(PermissionTypes.EDIT_SIGNS));
+        return permissions;
+    }
+}
+
+export class PlayerPermissions extends Permissions {
+    /**
+    * The entity id of the player
+    */
+    private _id: string;
+
+    /**
+     * The name of the player; do not use for identification as it can change.
+     */
+    private _name: string;
+
+    /**
+     * Creates a new PlayerPermissions object
+     * 
+     * @param id - The entity id of the player
+     * 
+     * @param name - The name of the player
+     */
+    constructor(id: string, name: string) {
+        super();
+
+        this._id = id;
+        this._name = name;
+    }
+
+    // Getters
+    get id(): string {
+        return this._id;
+    }
+
+    get name(): string {
+        return this._name;
     }
 
     /**
@@ -240,9 +287,7 @@ export class Claim {
     private _icon: string;
     private _particlesEnabled: boolean;
     private _playerPermissionsList: PlayerPermissions[];
-    private _publicPermissions: {
-        [key in PermissionTypes]: boolean;
-    };
+    private _permissions: Permissions;
 
     constructor(name: string, start: Vector3, end: Vector3, icon: string, particlesEnabled: boolean = true) {
         this._name = name;
@@ -251,19 +296,7 @@ export class Claim {
         this._icon = icon;
         this._particlesEnabled = particlesEnabled;
         this._playerPermissionsList = [];
-        this._publicPermissions = {
-            [PermissionTypes.ENTER_CLAIM]: true,
-            [PermissionTypes.BREAK_BLOCKS]: false,
-            [PermissionTypes.USE_ITEMS_ON_BLOCKS]: false,
-            [PermissionTypes.HURT_ENTITIES]: false,
-            [PermissionTypes.USE_TNT]: false,
-            [PermissionTypes.INTERACT_WITH_ENTITIES]: false,
-            [PermissionTypes.USE_DOORS]: true,
-            [PermissionTypes.USE_SWITCHES]: true,
-            [PermissionTypes.USE_BEDS]: false,
-            [PermissionTypes.OPEN_CONTAINERS]: false,
-            [PermissionTypes.EDIT_SIGNS]: false,
-        };
+        this._permissions = new Permissions();
     }
 
     // Getters
@@ -291,28 +324,8 @@ export class Claim {
         return this._playerPermissionsList;
     }
 
-    // Get a specific public permission
-    getPermission(permission: PermissionTypes): boolean {
-        // check if the permission is valid
-        if (this._publicPermissions[permission] != undefined) {
-            return this._publicPermissions[permission];
-        }
-        else {
-            console.log(`Invalid permission: ${permission} for claim ${this._name}`);
-            return false;
-        }
-    }
-
-    // Set a specific public permission
-    setPermission(permission: PermissionTypes, value: boolean): void {
-        // check if the permission is valid
-        if (this._publicPermissions[permission] != undefined) {
-            this._publicPermissions[permission] = value;
-        }
-        else {
-            console.log(`Invalid permission: ${permission} for claim ${this._name}`);
-        }
-        saveDb();
+    get permissions(): Permissions {
+        return this._permissions;
     }
 
     // Setters
@@ -388,19 +401,7 @@ export class Claim {
             data._particlesEnabled !== undefined ? data._particlesEnabled : defaultClaim.particlesEnabled
         );
 
-        claim._publicPermissions = {
-            enterClaim: data._publicPermissions?.enterClaim !== undefined ? data._publicPermissions.enterClaim : defaultClaim.getPermission(PermissionTypes.ENTER_CLAIM),
-            breakBlocks: data._publicPermissions?.breakBlocks !== undefined ? data._publicPermissions.breakBlocks : defaultClaim.getPermission(PermissionTypes.BREAK_BLOCKS),
-            useItemsOnBlocks: data._publicPermissions?.useItemsOnBlocks !== undefined ? data._publicPermissions.useItemsOnBlocks : defaultClaim.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS),
-            hurtEntities: data._publicPermissions?.hurtEntities !== undefined ? data._publicPermissions.hurtEntities : defaultClaim.getPermission(PermissionTypes.HURT_ENTITIES),
-            useTNT: data._publicPermissions?.useTNT !== undefined ? data._publicPermissions.useTNT : defaultClaim.getPermission(PermissionTypes.USE_TNT),
-            interactWithEntities: data._publicPermissions?.interactWithEntities !== undefined ? data._publicPermissions.interactWithEntities : defaultClaim.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES),
-            useDoors: data._publicPermissions?.useDoors !== undefined ? data._publicPermissions.useDoors : defaultClaim.getPermission(PermissionTypes.USE_DOORS),
-            useSwitches: data._publicPermissions?.useSwitches !== undefined ? data._publicPermissions.useSwitches : defaultClaim.getPermission(PermissionTypes.USE_SWITCHES),
-            useBeds: data._publicPermissions?.useBeds !== undefined ? data._publicPermissions.useBeds : defaultClaim.getPermission(PermissionTypes.USE_BEDS),
-            openContainers: data._publicPermissions?.openContainers !== undefined ? data._publicPermissions.openContainers : defaultClaim.getPermission(PermissionTypes.OPEN_CONTAINERS),
-            editSigns: data._publicPermissions?.editSigns !== undefined ? data._publicPermissions.editSigns : defaultClaim.getPermission(PermissionTypes.EDIT_SIGNS)
-        };
+        claim._permissions = Permissions.fromJSON(data._permissions || {});
 
         claim._playerPermissionsList = data._playerPermissionsList 
             ? data._playerPermissionsList
@@ -420,21 +421,27 @@ export class Claim {
     */
     hasPermission(permission: PermissionTypes, player?: Player): boolean {
 
-        // check if player is in specific permissions list
-        if (player) {
-            
-            var playerPermissions: PlayerPermissions = undefined;
+        var globalSearchResult = this.getOwnerData().playerPermissionsList.filter((p) => p.id == player.id);
+        var claimSearchResult = this._playerPermissionsList.filter((p) => p.id == player.id);
+        var perms: Permissions = this.permissions;
 
-            // find the players permissions
-            for (var p of this._playerPermissionsList) {
-                if (p.id == player.id) {
-                    playerPermissions = p;
-                    break;
-                }
-            }
+        // check if player is in the claims permissions list
+        if (claimSearchResult.length > 0) {
+            perms = claimSearchResult[0];
         }
-        // if player is not in the list, use public permissions
-        return playerPermissions ? playerPermissions.getPermission(permission) : this._publicPermissions[permission];
+        // check if player is in global permissions list
+        else if (globalSearchResult.length > 0) {
+            perms = globalSearchResult[0];
+        }
+
+        // check if the permission is valid
+        if (perms.getPermission(permission) != undefined) {
+            return perms.getPermission(permission);
+        }
+        else {
+            console.log(`Invalid permission: ${permission} for player: ${player.name}`);
+            return false;
+        }
     }
 
     /**
@@ -474,14 +481,18 @@ export class Claim {
 
         // filter players from the list, we don't want to add people who are already in it
         unsavedPlayers = unsavedPlayers.filter((p) => {
-            for (var playerPermissions of this.playerPermissionsList) {
-                if (p == playerPermissions.id) {
-                    return false;
-                }
+
+            if (this._playerPermissionsList.some((pP) => p == pP.id)) {
+                return false;
             }
 
             // make sure to remove owner from list as well
             if (p == this.getOwnerData().id) {
+                return false;
+            }
+
+            // also remove players who have permissions in the global list
+            if (this.getOwnerData().playerPermissionsList.some((pP) => p == pP.id)) {
                 return false;
             }
 
@@ -560,7 +571,7 @@ export class PlayerClaimBlocks {
 }
 
 export class PlayerData {
-    readonly schemaVersion: string = "1.0.0";
+    readonly schemaVersion: number[] = [1, 0, 1]; // version 1.0.1
 
     private _id: string;
     private _name: string;
@@ -575,6 +586,7 @@ export class PlayerData {
     private _pendingEntranceDisallow: boolean;
     private _claimBlocks: PlayerClaimBlocks;
     private _claims: Claim[];
+    private _playerPermissionsList: PlayerPermissions[];
 
     constructor(playerID: string, playerName: string) {
         this._id = playerID;
@@ -590,6 +602,7 @@ export class PlayerData {
         this._pendingEntranceDisallow = false;
         this._claimBlocks = new PlayerClaimBlocks(settings.startingClaimBlocks, settings.claimBlockHourlyPayment);
         this._claims = [];
+        this._playerPermissionsList = [];
     }
 
     // Getters
@@ -643,6 +656,10 @@ export class PlayerData {
 
     get claims(): Claim[] {
         return this._claims;
+    }
+
+    get playerPermissionsList(): PlayerPermissions[] {
+        return this._playerPermissionsList;
     }
 
     // Setters
@@ -710,6 +727,51 @@ export class PlayerData {
         return this._claims.find((c) => c.name === claimName);
     }
 
+    addPlayerPermissions(playerPermissions: PlayerPermissions): void {
+        this._playerPermissionsList.push(playerPermissions);
+        saveDb();
+    }
+
+    removePlayerPermissions(playerId: string): void {
+        this._playerPermissionsList = this._playerPermissionsList.filter((p) => p.id !== playerId);
+        saveDb();
+    }
+
+    getPlayerPermissions(playerId: string): PlayerPermissions | undefined {
+        return this._playerPermissionsList.find((p) => p.id === playerId);
+    }
+
+    /**
+     * Returns a list of player id's that are not saved in the global player permissions list
+     */
+    getUnsavedPlayers(): string[] {
+        // player permissions not found in the claims list
+        var unsavedPlayers: string[] = []
+
+        // get the entire list of players that have ever joined the world
+        for (var playerData of database) {
+            unsavedPlayers.push(playerData.id);
+        }
+
+        // filter players from the list, we don't want to add people who are already in it
+        unsavedPlayers = unsavedPlayers.filter((p) => {
+            for (var playerPermissions of this._playerPermissionsList) {
+                if (p == playerPermissions.id) {
+                    return false;
+                }
+            }
+
+            // make sure to remove owner from list as well
+            if (p == this.id) {
+                return false;
+            }
+
+            return true;
+        });
+
+        return unsavedPlayers;
+    }
+
     /**
      * Deletes this PlayerData object from the database.
      */
@@ -720,11 +782,15 @@ export class PlayerData {
         // remove player from world dynamic properties
         world.setDynamicProperty(`db.${this._id}`, undefined);
 
-        // recursively remove players permissions from all claims
         for (var pData of database) {
+            // recursively remove players permissions from all claims
             for (var claim of pData.claims) {
                 claim.removePlayerPermissions(this._id);
             }
+
+            // remove players permissions from global permissions list
+            pData.removePlayerPermissions(this._id);
+
         }
 
         saveDb();
@@ -747,6 +813,14 @@ export class PlayerData {
         playerData._claims = data._claims 
             ? data._claims.map(Claim.fromJSON).filter(claim => claim._name != "Undefined") 
             : defaultPlayerData.claims;
+        playerData._playerPermissionsList = data._playerPermissionsList != undefined ? data._playerPermissionsList.forEach((pP) => {PlayerPermissions.fromJSON(pP)}) : defaultPlayerData.playerPermissionsList;
+
+        playerData._playerPermissionsList = data._playerPermissionsList 
+        ? data._playerPermissionsList
+        .map(PlayerPermissions.fromJSON)
+        .filter(permission => permission.id !== undefined && permission.name !== undefined) 
+        : defaultPlayerData.playerPermissionsList;
+
         return playerData;
     }
 

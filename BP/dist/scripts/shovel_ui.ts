@@ -54,13 +54,18 @@ export class ShovelUI {
 
             // conditionally show the manage claims button if the player has any claims
             if (playerData.claims.length > 0){
-                form.button({"translate": "ui.main.button:manage"}, "textures/ui/icon_setting.png", () => {
+                form.button({ 
+                    "rawtext": [
+                        {"translate": "ui.main.button:manage"},
+                        { "text": settings.maxClaimAmount > 0 ? (((playerData.claims.length >= settings.maxClaimAmount) ? " §c" : " ") + `(${playerData.claims.length}/${settings.maxClaimAmount})`) : "" }
+                    ]
+                }, "textures/ui/icon_setting.png", () => {
                     this.claimsList(playerData.id);
                 });
             }
 
             form.button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/worldsIcon.png", () => {
-                
+                this.playerPermissionsList(playerData);
             })
             if (this.player.hasTag("shovel.op")) {
                 form.button({"translate": "ui.main.button:op_panel"}, "textures/ui/permissions_op_crown.png", () => {
@@ -151,6 +156,20 @@ export class ShovelUI {
                     return new ModalDataCorrect();
                 }
             })
+            .textField({"translate": "ui.op_panel.addon_settings.textbox:max_claim_amount"}, {"translate": "ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder"}, settings.maxClaimAmount.toString(), (value) => {
+                var newMaxClaimAmount = parseInt(value as string);
+
+                if (isNaN(newMaxClaimAmount) || newMaxClaimAmount < 0) {
+                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
+                    return new ModalDataError("ui.op_panel.addon_settings.error:must_be_positive_number");
+                }
+                else {
+                    // update max claim amount
+                    settings.setMaxClaimAmount(newMaxClaimAmount);
+
+                    return new ModalDataCorrect();
+                }
+            })
             .submitButton({"translate": "ui.op_panel.addon_settings.button:save"}, (response) => {
                 playSound(this.player, AddonSounds.Claim.SAVE);
                 navigateBack();
@@ -172,12 +191,15 @@ export class ShovelUI {
             }
             form.button({"translate": "ui.op_manage_player.button:edit_claim_blocks", "with": [playerData.claimBlocks.amount.toString()]}, "textures/ui/pencil_edit_icon.png", () => {this.opEditClaimBlocks(playerId)})
             form.button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/icon_multiplayer.png", () => {
-                
+                this.playerPermissionsList(playerData);
             })
-            form.button({"translate": "ui.op_manage_player.button:delete_player_data"}, "textures/ui/redX1.png", () => {
-                this.opDeletePlayerConfirm(playerId);
-            })
-            .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
+            // if player is offline
+            if (world.getAllPlayers().filter(p => p.id == playerId).length == 0) {
+                form.button({"translate": "ui.op_manage_player.button:delete_player_data"}, "textures/ui/redX1.png", () => {
+                    this.opDeletePlayerConfirm(playerId);
+                })
+            }
+            form.button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
 
 
         form.show(this.player);
@@ -304,6 +326,22 @@ export class ShovelUI {
     private addonInfo() {
         const form = new CallbackActionFormData(() => this.addonInfo())
             .title({"translate": "ui.addon_info:title"})
+            .body({
+                "rawtext": [
+                    { "translate": "ui.addon_info:body.paragraph:1" },
+                    { "text": "\n\n" },
+                    { "translate": "ui.addon_info:body.paragraph:2" },
+                    { "text": "\n\n" },
+                    { "translate": "ui.addon_info:body.paragraph:3" },
+                    { "text": "\n\n" },
+                    { "translate": "ui.addon_info:body.paragraph:4" },
+                    { "text": "\n\n" },
+                    { "translate": "ui.addon_info:body.paragraph:5" },
+                    { "text": "\n\n" },
+                    { "translate": "ui.addon_info:body.paragraph:6" },
+                    { "text": "\n\n" }
+                ]
+            })
             .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();})
             .show(this.player);
     }
@@ -356,6 +394,8 @@ export class ShovelUI {
 
                 //add/subtract the blocks from players balance
                 playerData.claimBlocks.incrementAmount(blockDifference);
+
+                playerData.setResizingClaimName("");
             });
 
         form.show(this.player);
@@ -370,7 +410,12 @@ export class ShovelUI {
         var playerData: PlayerData = PlayerData.fromId(ownerId);
 
         const form = new CallbackActionFormData(() => this.claimsList(ownerId))
-            .title({"translate": "ui.manage:title"})
+            .title({
+                rawtext: [
+                    {"translate": "ui.manage:title"},
+                    { "text": settings.maxClaimAmount > 0 ? (((playerData.claims.length >= settings.maxClaimAmount) ? " §c" : " ") + `(${playerData.claims.length}/${settings.maxClaimAmount})`) : "" }
+                ]
+            });
 
         for (const c of playerData.claims) {
 
@@ -418,29 +463,63 @@ export class ShovelUI {
         form.show(this.player);
     }
 
-    private playerPermissionsList(claim: Claim) {
+    /**
+     * Shows a message form asking if the player would like to either edit the global permissions or overwrite them with a local claim player permission.
+     * 
+     * @param listParent - The parent class that contains the player permissions list
+     * @param playerID - The entity id of the player to manage permissions for
+     */
+    private editGlobalPermissionIntent(listParent: Claim, playerID: string) {
+        // we're telling the navigation stack to go back to the player permissions list menu instead of this one :thumbs_up:
+        const form = new CallbackMessageFormData(() => this.playerPermissionsList(listParent))
+            .title({"translate": "ui.edit_global_permissions_intent.title"})
+            .body({"translate": "ui.edit_global_permissions_intent.body"})
+            .button1({"translate": "ui.edit_global_permissions_intent.button:overwrite"}, () => {this.managePermissions(listParent, playerID)})
+            .button2({"translate": "ui.edit_global_permissions_intent.button:edit"}, () => {this.managePermissions(listParent.getOwnerData(), playerID)});
 
-        const form = new CallbackActionFormData(() => this.playerPermissionsList(claim))
+
+        form.show(this.player);
+    }
+
+    /**
+     * Shows a form to manage individual player permissions.
+     * 
+     * @param listParent - The parent class that contains the player permissions list
+     */
+    private playerPermissionsList(listParent: Claim | PlayerData) {
+
+        const form = new CallbackActionFormData(() => this.playerPermissionsList(listParent))
             .title({
                 "rawtext": [
-                    { "translate": "ui.manage.permissions.player.selection:title" },
-                    { "text": `: ${claim.name}` }
+                    { "translate": listParent instanceof Claim ? "ui.manage.permissions.player.selection:title": "ui.manage.gloabl_permissions.player.selection:title" },
+                    listParent instanceof Claim ? { "text": `: ${listParent.name}` } : {}
                 ]
             })
-            .body({"translate": "ui.manage.permissions.player.selection:body"});
+            .body({"translate": listParent instanceof Claim ? "ui.manage.permissions.player.selection:body" : "ui.manage.gloabl_permissions.player.selection:body"});
+        
+        // show all global player permissions; include an extra Global badge next to the player name
+        if (listParent instanceof Claim) {
+            // make sure to filter out global player permissions that are overiden in the claim
+            for (const pP of listParent.getOwnerData().playerPermissionsList.filter(p => !listParent.playerPermissionsList.some(p2 => p2.id == p.id))) {
+                var isOnline = world.getAllPlayers().filter(player => player.id == pP.id).length > 0 ? true : false;
 
-        for (var pP of claim.playerPermissionsList) {
+                form.button({"rawtext": [{"text": pP.name + "\n"}, {"translate": isOnline? "ui.manage.permissions.player.selection:global_online": "ui.manage.permissions.player.selection:global_offline"}]}, isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.editGlobalPermissionIntent(listParent, pP.id)});
+            }
+        }
+        
+        // show all local/claim specific player permissions
+        for (const pP of listParent instanceof Claim ? listParent.playerPermissionsList : listParent.playerPermissionsList) {
             var isOnline = world.getAllPlayers().filter(player => player.id == pP.id).length > 0 ? true : false;
 
-            form.button({"rawtext": [{"text": pP.name + "\n"}, {"translate": isOnline? "ui.manage.permissions.player.selection.online": "ui.manage.permissions.player.selection.offline"}]}, isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.managePermissions(claim, pP.id)});
+            form.button({"rawtext": [{"text": pP.name + "\n"}, {"translate": isOnline? "ui.manage.permissions.player.selection.online": "ui.manage.permissions.player.selection.offline"}]}, isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.managePermissions(listParent, pP.id)});
         }
 
-        if (claim.getUnsavedPlayers().length > 0){
-            form.button({"translate": "ui.manage.permissions.player.selection:add_player"}, "textures/ui/realms_slot_check.png", () => {this.playerPermissionsListModify(claim, true)});
+        if (listParent.getUnsavedPlayers().length > 0){
+            form.button({"translate": "ui.manage.permissions.player.selection:add_player"}, "textures/ui/realms_slot_check.png", () => {this.playerPermissionsListModify(true, listParent)});
         }
 
-        if (claim.playerPermissionsList.length > 0){
-            form.button({"translate": "ui.manage.permissions.player.selection:remove_player"}, "textures/ui/redX1.png", () => {this.playerPermissionsListModify(claim, false)});
+        if (listParent.playerPermissionsList.length > 0){
+            form.button({"translate": "ui.manage.permissions.player.selection:remove_player"}, "textures/ui/redX1.png", () => {this.playerPermissionsListModify(false, listParent)});
         }
 
         form.button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
@@ -450,16 +529,16 @@ export class ShovelUI {
     /**
      * Creates a prompt to specify what player to add or remove from permissions list
      * 
-     * @param claim - The claim that is being updated
-     * 
      * @param add - Wether to add or remove the selected player from the specific player permissions list
+     * 
+     * @param listParent - The parent class that contains the player permissions list
      */
-    private playerPermissionsListModify(claim: Claim, add: boolean) {
+    private playerPermissionsListModify(add: boolean, listParent: Claim | PlayerData) {
 
         // get unsaved players list
-        var unsavedPlayers: string[] = claim.getUnsavedPlayers();
+        var unsavedPlayers: string[] = listParent.getUnsavedPlayers();
 
-        const form = new CallbackModalFormData(() => this.playerPermissionsListModify(claim, add))
+        const form = new CallbackModalFormData(() => this.playerPermissionsListModify(add, listParent))
             .title(add ? {
                 "rawtext": [
                     { "translate": "ui.manage.permissions.player.selection.modify.add:title" }
@@ -471,130 +550,163 @@ export class ShovelUI {
                     ]
                 }
             )
-            .dropdown({"translate": "ui.manage.permissions.player.selection.modify:player_dropdown"}, add ? unsavedPlayers.map(id => ({"text": database.filter(p => p.id == id)[0].name})) : claim.playerPermissionsList.map(p => ({"text": p.name})))
+            .dropdown({"translate": "ui.manage.permissions.player.selection.modify:player_dropdown"}, add ? unsavedPlayers.map(id => ({"text": PlayerData.fromId(id).name})) : listParent.playerPermissionsList.map(p => ({"text": p.name || ""})))
             .submitButton(add ? {"translate": "ui.manage.permissions.player.selection.modify.add:submit"} : {"translate": "ui.manage.permissions.player.selection.modify.remove:submit"}, (response) => {
+                const playerID = add ? unsavedPlayers[response.formValues[0] as number] : listParent.playerPermissionsList[response.formValues[0] as number].id;
+
                 if (add) {
-                    var newPlayerPermissions = new PlayerPermissions(unsavedPlayers[response.formValues[0] as number], database.filter(p => p.id == unsavedPlayers[response.formValues[0] as number])[0].name);
-
-                    // copy private permissions to new player permissions
-                    for (var perm of Object.values(PermissionTypes)) {
-                        newPlayerPermissions.setPermission(perm, claim.getPermission(perm));
-                    }
-
-                    // save new player permission to list
-                    claim.addPlayerPermissions(newPlayerPermissions);
 
                     // if player was added open the permissions menu for them
                     popNavigationStack(); // remove the player permissions list menu from the stack
-                    this.managePermissions(claim, newPlayerPermissions.id);
+                    this.managePermissions(listParent, playerID);
                 }
                 else {
 
-                    // if a players permissions have been removed/reset notify them
+                    // list of players that are set to be disallowed from entering the claim
+                    var pendingEntranceDisallowList: PlayerData[] = [];
+                    var pendingEntranceDisallowClaimName: string;
+
                     for (var p of world.getAllPlayers()) {
-                        if (p.id == claim.playerPermissionsList[response.formValues[0] as number].id) {
-                            p.runCommandAsync(`tellraw @s {"rawtext":[{"translate":"chat.prefix"}, {"text":" ${claim.getOwnerData().name} "}, {"translate":"chat.claim:player_permissions_reset_notif"}, {"translate":"claim:name_color"}, {"text":" ${claim.name}"}]}`);
-                            playSound(p, AddonSounds.Global.POSITIVE_EVENT);
-                            break;
+                        var playerData: PlayerData = PlayerData.fromId(p.id);
+
+                        // if a players permissions have been deleted notify them
+                        if (p.id == playerID) {
+                            sendNotification(p, listParent instanceof Claim ? "chat.claim:player_permissions_reset_notif" : "chat.claim:global_player_permissions_reset_notif", this.player.name, listParent.name);
+                            playSound(p, AddonSounds.Claim.SAVE);
+
+                            // get the claim the player is in, this will be undefined if the player is not in a claim
+                            const claim = listParent instanceof Claim ? 
+                                listParent.isOverlap(p.location, p.location) ? 
+                                    listParent : undefined
+                                : listParent.claims.filter(c => c.isOverlap(p.location, p.location))[0];
+
+                            // check if the player will lose access to the claim they are in
+                            // compares permissions of soon to be deleted player permissions to the claim permissions
+                            if (claim && !claim.permissions.getPermission(PermissionTypes.ENTER_CLAIM) && claim.hasPermission(PermissionTypes.ENTER_CLAIM, p)) {
+                                
+                                // set flag so the player is not ejected from the claim
+                                playerData.setPendingEntranceDisallow(true);
+
+                                pendingEntranceDisallowList.push(playerData);
+                                pendingEntranceDisallowClaimName = claim.name;
+
+                            }
                         }
                     }
 
                     // remove player from list
-                    claim.removePlayerPermissions(claim.playerPermissionsList[response.formValues[0] as number].id);
+                    listParent.removePlayerPermissions(playerID);
 
-                    // return to previous menu
-                    navigateBack();
+                    playSound(this.player, AddonSounds.Claim.DELETE);
+
+                    if (pendingEntranceDisallowList.length > 0) {
+                        // notify the owner that players are pending entrance disallowed
+                        this.pendingEntranceDisallow(pendingEntranceDisallowList, pendingEntranceDisallowClaimName);
+                    }
+                    else {
+                        // return to previous menu
+                        navigateBack();
+                    }
                 }
             });
         form.show(this.player)
     }
 
     /**
-    * A page for editing a claims permissions.
-    * If the player parameter is not specified the form will edit the claims global permissions.
+    * A page for editing permissions.
     * 
-    * @param claim - The claim that is being updated
+    * @param listParent - The parent class that contains the player permissions list
     * 
-    * @param playerID - The entity id of the player to manage permissions for.
+    * @param playerID - The entity id of the player to manage permissions for, if not specified the claims public permissions will be updated.
     */
-    private managePermissions(claim: Claim, playerID?: string) {
+    private managePermissions(listParent: Claim | PlayerData, playerID?: string) {
 
-        if (playerID) {
-            for (var p of claim.playerPermissionsList) {
-                if (p.id == playerID) {
-                    var playerPermissions = p;
-                    break;
+        var playerPermissions = listParent.playerPermissionsList.filter(p => p.id == playerID)[0];
+
+        // player is not in the list, so we need to create a new player permissions object
+        if (playerPermissions == undefined && playerID) {
+
+            playerPermissions = new PlayerPermissions(playerID, PlayerData.fromId(playerID).name);
+
+            // if a claim, copy private permissions to new player permissions
+            if (listParent instanceof Claim) {
+                for (var perm of Object.values(PermissionTypes)) {
+                    playerPermissions.setPermission(perm, listParent.permissions.getPermission(perm));
                 }
             }
+
+            // save new player permission to list
+            listParent.addPlayerPermissions(playerPermissions);
         }
 
-        const target = playerID ? playerPermissions : claim; // target is either the claim or the player permissions object
-        const form = new CallbackModalFormData(() => this.managePermissions(claim, playerID))
+        const target = playerID ? playerPermissions : (listParent instanceof Claim ? listParent.permissions : undefined); // target is either the claim or the player permissions object
+        const defaults = playerID ? playerPermissions : (listParent instanceof Claim ? listParent.permissions : undefined); // defaults is either the claim or the player permissions object
+        const form = new CallbackModalFormData(() => this.managePermissions(listParent, playerID))
             .title(playerID ? {
                 "rawtext": [
-                    { "translate": "ui.manage.permissions.player:title", "with": [playerPermissions.name, claim.name] },
+                    { "translate": listParent instanceof Claim? "ui.manage.permissions.player:title" : "ui.manage.global_permissions.player:title", "with": [playerPermissions.name, listParent.name] },
                 ]
             } :
                 {
                     "rawtext": [
-                        { "translate": "ui.manage.permissions.public:title", "with": [claim.name] }
+                        { "translate": "ui.manage.permissions.public:title", "with": [listParent.name] }
                     ]
                 }
             )
-            .toggle({"translate": "ui.manage.permissions:enter_claim"}, playerID ? playerPermissions.getPermission(PermissionTypes.ENTER_CLAIM) : claim.getPermission(PermissionTypes.ENTER_CLAIM), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:enter_claim"}, defaults.getPermission(PermissionTypes.ENTER_CLAIM), (value)=> {
                 target.setPermission(PermissionTypes.ENTER_CLAIM, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:break_blocks"}, playerID ? playerPermissions.getPermission(PermissionTypes.BREAK_BLOCKS) : claim.getPermission(PermissionTypes.BREAK_BLOCKS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:break_blocks"}, defaults.getPermission(PermissionTypes.BREAK_BLOCKS), (value)=> {
                 target.setPermission(PermissionTypes.BREAK_BLOCKS, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:use_items_on_blocks"}, playerID ? playerPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS) : claim.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:use_items_on_blocks"}, defaults.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS), (value)=> {
                 target.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:hurt_entities"}, playerID ? playerPermissions.getPermission(PermissionTypes.HURT_ENTITIES) : claim.getPermission(PermissionTypes.HURT_ENTITIES), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:hurt_entities"}, defaults.getPermission(PermissionTypes.HURT_ENTITIES), (value)=> {
                 target.setPermission(PermissionTypes.HURT_ENTITIES, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:interact_with_entities"}, playerID ? playerPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES) : claim.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:interact_with_entities"}, defaults.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES), (value)=> {
                 target.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:use_doors"}, playerID ? playerPermissions.getPermission(PermissionTypes.USE_DOORS) : claim.getPermission(PermissionTypes.USE_DOORS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:use_doors"}, defaults.getPermission(PermissionTypes.USE_DOORS), (value)=> {
                 target.setPermission(PermissionTypes.USE_DOORS, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:use_switches"}, playerID ? playerPermissions.getPermission(PermissionTypes.USE_SWITCHES) : claim.getPermission(PermissionTypes.USE_SWITCHES), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:use_switches"}, defaults.getPermission(PermissionTypes.USE_SWITCHES), (value)=> {
                 target.setPermission(PermissionTypes.USE_SWITCHES, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:use_beds"}, playerID ? playerPermissions.getPermission(PermissionTypes.USE_BEDS) : claim.getPermission(PermissionTypes.USE_BEDS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:use_beds"}, defaults.getPermission(PermissionTypes.USE_BEDS), (value)=> {
                 target.setPermission(PermissionTypes.USE_BEDS, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:open_containers"}, playerID ? playerPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS) : claim.getPermission(PermissionTypes.OPEN_CONTAINERS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:open_containers"}, defaults.getPermission(PermissionTypes.OPEN_CONTAINERS), (value)=> {
                 target.setPermission(PermissionTypes.OPEN_CONTAINERS, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:edit_signs"}, playerID ? playerPermissions.getPermission(PermissionTypes.EDIT_SIGNS) : claim.getPermission(PermissionTypes.EDIT_SIGNS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:edit_signs"}, defaults.getPermission(PermissionTypes.EDIT_SIGNS), (value)=> {
                 target.setPermission(PermissionTypes.EDIT_SIGNS, value);
 
                 return new ModalDataCorrect();
             })
 
         if (!playerID) {
-            form.toggle({"translate": "ui.manage.permissions:use_tnt"}, claim.getPermission(PermissionTypes.USE_TNT), (value)=> {
-                claim.setPermission(PermissionTypes.USE_TNT, value);
+            form.toggle({"translate": "ui.manage.permissions:use_tnt"}, defaults.getPermission(PermissionTypes.USE_TNT), (value)=> {
+                target.setPermission(PermissionTypes.USE_TNT, value);
 
                 return new ModalDataCorrect();
             });
@@ -603,37 +715,75 @@ export class ShovelUI {
         form.submitButton({"translate": "ui.global.button:save"}, ()=> {
             playSound(this.player, AddonSounds.Claim.SAVE);
 
+            // list of players that are set to be disallowed from entering the claim
+            var pendingEntranceDisallowList: PlayerData[] = [];
+            var pendingEntranceDisallowClaimName: string;
+
             for (var p of world.getAllPlayers()) {
                 var playerData: PlayerData = PlayerData.fromId(p.id);
 
                 // if a players permissions have been updated notify them
                 if (playerID && p.id == playerID) {
-                    sendNotification(p, "chat.claim:player_permissions_updated_notif", this.player.name, claim.name)
+                    sendNotification(p, listParent instanceof Claim ? "chat.claim:player_permissions_updated_notif" : "chat.claim:global_permissions_updated_notif" , this.player.name, listParent.name)
                     playSound(p, AddonSounds.Claim.SAVE);
                 }
 
                 // if the claims global permissions have been updated notify all players in the claim
-                if (!playerID && claim.isOverlap(p.location, p.location) && (playerData.id != claim.getOwnerData().id)) {
-                    sendNotification(p, "chat.claim:public_permissions_updated_notif", this.player.name, claim.name)
+                if (!playerID && listParent instanceof Claim && listParent.isOverlap(p.location, p.location) && (playerData.id != listParent.getOwnerData().id)) {
+                    sendNotification(p, "chat.claim:public_permissions_updated_notif", this.player.name, listParent.name)
                     playSound(p, AddonSounds.Claim.SAVE);
                 }
 
+                // get the claim the player is in, this will be undefined if the player is not in a claim
+                const claim = listParent instanceof Claim ? 
+                    listParent.isOverlap(p.location, p.location) ? 
+                        listParent : undefined
+                    : listParent.claims.filter(c => c.isOverlap(p.location, p.location))[0];
+
                 // if a players enter claim permission has been removed while they are in the claim, notify the owner
-                if (!claim.hasPermission(PermissionTypes.ENTER_CLAIM, p) && claim.isOverlap(p.location, p.location) && (playerData.id != claim.getOwnerData().id) && (playerID ? (playerData.id == playerID) : true)) {
+                if (claim && !claim.hasPermission(PermissionTypes.ENTER_CLAIM, p) && (playerData.id != claim.getOwnerData().id) && (playerID ? (playerData.id == playerID) : true)) {
                     
                     // set flag so the player is not ejected from the claim
                     playerData.setPendingEntranceDisallow(true);
 
-                    // notify owner
-                    sendNotification(this.player, "chat.claim:pending_entrance_disallow", playerData.name);
+                    pendingEntranceDisallowList.push(playerData);
+                    pendingEntranceDisallowClaimName = claim.name;
+
                 }
             }
 
-            // return to previous menu
-            navigateBack();
+            if (pendingEntranceDisallowList.length > 0) {
+                // notify the owner that players are pending entrance disallowed
+                this.pendingEntranceDisallow(pendingEntranceDisallowList, pendingEntranceDisallowClaimName);
+            }
+            else {
+                // return to previous menu
+                navigateBack();
+            }
         });
         form.show(this.player);
     }
+
+    /**
+     * Shows a message form to the player that lists all players that are set to be disallowed from entering the claim.
+     * 
+     * @param players - The list of players that are pending entrance disallowed
+     * @param claimName - The name of the claim
+     */
+    private pendingEntranceDisallow(players: PlayerData[] = [], claimName: string) {
+        const form = new CallbackActionFormData(() => this.pendingEntranceDisallow(players, claimName))
+            .title({"translate": "ui.pending_entrance_disallow:title"})
+            .body({
+            "rawtext": [
+                { "translate": "ui.pending_entrance_disallow:body", "with": [claimName] },
+                { "text": "\n\n" },
+                ...players.map(p => ({"text": "§l- " + p.name + "\n "}))
+            ]})
+            .button({"translate": "ui.pending_entrance_disallow.button:ok"}, undefined, () => {popNavigationStack(); navigateBack();});
+
+            form.show(this.player);
+    }
+
 
     /**
      * Uses the camera command to view a claim.
