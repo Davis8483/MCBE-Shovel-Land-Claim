@@ -11,19 +11,17 @@
     "components": {
       "minecraft:max_stack_size": 1,
       "minecraft:hand_equipped": true,
-      "minecraft:digger": {
-        "destroy_speeds": [
-          {
-            "block": {
-              "tags": "1.0"
-            },
-            "speed": 200
-          }
-        ]
-      },
-      "minecraft:icon": {
-        "texture": "slc_claim_shovel"
-      },
+      // "minecraft:digger": {
+      //   "destroy_speeds": [
+      //     {
+      //       "block": {
+      //         "tags": "1.0"
+      //       },
+      //       "speed": 200
+      //     }
+      //   ]
+      // },
+      "minecraft:icon": "slc_claim_shovel",
       "minecraft:cooldown": {
         "category": "land_shovel_use",
         "duration": 1
