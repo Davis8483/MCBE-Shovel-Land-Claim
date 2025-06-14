@@ -22,7 +22,8 @@ While holding the Claim Shovel, break any corner of your claim, then break anoth
 This addon uses a block balance for claim creation. Your claim block balance is displayed in the main menu of the claim shovel. You will obtain x number of claim blocks(set by admin) for every hour you play.
 
 ## Operator Panel
-An Operator Panel is included for managing all aspects of this addon. It can be obtained by giving yourself the `shovel.op` tag.
+An Operator Panel is included for managing all aspects of this addon. It can be obtained by giving yourself the `shovel.op` tag.<br> 
+`/tag @s add shovel.op`
 
 **Addon Config** - Allows you to change the Claim Block hourly payment, starting claim block amount, claim minimum width requirement, and max number of claims a player can have.
 
