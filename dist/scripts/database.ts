@@ -561,7 +561,7 @@ export class PlayerClaimBlocks {
     }
 
     resetPaymentTime(): void {
-        this._paymentTimeRemaining = settings.claimBlockHourlyPayment;
+        this._paymentTimeRemaining = 60; // reset to 60 minutes; 1 hour
         saveDb();
     }
 
