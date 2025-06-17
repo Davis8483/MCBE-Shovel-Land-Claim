@@ -65,7 +65,7 @@ export class ShovelUI {
                         {"translate": "ui.main.button:manage"},
                         { "text": settings.maxClaimAmount > 0 ? (((playerData.claims.length >= settings.maxClaimAmount) ? " §c" : " ") + `(${playerData.claims.length}/${settings.maxClaimAmount})`) : "" }
                     ]
-                }, "textures/ui/icon_setting.png", () => {
+                }, "textures/ui/icon_saleribbon.png", () => {
                     this.claimsList(playerData.id);
                 });
             }
@@ -193,7 +193,7 @@ export class ShovelUI {
 
             // conditionally show the manage claims button if the player has any claims
             if (playerData.claims.length > 0){
-                form.button({"translate": "ui.main.button:manage"}, "textures/ui/icon_setting.png", () => {
+                form.button({"translate": "ui.main.button:manage"}, "textures/ui/icon_saleribbon.png", () => {
                     this.claimsList(playerData.id);
                 });
             }
@@ -495,7 +495,7 @@ export class ShovelUI {
                     { "text": "\n " }
                 ]
             })
-            .button({"translate": "ui.manage.button:config"}, "textures/ui/debug_glyph_color.png", () => {this.claimConfig(claim)})
+            .button({"translate": "ui.manage.button:config"}, "textures/ui/icon_setting.png", () => {this.claimConfig(claim)})
             .button({"translate": "ui.manage.button:public_permissions"}, "textures/ui/icon_multiplayer.png", () => {this.managePermissions(claim)})
             .button({"translate": "ui.manage.button:player_permissions"}, "textures/ui/friend1_black_outline_2x.png", () => {this.playerPermissionsList(claim)})
             .button({"translate": "ui.manage.button:view"}, "textures/ui/magnifyingGlass.png", () => {this.viewClaim(claim)})
