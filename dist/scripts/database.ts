@@ -587,6 +587,8 @@ export class PlayerData {
     private _claimBlocks: PlayerClaimBlocks;
     private _claims: Claim[];
     private _playerPermissionsList: PlayerPermissions[];
+    private _ignoreClaimBlockRequirements: boolean;
+    private _disableClaimBlockPayment: boolean;
 
     constructor(playerID: string, playerName: string) {
         this._id = playerID;
@@ -603,6 +605,8 @@ export class PlayerData {
         this._claimBlocks = new PlayerClaimBlocks(settings.startingClaimBlocks, settings.claimBlockHourlyPayment);
         this._claims = [];
         this._playerPermissionsList = [];
+        this._ignoreClaimBlockRequirements = false;
+        this._disableClaimBlockPayment = false;
     }
 
     // Getters
@@ -660,6 +664,14 @@ export class PlayerData {
 
     get playerPermissionsList(): PlayerPermissions[] {
         return this._playerPermissionsList;
+    }
+
+    get ignoreClaimBlockRequirements(): boolean {
+        return this._ignoreClaimBlockRequirements;
+    }
+
+    get disableClaimBlockPayment(): boolean {
+        return this._disableClaimBlockPayment;
     }
 
     // Setters
@@ -772,6 +784,16 @@ export class PlayerData {
         return unsavedPlayers;
     }
 
+    setIgnoreClaimBlockRequirements(value: boolean): void {
+        this._ignoreClaimBlockRequirements = value;
+        saveDb();
+    }
+
+    setDisableClaimBlockPayment(value: boolean): void {
+        this._disableClaimBlockPayment = value;
+        saveDb();
+    }
+
     /**
      * Deletes this PlayerData object from the database.
      */
@@ -820,6 +842,9 @@ export class PlayerData {
         .map(PlayerPermissions.fromJSON)
         .filter(permission => permission.id !== undefined && permission.name !== undefined) 
         : defaultPlayerData.playerPermissionsList;
+
+        playerData.setIgnoreClaimBlockRequirements(data._ignoreClaimBlockRequirements !== undefined ? data._ignoreClaimBlockRequirements : defaultPlayerData.ignoreClaimBlockRequirements);
+        playerData.setDisableClaimBlockPayment(data._disableClaimBlockPayment !== undefined ? data._disableClaimBlockPayment : defaultPlayerData.disableClaimBlockPayment);
 
         return playerData;
     }

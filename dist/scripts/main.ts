@@ -235,7 +235,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                             playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // not enough claim blocks warning message, cancel resize
-                        else if (playerData.claimBlocks.amount < blockDifference) {
+                        else if (!playerData.ignoreClaimBlockRequirements && (playerData.claimBlocks.amount < blockDifference)) {
                             sendNotification(data.player, "chat.claim:blocks_resize", ((blockDifference) - playerData.claimBlocks.amount).toString());
                             playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
@@ -284,7 +284,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                             playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
                         // not enough claim blocks warning message, cancel creation
-                        else if (playerData.claimBlocks.amount < (claimWidth * claimLength)) {
+                        else if (!playerData.ignoreClaimBlockRequirements && (playerData.claimBlocks.amount < (claimWidth * claimLength))) {
                             sendNotification(data.player, "chat.claim:blocks_new", ((claimWidth * claimLength) - playerData.claimBlocks.amount).toString());
                             playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
                         }
@@ -977,16 +977,19 @@ system.runInterval(() => {
 
         var playerData = PlayerData.fromId(p.id);
 
-        // decrement timer by 1
-        playerData.claimBlocks.decrementPaymentTime();
+        if (!playerData.disableClaimBlockPayment) {
 
-        // if time is up reward blocks and reset timer
-        if (playerData.claimBlocks.paymentTimeRemaining <= 0) {
-            playerData.claimBlocks.incrementAmount(settings.claimBlockHourlyPayment);
-            sendNotification(p, "chat.blocks:payment", settings.claimBlockHourlyPayment.toString());
-            playSound(p, AddonSounds.Global.POSITIVE_EVENT);
+            // decrement timer by 1
+            playerData.claimBlocks.decrementPaymentTime();
 
-            playerData.claimBlocks.resetPaymentTime();
+            // if time is up reward blocks and reset timer
+            if (playerData.claimBlocks.paymentTimeRemaining <= 0) {
+                playerData.claimBlocks.incrementAmount(settings.claimBlockHourlyPayment);
+                sendNotification(p, "chat.blocks:payment", settings.claimBlockHourlyPayment.toString());
+                playSound(p, AddonSounds.Global.POSITIVE_EVENT);
+
+                playerData.claimBlocks.resetPaymentTime();
+            }
         }
     }
 }, 1200)

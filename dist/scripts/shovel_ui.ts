@@ -45,10 +45,16 @@ export class ShovelUI {
                     { "translate": "ui.main:body.paragraph:2" },
                     { "text": "\n\n" },
                     { "translate": "ui.main:body.paragraph:3" },
-                    { "text": "\n\n" },
-                    { "translate": "ui.main:body.paragraph:4" }, { "text": ` §e${playerData.claimBlocks.amount}§r ` },
-                    { "text": "\n\n" },
-                    { "translate": "ui.main:body.paragraph:5", "with": [settings.claimBlockHourlyPayment.toString(), playerData.claimBlocks.paymentTimeRemaining.toString()] }
+                    // conditionally show the claim blocks information
+                    !playerData.ignoreClaimBlockRequirements ? { "rawtext": [
+                        { "text": "\n\n" },
+                        { "translate": "ui.main:body.paragraph:4" }, { "text": ` §e${playerData.claimBlocks.amount}§r ` },
+                        // conditionally show the claim block hourly payment information
+                        !playerData.disableClaimBlockPayment ? { "rawtext": [
+                            { "text": "\n\n" },
+                            { "translate": "ui.main:body.paragraph:5", "with": [settings.claimBlockHourlyPayment.toString(), playerData.claimBlocks.paymentTimeRemaining.toString()] }
+                        ]} : { "rawtext": [] }
+                    ]} : { "rawtext": [] }
                 ]
             })
 
@@ -90,7 +96,7 @@ export class ShovelUI {
 
         const form = new CallbackActionFormData(() => this.opPanel())
             .title({"translate": "ui.op_panel:title"})
-            .button({"translate": "ui.op_panel.button:addon_config"}, "textures/ui/icon_setting.png", () => {this.opAddonSettings()})
+            .button({"translate": "ui.op_panel.addon_settings:title"}, "textures/ui/icon_setting.png", () => {this.opAddonSettings()})
             .button({"translate": "ui.op_panel.button:manage_players"}, "textures/ui/multiplayer_glyph_color.png", () => {this.opPlayerList()})
             .button({"translate": "ui.op_panel.button:disallowed_blocks"}, "textures/blocks/barrier.png", () => {this.opDisallowedBlocks()})
             .button({"translate": "ui.global.button:back"}, undefined, () => {this.opModeActive = false; navigateBack();})
@@ -189,7 +195,14 @@ export class ShovelUI {
                     this.claimsList(playerData.id);
                 });
             }
-            form.button({"translate": "ui.op_manage_player.button:edit_claim_blocks", "with": [playerData.claimBlocks.amount.toString()]}, "textures/ui/pencil_edit_icon.png", () => {this.opEditClaimBlocks(playerId)})
+
+            form.button({"translate": "ui.op_manage_player.button:player_config"}, "textures/ui/icon_setting.png", () => {this.opPlayerConfig(playerId)})
+
+            // conditionally show the edit claim blocks button
+            if (!playerData.ignoreClaimBlockRequirements){
+                form.button({"translate": "ui.op_manage_player.button:edit_claim_blocks", "with": [playerData.claimBlocks.amount.toString()]}, "textures/ui/pencil_edit_icon.png", () => {this.opEditClaimBlocks(playerId)})
+            }
+
             form.button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/icon_multiplayer.png", () => {
                 this.playerPermissionsList(playerData);
             })
@@ -202,6 +215,35 @@ export class ShovelUI {
             form.button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
 
 
+        form.show(this.player);
+    }
+
+    private opPlayerConfig(playerId: string) {
+
+        var playerData: PlayerData = PlayerData.fromId(playerId);
+
+        const form = new CallbackModalFormData(() => this.opPlayerConfig(playerId))
+            .title({"translate": "ui.op_player_config:title", "with": [playerData.name]})
+            .toggle({"translate": "ui.op_player_config.toggle:ignore_claim_block_requirements"}, playerData.ignoreClaimBlockRequirements, (value) => {
+
+                playerData.setIgnoreClaimBlockRequirements(value);
+
+                return new ModalDataCorrect();
+
+            })
+            .toggle({"translate": "ui.op_player_config.toggle:disable_claim_block_hourly_payement"}, playerData.disableClaimBlockPayment, (value) => {
+                playerData.setDisableClaimBlockPayment(value);
+
+                return new ModalDataCorrect();
+            });
+
+            form.submitButton({"translate": "ui.global.button:save"}, (response) => {
+
+                playSound(this.player, AddonSounds.Claim.SAVE);
+
+                // navigate back to the previous menu
+                navigateBack();
+            })
         form.show(this.player);
     }
 
