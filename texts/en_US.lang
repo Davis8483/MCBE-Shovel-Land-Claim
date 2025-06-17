@@ -82,8 +82,13 @@ ui.op_panel.player_list:title=Player List
 ui.op_panel.player_list.online=§aOnline§r
 ui.op_panel.player_list.offline=§cOffline§r
 
+ui.op_manage_player.button:player_config=Player Config
 ui.op_manage_player.button:edit_claim_blocks=Edit Claim Blocks: §l%s§r
 ui.op_manage_player.button:delete_player_data=§cDelete Player Data§r
+
+ui.op_player_config:title=Player Config: %s
+ui.op_player_config.toggle:ignore_claim_block_requirements=Ignore Claim Block Requirements
+ui.op_player_config.toggle:disable_claim_block_hourly_payement=Disable Claim Block Hourly Payment
 
 ui.op_delete_player:title=Delete Player Data
 ui.op_delete_player:body=Are you sure you want to delete this player's data? This will remove all claims and permissions.
