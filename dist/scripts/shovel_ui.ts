@@ -189,14 +189,14 @@ export class ShovelUI {
         const form = new CallbackActionFormData(() => this.opManagePlayer(playerId))
             .title(this.opModeActive? {"translate": "ui.main.op_mode:title", "with": [playerData.name]} : {"translate": "ui.main:title"})
 
+            form.button({"translate": "ui.op_manage_player.button:player_config"}, "textures/ui/icon_setting.png", () => {this.opPlayerConfig(playerId)})
+
             // conditionally show the manage claims button if the player has any claims
             if (playerData.claims.length > 0){
                 form.button({"translate": "ui.main.button:manage"}, "textures/ui/icon_setting.png", () => {
                     this.claimsList(playerData.id);
                 });
             }
-
-            form.button({"translate": "ui.op_manage_player.button:player_config"}, "textures/ui/icon_setting.png", () => {this.opPlayerConfig(playerId)})
 
             // conditionally show the edit claim blocks button
             if (!playerData.ignoreClaimBlockRequirements){
