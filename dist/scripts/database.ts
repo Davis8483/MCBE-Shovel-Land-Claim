@@ -566,7 +566,7 @@ export class PlayerClaimBlocks {
     }
 
     static fromJSON(data: any): PlayerClaimBlocks {
-        return new PlayerClaimBlocks(data._amount || settings.startingClaimBlocks, data._paymentTimeRemaining || settings.claimBlockHourlyPayment);
+        return new PlayerClaimBlocks(data._amount || settings.startingClaimBlocks, data._paymentTimeRemaining || 60);
     }
 }
 
@@ -602,7 +602,7 @@ export class PlayerData {
         this._entranceVelocity = { x: 0, y: 0, z: 0 };
         this._previousLocation = { x: 0, y: 0, z: 0 };
         this._pendingEntranceDisallow = false;
-        this._claimBlocks = new PlayerClaimBlocks(settings.startingClaimBlocks, settings.claimBlockHourlyPayment);
+        this._claimBlocks = new PlayerClaimBlocks(settings.startingClaimBlocks, 60); // 60 minutes; 1 hour
         this._claims = [];
         this._playerPermissionsList = [];
         this._ignoreClaimBlockRequirements = false;
