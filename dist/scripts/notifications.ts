@@ -1,4 +1,7 @@
-import { Player, RawMessage } from "@minecraft/server";
+import { Player } from "@minecraft/server";
+
+var lastNotificationTime = Date.now();
+var lastNotificationLangEntry = "";
 
 /**
  * Sends a notification message to the player with a custom SLC prefix.
@@ -8,5 +11,12 @@ import { Player, RawMessage } from "@minecraft/server";
  * @param slots - The %s slots to replace in the message.
  */
 export function sendNotification(player: Player, langEntry: string, ...slots: string[]) {
-    player.sendMessage([{ "translate": "chat.prefix" }, { "text": " " }, { "translate": `${langEntry}` , "with": slots}]);
+
+    // only send the message if the last notification with the same langEntry was sent after 200ms
+    if ((Date.now() - lastNotificationTime > 200) || (lastNotificationLangEntry != langEntry)) {
+        player.sendMessage([{ "translate": "chat.prefix" }, { "text": " " }, { "translate": `${langEntry}` , "with": slots}]);
+    }
+
+    lastNotificationLangEntry = langEntry;
+    lastNotificationTime = Date.now();
 }
