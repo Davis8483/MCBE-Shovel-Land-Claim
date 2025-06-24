@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, ItemStack, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, EntityProjectileComponent, MolangVariableMap, DimensionType, DimensionTypes, } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, EntityProjectileComponent, MolangVariableMap, DimensionType, DimensionTypes, ItemLockMode, } from '@minecraft/server';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { sendNotification } from './notifications.js';
@@ -95,9 +95,26 @@ world.afterEvents.playerLeave.subscribe((data) => {
 });
 
 world.afterEvents.playerSpawn.subscribe((data) => {
-    // make sure player has only 1 claim shovel
-    data.player.runCommandAsync(`execute if entity @s[hasitem = { item=${shovelID}, quantity =! 1}] run clear @s ${shovelID} 0`);
-    data.player.runCommandAsync(`execute if entity @s[hasitem = { item=${shovelID}, quantity = 0}] run give @s ${shovelID} 1 0 { "keep_on_death": { }, "item_lock": { "mode": "lock_in_inventory" } } `);
+    
+    var inventory = data.player.getComponent(EntityComponentTypes.Inventory) as EntityInventoryComponent;
+
+    // check if player has a claim shovel in their inventory
+    var hasShovel = false;
+    for (var i = 0; i++; inventory.inventorySize) {
+        var item = inventory.container.getItem(i);
+        if (item && item.typeId == shovelID) {
+            hasShovel = true;
+            break;
+        }
+    }
+
+    if (!hasShovel) {
+        // give player a claim shovel if they don't have one
+        var item = new ItemStack(shovelID, 1);
+        item.lockMode = ItemLockMode.inventory;
+        item.keepOnDeath = true;
+        inventory.container.addItem(item);
+    }
 
     // set flag to false since all camera positions will be reset upon rejoining
     PlayerData.fromId(data.player.id).setViewingClaim(false);
