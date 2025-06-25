@@ -185,20 +185,16 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                                 playerData.setOppositeCorner({ "x": points[aIndex ^ 1][bIndex ^ 1][0], "y": data.block.y, "z": points[aIndex ^ 1][bIndex ^ 1][1] });
                                 playerData.setResizingClaimName(claim.name);
 
-                                sendNotification(data.player, "chat.point.resize:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
-
-                                playSound(data.player, AddonSounds.Shovel.RESIZE);
+                                sendNotification(data.player, AddonSounds.Shovel.RESIZE, "chat.point.resize:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
 
                             } else {
-                                sendNotification(data.player, "chat.point.resize:disallowed");
-                                playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                                sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.point.resize:disallowed");
                             }
                         }
                     });
 
                     if (!isResize) {
-                        sendNotification(data.player, "chat.point.new:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
-                        playSound(data.player, AddonSounds.Shovel.SELECT);
+                        sendNotification(data.player, AddonSounds.Shovel.SELECT, "chat.point.new:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
                     }
                 }
                 // if player is crouching
@@ -238,23 +234,19 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
 
                         // intersecting claim warning message, cancel resize
                         if (claimIntersectingClaim) {
-                            sendNotification(data.player, "chat.claim:claim_intersecting");
-                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:claim_intersecting");
                         }
                         // player is in the way warning message, cancel resize
                         else if (playerIntersectingClaim) {
-                            sendNotification(data.player, "chat.claim:player_intersecting");
-                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:player_intersecting");
                         }
                         // claim isn't wide enough warning message, cancel resize
                         else if (newClaimWidth < settings.claimMinimumWidth || newClaimLength < settings.claimMinimumWidth) {
-                            sendNotification(data.player, "chat.claim:width", settings.claimMinimumWidth.toString());
-                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:width", settings.claimMinimumWidth.toString());
                         }
                         // not enough claim blocks warning message, cancel resize
                         else if (!playerData.ignoreClaimBlockRequirements && (playerData.claimBlocks.amount < blockDifference)) {
-                            sendNotification(data.player, "chat.claim:blocks_resize", ((blockDifference) - playerData.claimBlocks.amount).toString());
-                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:blocks_resize", ((blockDifference) - playerData.claimBlocks.amount).toString());
                         }
                         // all requirements met, open the claim resizing ui
                         else {
@@ -287,28 +279,23 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
 
                         // intersecting claim warning message, cancel creation
                         if (claimIntersectingClaim) {
-                            sendNotification(data.player, "chat.claim:claim_intersecting");
-                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:claim_intersecting");
                         }
                         // player is in the way warning message, cancel creation
                         else if (playerIntersectingClaim) {
-                            sendNotification(data.player, "chat.claim:player_intersecting");
-                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:player_intersecting");
                         }
                         // claim is not wide enough warning message, cancel creation
                         else if (claimWidth < settings.claimMinimumWidth || claimLength < settings.claimMinimumWidth) {
-                            sendNotification(data.player, "chat.claim:width", settings.claimMinimumWidth.toString());
-                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:width", settings.claimMinimumWidth.toString());
                         }
                         // not enough claim blocks warning message, cancel creation
                         else if (!playerData.ignoreClaimBlockRequirements && (playerData.claimBlocks.amount < (claimWidth * claimLength))) {
-                            sendNotification(data.player, "chat.claim:blocks_new", ((claimWidth * claimLength) - playerData.claimBlocks.amount).toString());
-                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:blocks_new", ((claimWidth * claimLength) - playerData.claimBlocks.amount).toString());
                         }
                         // check if this new claim doesn't exceed the players max number of claims
                         else if ((settings.maxClaimAmount > 0) && (playerData.claims.length >= settings.maxClaimAmount)) {
-                            sendNotification(data.player, "chat.claim:max_claims", playerData.claims.length.toString());
-                            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:max_claims", playerData.claims.length.toString());
                         }
                         // all requirements are met, open the claim creation ui
                         else {
@@ -325,8 +312,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
         }
         // player is not in the overworld, warn them that they are not allowed to create a claim here
         else {
-            sendNotification(data.player, "chat.shovel:dimension_warning");
-            playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
+            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.shovel:dimension_warning");
         }
 
     }
@@ -340,8 +326,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                 if (claim.isOverlap(data.block, data.block) && (playerID != data.player.id) && !claim.hasPermission(PermissionTypes.BREAK_BLOCKS, data.player)) {
                     data.cancel = true;
 
-                    playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
-                    sendNotification(data.player, "chat.claim.permission:break_blocks");
+                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:break_blocks");
 
                 }
             });
@@ -389,8 +374,7 @@ world.beforeEvents.explosion.subscribe((data) => {
 
         // if tnt effected a claim notify player
         if ((data.source.typeId == "minecraft:tnt") && sendDisallowedNotification) {
-            playSound(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT);
-            sendNotification(closestPlayer, "chat.claim.permission:use_tnt");
+            sendNotification(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:use_tnt");
         }
 
     }
@@ -453,8 +437,7 @@ world.afterEvents.pistonActivate.subscribe((data) => {
             var closestPlayer: Player = getClosestPlayer(data.piston.block.location)
 
             // notify player
-            playSound(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT);
-            sendNotification(closestPlayer, "chat.claim:piston");
+            sendNotification(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:piston");
         }
     }
 
@@ -482,8 +465,7 @@ world.beforeEvents.itemUse.subscribe((data) => {
                 data.cancel = true;
 
                 // notify player they don't have permissions
-                playSound(data.source, AddonSounds.Global.NEGATIVE_EVENT);
-                sendNotification(data.source, "chat.claim.permission:hurt_entities");
+                sendNotification(data.source, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:hurt_entities");
                  
             }
         });
@@ -511,8 +493,7 @@ world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
                     data.cancel = true;
 
                     // notify player they don't have permissions
-                    playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
-                    sendNotification(data.player, "chat.claim.permission:enter_claim");
+                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:enter_claim");
                 }
 
                 // disallow player from interacting with entities based on permissions
@@ -522,8 +503,7 @@ world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
                     data.cancel = true;
 
                     // notify player they don't have permissions
-                    playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
-                    sendNotification(data.player, "chat.claim.permission:interact_with_entities");
+                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:interact_with_entities");
                 }
             }
         });
@@ -535,8 +515,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
     // blocks that are disabled by admin; can't be placed
     if (data.itemStack && settings.disallowedBlocks.includes(data.itemStack.typeId)) {
         // notify player
-        playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
-        sendNotification(data.player, "chat.world:disabled_item");
+        sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.world:disabled_item");
 
         data.cancel = true;
     }
@@ -570,8 +549,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                         data.cancel = true;
 
                         // notify player they don't have permissions
-                        playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
-                        sendNotification(data.player, "chat.claim.permission:use_doors");
+                        sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:use_doors");
                     
                     }
                 }
@@ -582,8 +560,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                         data.cancel = true;
 
                         // notify player they don't have permissions
-                        playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
-                        sendNotification(data.player, "chat.claim.permission:use_switches");
+                        sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT,"chat.claim.permission:use_switches");
                     }
                 }
                 // bed interaction permissions
@@ -593,8 +570,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                         data.cancel = true;
 
                         // notify player they don't have permissions
-                        playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
-                        sendNotification(data.player, "chat.claim.permission:use_beds");
+                        sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:use_beds");
                          
                     }
                 }
@@ -605,8 +581,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                         data.cancel = true;
 
                         // notify player they don't have permissions
-                        playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
-                        sendNotification(data.player, "chat.claim.permission:open_containers");
+                        sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:open_containers");
                     }
                 }
                 // editing signs permissions
@@ -616,8 +591,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                         data.cancel = true;
 
                         // notify player they don't have permissions
-                        playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
-                        sendNotification(data.player, "chat.claim.permission:edit_signs");
+                        sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:edit_signs");
                     }
                 }
                 // block placing/using items on blocks permissions
@@ -627,8 +601,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                         data.cancel = true;
 
                         // notify player they don't have permissions
-                        playSound(data.player, AddonSounds.Global.NEGATIVE_EVENT);
-                        sendNotification(data.player, "chat.claim.permission:use_item_on_block");
+                        sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:use_item_on_block");
                           
                     }
                 }
@@ -682,8 +655,7 @@ system.runInterval(() => {
                                 e.remove();
 
                                 // notify player
-                                playSound(p, AddonSounds.Global.NEGATIVE_EVENT);
-                                sendNotification(p, "chat.claim.permission:hurt_entities");
+                                sendNotification(p, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:hurt_entities");
                             }
                         });
                     }     
@@ -770,14 +742,12 @@ system.runInterval(() => {
 
                                 // wait a second before playing sound so it is played at the teleported to location
                                 system.runTimeout(() => {
-                                    playSound(p, AddonSounds.Global.NEGATIVE_EVENT);
-                                    sendNotification(p, "chat.claim.permission:teleport_enter_claim");
+                                    sendNotification(p, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:teleport_enter_claim");
                                 }, 10);
                             }
                             // player did not teleport, send a normal notif
                             else {
-                                playSound(p, AddonSounds.Global.NEGATIVE_EVENT);
-                                sendNotification(p, "chat.claim.permission:enter_claim");
+                                sendNotification(p, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:enter_claim");
                             }
                         }
 
@@ -1002,8 +972,8 @@ system.runInterval(() => {
             // if time is up reward blocks and reset timer
             if (playerData.claimBlocks.paymentTimeRemaining <= 0) {
                 playerData.claimBlocks.incrementAmount(settings.claimBlockHourlyPayment);
-                sendNotification(p, "chat.blocks:payment", settings.claimBlockHourlyPayment.toString());
-                playSound(p, AddonSounds.Global.POSITIVE_EVENT);
+                
+                sendNotification(p, AddonSounds.Global.POSITIVE_EVENT, "chat.blocks:payment", settings.claimBlockHourlyPayment.toString());
 
                 playerData.claimBlocks.resetPaymentTime();
             }
