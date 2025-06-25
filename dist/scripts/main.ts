@@ -95,14 +95,14 @@ world.afterEvents.playerLeave.subscribe((data) => {
 });
 
 world.afterEvents.playerSpawn.subscribe((data) => {
-    
+
     var inventory = data.player.getComponent(EntityComponentTypes.Inventory) as EntityInventoryComponent;
 
     // check if player has a claim shovel in their inventory
     var hasShovel = false;
-    for (var i = 0; i++; inventory.inventorySize) {
+    for (var i = 0; i < inventory.inventorySize; i++) {
         var item = inventory.container.getItem(i);
-        if (item && item.typeId == shovelID) {
+        if (item && item.matches(shovelID)) {
             hasShovel = true;
             break;
         }
