@@ -3,53 +3,7 @@ import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settin
 import { playSound, AddonSounds } from './sounds.js';
 import { sendNotification } from './notifications.js';
 import { ShovelUI } from './shovel_ui.js';
-
-const shovelID = "slc:claim_shovel"
-
-/**
- * Runs the callback for every claim saved in the database
- * 
- */
-function runInAllClaims(callback: (playerId: string, playerName: string, claimData: Claim) => void) {
-
-    for (var player of database) {
-
-        var claims = player.claims;
-        for (var claim of claims) {
-            callback(player.id, player.name, claim);
-        }
-    }
-}
-
-/**
- * Gets the player closest to the specified block
- * 
- * @param blockLocation - Point to test from
- * 
- * @return - The player closest to the specified point
- */
-function getClosestPlayer(blockLocation: Vector3): Player {
-    var closestPlayer: Player = undefined;
-    var closestDistance: number = Number.MAX_VALUE;
-
-    // find player closest to the specified block
-    for (var p of world.getAllPlayers()) {
-        if (p.dimension == world.getDimension("overworld")) {
-            var distance = Math.sqrt(
-                Math.pow(p.location.x - blockLocation.x, 2) +
-                Math.pow(p.location.y - blockLocation.y, 2) +
-                Math.pow(p.location.z - blockLocation.z, 2)
-            );
-
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closestPlayer = p;
-            }
-        }
-    }
-
-    return closestPlayer;
-}
+import { forceClaimShovelInInventory, removeLockedClaimShovel, runInAllClaims, getClosestPlayer, SHOVEL_ID } from './utils.js'
 
 world.afterEvents.playerJoin.subscribe((data) => {
 
@@ -96,25 +50,8 @@ world.afterEvents.playerLeave.subscribe((data) => {
 
 world.afterEvents.playerSpawn.subscribe((data) => {
 
-    var inventory = data.player.getComponent(EntityComponentTypes.Inventory) as EntityInventoryComponent;
-
-    // check if player has a claim shovel in their inventory
-    var hasShovel = false;
-    for (var i = 0; i < inventory.inventorySize; i++) {
-        var item = inventory.container.getItem(i);
-        if (item && item.matches(shovelID)) {
-            hasShovel = true;
-            break;
-        }
-    }
-
-    if (!hasShovel) {
-        // give player a claim shovel if they don't have one
-        var item = new ItemStack(shovelID, 1);
-        item.lockMode = ItemLockMode.inventory;
-        item.keepOnDeath = true;
-        inventory.container.addItem(item);
-    }
+    // make sure the player has a claim shovel
+    forceClaimShovelInInventory(data.player);
 
     // set flag to false since all camera positions will be reset upon rejoining
     PlayerData.fromId(data.player.id).setViewingClaim(false);
@@ -122,7 +59,7 @@ world.afterEvents.playerSpawn.subscribe((data) => {
 
 // open menu when claim shovel is used
 world.afterEvents.itemUse.subscribe((data) => {
-    if (data.itemStack.typeId == shovelID) {
+    if (data.itemStack.typeId == SHOVEL_ID) {
         new ShovelUI(data.source).main();
     };
 });
@@ -133,7 +70,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
     var playerData = PlayerData.fromId(data.player.id);
 
     // handle creating claims by setting first and second point
-    if ((data.itemStack != undefined) && (data.itemStack.typeId == shovelID)) {
+    if ((data.itemStack != undefined) && (data.itemStack.typeId == SHOVEL_ID)) {
         // stop the shovel from breaking the block
         data.cancel = true
 
@@ -595,7 +532,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                     }
                 }
                 // block placing/using items on blocks permissions
-                else if ((claim.isOverlap(data.block, data.block) || claim.isOverlap(placedBlock, placedBlock)) && data.itemStack && !data.itemStack.matches(shovelID)) {
+                else if ((claim.isOverlap(data.block, data.block) || claim.isOverlap(placedBlock, placedBlock)) && data.itemStack && !data.itemStack.matches(SHOVEL_ID)) {
                     if (!claim.hasPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data.player)){
                         // cancel the action
                         data.cancel = true;
@@ -699,7 +636,7 @@ system.runInterval(() => {
             }
 
             // if player is no longer holding the claim shovel, set the resizing claim name to empty
-            if (!p.getComponent(EntityComponentTypes.Inventory).container.getItem(p.selectedSlotIndex)?.matches(shovelID)) {
+            if (!p.getComponent(EntityComponentTypes.Inventory).container.getItem(p.selectedSlotIndex)?.matches(SHOVEL_ID)) {
                 playerData.setResizingClaimName("");
             }
 
@@ -894,7 +831,7 @@ system.runInterval(() => {
 
                 var claimShovelOut = false;
 
-                if (p.id == playerID && p.getComponent(EntityComponentTypes.Inventory).container.getItem(p.selectedSlotIndex)?.matches(shovelID)) {
+                if (p.id == playerID && p.getComponent(EntityComponentTypes.Inventory).container.getItem(p.selectedSlotIndex)?.matches(SHOVEL_ID)) {
                     // set flag
                     claimShovelOut = true;
                 }
