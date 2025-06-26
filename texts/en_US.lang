@@ -109,6 +109,10 @@ ui.op_panel.addon_settings.textbox:claim_min_width=Claim Minimum Width
 ui.op_panel.addon_settings.textbox:claim_min_width_placeholder=Ex: 10
 ui.op_panel.addon_settings.textbox:max_claim_amount=Per Player Max Claim Amount\n0 = Unlimited
 ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder=Ex: 10
+ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior=Claim Shovel Item Behavior
+ui.op_panel.addon_settings.dropdown_option:lock_to_inventory=Lock to Inventory
+ui.op_panel.addon_settings.dropdown_option:give_at_spawn=Give at Spawn
+ui.op_panel.addon_settings.dropdown_option:must_be_crafted=Must be Crafted
 ui.op_panel.addon_settings.error:must_be_positive_number=§cYou must provide a positive number!§r
 ui.op_panel.addon_settings.button:save=Save Config
 
