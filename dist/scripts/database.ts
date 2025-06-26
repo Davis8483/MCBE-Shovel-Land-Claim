@@ -594,7 +594,7 @@ export class PlayerClaimBlocks {
 }
 
 export class PlayerData {
-    readonly schemaVersion: number[] = [1, 0, 2]; // version 1.0.2
+    private _schemaVersion: number[] = [1, 0, 2]; // version 1.0.2
 
     private _id: string;
     private _name: string;
@@ -697,7 +697,16 @@ export class PlayerData {
         return this._disableClaimBlockPayment;
     }
 
+    get schemaVersion(): number[] {
+        return this._schemaVersion;
+    }
+
     // Setters
+    setSchemaVersion(version: number[]): void {
+        this._schemaVersion = version;
+        saveDb();
+    }
+
     setName(newName: string): void {
         this._name = newName;
         saveDb();
@@ -845,6 +854,7 @@ export class PlayerData {
 
         const defaultPlayerData = new PlayerData(data._id, data._name);
         const playerData = new PlayerData(data._id, data._name);
+        playerData.setSchemaVersion(data._schemaVersion || defaultPlayerData.schemaVersion)
         playerData.setInClaim(data._inClaim !== undefined ? data._inClaim : defaultPlayerData.inClaim);
         playerData.setItemCharged(data._itemCharged !== undefined ? data._itemCharged : defaultPlayerData.itemCharged);
         playerData.setViewingClaim(data._viewingClaim !== undefined ? data._viewingClaim : defaultPlayerData.viewingClaim);
