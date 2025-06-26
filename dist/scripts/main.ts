@@ -1,27 +1,27 @@
 import { world, system, Player, Vector3, ItemStack, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, EntityProjectileComponent, MolangVariableMap, DimensionType, DimensionTypes, ItemLockMode, } from '@minecraft/server';
-import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings } from './database.js';
+import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ShovelBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { sendNotification } from './notifications.js';
 import { ShovelUI } from './shovel_ui.js';
-import { forceClaimShovelInInventory, removeLockedClaimShovel, runInAllClaims, getClosestPlayer, SHOVEL_ID } from './utils.js'
+import { giveClaimShovel, unlockClaimShovel, runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior } from './utils.js'
 
 world.afterEvents.playerJoin.subscribe((data) => {
 
     // verify player data is on file
     var playerFound = false;
 
-    for (var p of database) {
-        if (p.id == data.playerId) {
+    for (var pD of database) {
+        if (pD.id == data.playerId) {
 
             // update player name in db to current; in case they changed it
-            p.setName(data.playerName);
+            pD.setName(data.playerName);
 
             // set other values to default
-            p.setViewingClaim(false);
-            p.setResizingClaimName("");
+            pD.setViewingClaim(false);
+            pD.setResizingClaimName("");
 
             // if player is not in a claim this flag will automatically be set back to false
-            p.setPendingEntranceDisallow(true);
+            pD.setPendingEntranceDisallow(true);
 
             playerFound = true;
             break;
@@ -34,7 +34,14 @@ world.afterEvents.playerJoin.subscribe((data) => {
         database.push(new PlayerData(data.playerId, data.playerName));
     }
 
-    
+    // get player object
+    for (var p of world.getAllPlayers()){
+        if (p.id == data.playerId){
+
+            // updates how the shovel is stored/given to the player; ex: locking to inventory
+            updateShovelBehavior(p, settings.claimShovelItemBehavior)
+        }
+    }
 
 });
 
@@ -50,8 +57,8 @@ world.afterEvents.playerLeave.subscribe((data) => {
 
 world.afterEvents.playerSpawn.subscribe((data) => {
 
-    // make sure the player has a claim shovel
-    forceClaimShovelInInventory(data.player);
+    // updates how the shovel is stored/given to the player; ex: locking to inventory
+    updateShovelBehavior(data.player, settings.claimShovelItemBehavior)
 
     // set flag to false since all camera positions will be reset upon rejoining
     PlayerData.fromId(data.player.id).setViewingClaim(false);

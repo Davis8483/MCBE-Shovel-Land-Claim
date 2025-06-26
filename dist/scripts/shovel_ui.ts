@@ -1,8 +1,9 @@
 import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility, RawMessage } from '@minecraft/server';
 import { CallbackActionFormData, CallbackModalFormData, CallbackMessageFormData, clearNavigationStack, ModalDataCorrect, ModalDataError, navigateBack, popNavigationStack } from './ui_wrapper.js';
-import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings } from './database.js';
+import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ShovelBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { sendNotification } from './notifications.js';
+import { giveClaimShovel, unlockClaimShovel, updateShovelBehavior } from './utils.js';
 
 export class ShovelUI {
     private player: Player;
@@ -175,6 +176,27 @@ export class ShovelUI {
 
                     return new ModalDataCorrect();
                 }
+            })
+
+            
+
+            form.dropdown({"translate": "ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior"},
+                [
+                    {"translate": "ui.op_panel.addon_settings.dropdown_option:lock_to_inventory"},
+                    {"translate": "ui.op_panel.addon_settings.dropdown_option:give_at_spawn"},
+                    {"translate": "ui.op_panel.addon_settings.dropdown_option:must_be_crafted"}
+                ],
+                settings.claimShovelItemBehavior, (value) => {
+
+                // loop through all online players to modify their inventory
+                for (var p of world.getAllPlayers()) {
+                    // updates how the shovel is stored/given to the player; ex: locking to inventory
+                    updateShovelBehavior(p, value)
+                }
+
+                settings.setclaimShovelItemBehavior(value);
+
+                return new ModalDataCorrect();
             })
             .submitButton({"translate": "ui.op_panel.addon_settings.button:save"}, (response) => {
                 playSound(this.player, AddonSounds.Claim.SAVE);

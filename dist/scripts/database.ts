@@ -1,5 +1,11 @@
 import { world, Vector3, Player } from "@minecraft/server";
 
+export enum ShovelBehavior {
+    LOCK_TO_INVENTORY = 0,
+    GIVE_AT_SPAWN = 1,
+    MUST_BE_CRAFTED = 2
+}
+
 /**
  * An object containing global settings for the addon
  */
@@ -9,6 +15,7 @@ export class Settings{
     private _claimMinimumWidth: number;
     private _disallowedBlocks: string[];
     private _maxClaimAmount: number;
+    private _claimShovelItemBehavior: ShovelBehavior;
 
     /**
      * Creates a new Settings object with default values
@@ -30,6 +37,7 @@ export class Settings{
             "minecraft:sculk_catalyst" // can be used for griefing
         ];
         this._maxClaimAmount = 0;
+        this._claimShovelItemBehavior = ShovelBehavior.LOCK_TO_INVENTORY;
     }
 
     get claimBlockHourlyPayment(): number {
@@ -49,6 +57,10 @@ export class Settings{
      */
     get maxClaimAmount(): number {
         return this._maxClaimAmount;
+    }
+
+    get claimShovelItemBehavior(): ShovelBehavior {
+        return this._claimShovelItemBehavior;
     }
 
     setClaimBlockHourlyPayment(value: number) {
@@ -92,6 +104,16 @@ export class Settings{
     }
     
     /**
+     * Determines how the claim shovel item is given to the player.
+     * 
+     * @param value - The type of item behavior, lock to inventory; give at spawn; crafting only
+     */
+    setclaimShovelItemBehavior(value: ShovelBehavior) {
+        this._claimShovelItemBehavior = value;
+        saveSettings();
+    }
+    
+    /**
      * Returns a Settings object loaded from JSON, if a key is missing it will be replaced with the default value.
      * 
      * @param data - The JSON object to load the Settings object from
@@ -106,6 +128,7 @@ export class Settings{
         settings._claimMinimumWidth = data._claimMinimumWidth || defaultSettings._claimMinimumWidth;
         settings._disallowedBlocks = data._disallowedBlocks || defaultSettings._disallowedBlocks;
         settings._maxClaimAmount = data._maxClaimAmount || defaultSettings._maxClaimAmount;
+        settings._claimShovelItemBehavior = data._claimShovelItemBehavior || defaultSettings._claimShovelItemBehavior;
         return settings;
     }
 }

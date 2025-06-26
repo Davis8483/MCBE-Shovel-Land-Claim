@@ -1,49 +1,99 @@
 import { EntityComponentTypes, EntityInventoryComponent, ItemLockMode, ItemStack, Player, Vector3, world } from "@minecraft/server";
-import { Claim, database } from "./database";
+import { Claim, database, settings, ShovelBehavior } from "./database";
 
 export const SHOVEL_ID = "slc:claim_shovel"
 
 /**
- * When ran, this function will check if the player has a locked claim shovel in their inventory and if not will give them one.
+ * When ran, this function will check if the player has a claim shovel in their inventory already and if not will give them one.
  * 
  * @param player - The player to give the claim shovel to
+ * 
+ * @param isLocked - Locks the claim shovel to the players inventory. This will also lock an existing claim shovel if found as an alternative to giving a new one.
  */
-export function forceClaimShovelInInventory(player: Player) {
+export function giveClaimShovel(player: Player, isLocked: boolean) {
     var inventory = player.getComponent(EntityComponentTypes.Inventory) as EntityInventoryComponent;
 
     // check if player has a claim shovel in their inventory
     var hasShovel = false;
+    var hasLockedShovel = true;
     for (var i = 0; i < inventory.inventorySize; i++) {
         var item = inventory.container.getItem(i);
-        if (item && item.matches(SHOVEL_ID) && (item.lockMode == ItemLockMode.inventory)) {
+
+        if (item && item.matches(SHOVEL_ID)) {
             hasShovel = true;
-            break;
+
+            // if the player already has a locked shovel, break
+            if (item.lockMode == ItemLockMode.inventory) {
+                hasLockedShovel = true;
+                break;
+            }
+            // edit the item to make it locked
+            else if (isLocked) {
+                hasLockedShovel = true;
+
+                item.lockMode = ItemLockMode.inventory;
+                item.keepOnDeath = true;
+
+                inventory.container.setItem(i, item) // update the current slots item
+
+                break;
+            }
         }
     }
 
-    if (!hasShovel) {
-        // give player a claim shovel if they don't have one
+    // give player a claim shovel if they don't have one
+    if (!hasShovel || (isLocked && !hasLockedShovel)) {
         var item = new ItemStack(SHOVEL_ID, 1);
-        item.lockMode = ItemLockMode.inventory;
-        item.keepOnDeath = true;
+
+        if (isLocked){
+            item.lockMode = ItemLockMode.inventory;
+            item.keepOnDeath = true;
+        }
+
         inventory.container.addItem(item);
     }
 }
 
 /**
- * Used when the Lock Claim Shovel To Inventory addon setting is disabled to remove any existing locked claim shovels
+ * Edits the claim shovel attributes to unlock it from the inventory and disable keep on death
  * 
- * @param player - The player to remove locked claim shovels from
+ * @param player - The player to unlock the claim shovel for
  */
-export function removeLockedClaimShovel(player: Player) {
+export function unlockClaimShovel(player: Player) {
     var inventory = player.getComponent(EntityComponentTypes.Inventory) as EntityInventoryComponent;
 
-    // find and remove any claim shovels that are locked to inventory
+    // find and edit any claim shovels that are locked to inventory
     for (var i = 0; i < inventory.inventorySize; i++) {
         var item = inventory.container.getItem(i);
         if (item && item.matches(SHOVEL_ID) && (item.lockMode == ItemLockMode.inventory)) {
-            inventory.container.setItem(i, undefined) // clear the slot
+
+            item.lockMode = ItemLockMode.none
+            item.keepOnDeath = false;
+
+            inventory.container.setItem(i, item) // replace the shovel with the updated one
         }
+    }
+}
+
+/**
+ * Updates how the claim shovel is given to a player
+ * 
+ * @param player - The player to update the claim shovels item behavior for
+ */
+export function updateShovelBehavior(player: Player, behaviorType: ShovelBehavior) {
+
+    // forces the player to have a claim shovel at all times; default option
+    if (behaviorType == ShovelBehavior.LOCK_TO_INVENTORY) {
+        giveClaimShovel(player, true);
+    }
+    // gives the player a new claim shovel when the spawn in, it won't be locked to their inventory
+    else if (behaviorType == ShovelBehavior.GIVE_AT_SPAWN) {
+        giveClaimShovel(player, false);
+    }
+
+    // unlock the existing claim shovel item when switching to the crafting only or give at spawn modes
+    if ((behaviorType == ShovelBehavior.MUST_BE_CRAFTED) || (behaviorType == ShovelBehavior.GIVE_AT_SPAWN)) {
+        unlockClaimShovel(player)
     }
 }
 
