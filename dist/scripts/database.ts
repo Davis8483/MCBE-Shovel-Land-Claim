@@ -594,8 +594,7 @@ export class PlayerClaimBlocks {
 }
 
 export class PlayerData {
-    private _schemaVersion: number[] = [1, 0, 2]; // version 1.0.2
-
+    private _schemaVersion: number[];
     private _id: string;
     private _name: string;
     private _inClaim: boolean;
@@ -614,6 +613,7 @@ export class PlayerData {
     private _disableClaimBlockPayment: boolean;
 
     constructor(playerID: string, playerName: string) {
+        this._schemaVersion = [1, 0, 2]; // version 1.0.2
         this._id = playerID;
         this._name = playerName;
         this._inClaim = false;
