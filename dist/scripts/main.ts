@@ -42,7 +42,6 @@ world.afterEvents.playerJoin.subscribe((data) => {
             updateShovelBehavior(p, settings.claimShovelItemBehavior)
         }
     }
-
 });
 
 world.afterEvents.playerLeave.subscribe((data) => {
@@ -918,6 +917,26 @@ system.runInterval(() => {
                 playerData.claimBlocks.incrementAmount(settings.claimBlockHourlyPayment);
                 
                 sendNotification(p, AddonSounds.Global.POSITIVE_EVENT, "chat.blocks:payment", settings.claimBlockHourlyPayment.toString());
+
+                var inventory = p.getComponent(EntityComponentTypes.Inventory) as EntityInventoryComponent;
+                
+                var hasShovel = false;
+                for (var i = 0; i < inventory.inventorySize; i++) {
+                    var item = inventory.container.getItem(i);
+
+                    if (item && item.matches(SHOVEL_ID)) {
+                        hasShovel = true;
+                    }
+                }
+
+                // if the player doesn't have a claim shovel and its item behavior is set to must be crafted
+                if (!hasShovel && (settings.claimShovelItemBehavior == ShovelBehavior.MUST_BE_CRAFTED)) {
+                    // 2 second delay since last notif
+                    system.runTimeout(() => {
+                        // notify the player of how they can craft a claim shovel
+                        sendNotification(p, AddonSounds.Global.NEUTRAl_EVENT, "chat.shovel:how_to_craft")
+                    }, 40)
+                }
 
                 playerData.claimBlocks.resetPaymentTime();
             }

@@ -17,7 +17,8 @@ export namespace AddonSounds {
 
     export enum Global {
         NEGATIVE_EVENT = "note.didgeridoo",
-        POSITIVE_EVENT = "random.levelup"
+        POSITIVE_EVENT = "random.levelup",
+        NEUTRAl_EVENT = "note.cow_bell"
     }
 }
 
