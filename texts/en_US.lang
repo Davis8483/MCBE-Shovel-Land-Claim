@@ -90,16 +90,14 @@ ui.op_manage_player.button:delete_player_data=§cDelete Player Data§r
 ui.op_player_config:title=Player Config: %s
 ui.op_player_config.toggle:ignore_claim_block_requirements=Ignore Claim Block Requirements
 ui.op_player_config.toggle:disable_claim_block_hourly_payement=Disable Claim Block Hourly Payment
+ui.op_player_config.textbox:claim_blocks=Claim Block Balance
+ui.op_player_config.textbox:claim_blocks_placeholder=Ex: 500
+ui.op_player_config.error:must_be_positive_number=§cYou must provide a positive number!§r
 
 ui.op_delete_player:title=Delete Player Data
 ui.op_delete_player:body=Are you sure you want to delete this player's data? This will remove all claims and permissions.
 ui.op_delete_player.button:cancel=Cancel
 ui.op_delete_player.button:confirm=§cDelete Player Data§r
-
-ui.op_edit_claim_blocks:title=Edit Claim Blocks
-ui.op_edit_claim_blocks.textbox:claim_blocks=Claim Blocks
-ui.op_edit_claim_blocks.textbox:claim_blocks_placeholder=Ex: 500
-ui.op_edit_claim_blocks.error:must_be_positive_number=§cYou must provide a positive number!§r
 
 ui.op_panel.addon_settings:title=Addon Config
 ui.op_panel.addon_settings.textbox:claim_block_payment=Claim Block Hourly Payment
