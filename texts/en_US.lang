@@ -41,6 +41,7 @@ chat.claim:view=§cYou can only view a claim from the overworld!§r
 chat.claim:piston=§cYou can't use a piston from outside this claim!§r
 
 chat.blocks:payment=§aYou've recieved your hourly payment of %s blocks!§r
+chat.shovel:how_to_craft=Craft a §5Claim Shovel§r by surrounding any vanilla shovel with amethyst shards...
 
 ui.global.button:back=<< Back
 ui.global.button:save=Save
