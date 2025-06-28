@@ -1,5 +1,5 @@
 import { world, system, Player, Vector3, ItemStack, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, EntityProjectileComponent, MolangVariableMap, DimensionType, DimensionTypes, ItemLockMode, } from '@minecraft/server';
-import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ShovelBehavior } from './database.js';
+import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { sendNotification } from './notifications.js';
 import { ShovelUI } from './shovel_ui.js';
@@ -188,7 +188,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                             sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:width", settings.claimMinimumWidth.toString());
                         }
                         // not enough claim blocks warning message, cancel resize
-                        else if (!playerData.ignoreClaimBlockRequirements && (playerData.claimBlocks.amount < blockDifference)) {
+                        else if ((playerData.claimBlocks.behavior != ClaimBlocksBehavior.UNLIMITED) && (playerData.claimBlocks.amount < blockDifference)) {
                             sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:blocks_resize", ((blockDifference) - playerData.claimBlocks.amount).toString());
                         }
                         // all requirements met, open the claim resizing ui
@@ -233,7 +233,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                             sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:width", settings.claimMinimumWidth.toString());
                         }
                         // not enough claim blocks warning message, cancel creation
-                        else if (!playerData.ignoreClaimBlockRequirements && (playerData.claimBlocks.amount < (claimWidth * claimLength))) {
+                        else if ((playerData.claimBlocks.behavior != ClaimBlocksBehavior.UNLIMITED) && (playerData.claimBlocks.amount < (claimWidth * claimLength))) {
                             sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:blocks_new", ((claimWidth * claimLength) - playerData.claimBlocks.amount).toString());
                         }
                         // check if this new claim doesn't exceed the players max number of claims
@@ -907,7 +907,8 @@ system.runInterval(() => {
 
         var playerData = PlayerData.fromId(p.id);
 
-        if (!playerData.disableClaimBlockPayment) {
+        // the hourly payment is only included in the default behavior
+        if (playerData.claimBlocks.behavior == ClaimBlocksBehavior.DEFAULT) {
 
             // decrement timer by 1
             playerData.claimBlocks.decrementPaymentTime();

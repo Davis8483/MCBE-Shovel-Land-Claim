@@ -1,6 +1,6 @@
 import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility, RawMessage } from '@minecraft/server';
 import { CallbackActionFormData, CallbackModalFormData, CallbackMessageFormData, clearNavigationStack, ModalDataCorrect, ModalDataError, navigateBack, popNavigationStack } from './ui_wrapper.js';
-import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ShovelBehavior } from './database.js';
+import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { sendNotification } from './notifications.js';
 import { giveClaimShovel, unlockClaimShovel, updateShovelBehavior } from './utils.js';
@@ -47,11 +47,11 @@ export class ShovelUI {
                     { "text": "\n\n" },
                     { "translate": "ui.main:body.paragraph:3" },
                     // conditionally show the claim blocks information
-                    !playerData.ignoreClaimBlockRequirements ? { "rawtext": [
+                    (playerData.claimBlocks.behavior != ClaimBlocksBehavior.UNLIMITED) ? { "rawtext": [
                         { "text": "\n\n" },
                         { "translate": "ui.main:body.paragraph:4" }, { "text": ` §e${playerData.claimBlocks.amount}§r ` },
                         // conditionally show the claim block hourly payment information
-                        !playerData.disableClaimBlockPayment ? { "rawtext": [
+                        (playerData.claimBlocks.behavior != ClaimBlocksBehavior.DISABLE_HOURLY_PAYMENT) ? { "rawtext": [
                             { "text": "\n\n" },
                             { "translate": "ui.main:body.paragraph:5", "with": [settings.claimBlockHourlyPayment.toString(), playerData.claimBlocks.paymentTimeRemaining.toString()] }
                         ]} : { "rawtext": [] }
@@ -238,23 +238,22 @@ export class ShovelUI {
     private opPlayerConfig(playerId: string) {
 
         var playerData: PlayerData = PlayerData.fromId(playerId);
-        var claimBlocks = playerData.claimBlocks.amount;
 
         const form = new CallbackModalFormData(() => this.opPlayerConfig(playerId))
             .title({"translate": "ui.op_player_config:title", "with": [playerData.name]})
-            .toggle({"translate": "ui.op_player_config.toggle:ignore_claim_block_requirements"}, playerData.ignoreClaimBlockRequirements, (value) => {
+            .dropdown({"translate": "ui.op_player_config.dropdown:claim_blocks_behavior"},
+                [
+                    {"translate": "ui.op_player_config.dropdown_option:default"},
+                    {"translate": "ui.op_player_config.dropdown_option:disable_payment"},
+                    {"translate": "ui.op_player_config.dropdown_option:unlimited"}
+                ],
+                playerData.claimBlocks.behavior, (value) => {
 
-                playerData.setIgnoreClaimBlockRequirements(value);
+                    playerData.claimBlocks.setBehavior(value)
 
-                return new ModalDataCorrect();
-
-            })
-            .toggle({"translate": "ui.op_player_config.toggle:disable_claim_block_hourly_payement"}, playerData.disableClaimBlockPayment, (value) => {
-                playerData.setDisableClaimBlockPayment(value);
-
-                return new ModalDataCorrect();
-            })
-            .textField({"translate": "ui.op_player_config.textbox:claim_blocks"}, {"translate": "ui.op_player_config.textbox:claim_blocks_placeholder"}, claimBlocks.toString(), (value) => {
+                    return new ModalDataCorrect();
+                })
+            .textField({"translate": "ui.op_player_config.textbox:claim_blocks"}, {"translate": "ui.op_player_config.textbox:claim_blocks_placeholder"}, playerData.claimBlocks.amount.toString(), (value) => {
                 var newClaimBlocks = parseInt(value as string);
 
                 if (isNaN(newClaimBlocks) || newClaimBlocks < 0) {
@@ -421,9 +420,14 @@ export class ShovelUI {
             .title({"translate": "ui.claim.resize:title"})
             .body({
                 "rawtext": [
-                    { "translate": "ui.claim.resize:body" },
-                    { "text": `§l\n\n${blockDifference < 0 ? "§c-" : "§a+"}${blockDifference} ` },
-                    { "translate": "ui.manage.resize:label:claim_blocks" }
+                    { "translate": "ui.claim.resize:body_1" },
+                    // conditionaly show the claim block requirements/warning
+                    (playerData.claimBlocks.behavior != ClaimBlocksBehavior.UNLIMITED) ? { "rawtext": [
+                        {"text": " " },
+                        {"translate": "ui.claim.resize:body_2" },
+                        { "text": `§l\n\n${blockDifference < 0 ? "§c-" : "§a+"}${blockDifference} ` },
+                        { "translate": "ui.manage.resize:label:claim_blocks" }
+                    ]} : {},
                 ]
             })
             .button1({"translate": "ui.claim.resize.button:cancel"})
@@ -1005,9 +1009,13 @@ export class ShovelUI {
             .title({"translate": "ui.manage.remove:title"})
             .body({
                 "rawtext": [
-                    { "translate": "ui.manage.remove:body" },
-                    { "text": `§l\n\n§a+${claim.getSize().width * claim.getSize().length} ` },
-                    { "translate": "ui.manage.remove:label:claim_blocks" }
+                    { "translate": "ui.manage.remove:body_1" },
+                    (playerData.claimBlocks.behavior != ClaimBlocksBehavior.UNLIMITED) ? { "rawtext": [
+                        { "text": " " },
+                        { "translate": "ui.manage.remove:body_2" },
+                        { "text": `§l\n\n§a+${claim.getSize().width * claim.getSize().length} ` },
+                        { "translate": "ui.manage.remove:label:claim_blocks" }
+                    ]} : {}
                 ]
             })
             .button1({"translate": "ui.manage.remove.button:cancel"}, () => {

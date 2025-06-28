@@ -543,13 +543,24 @@ export class Claim {
     }
 }
 
+export enum ClaimBlocksBehavior {
+    /** Claim blocks are required to claim/resize; the balance is added to hourly */
+    DEFAULT = 0,
+    /** Claim blocks are still required to claim/resize; there is no way to obtain more blocks unless given by an operator  */
+    DISABLE_HOURLY_PAYMENT = 1,
+    /** Any restrictions requiring claim blocks are removed and the ui hides anything mentioning claim blocks */
+    UNLIMITED = 2
+}
+
 export class PlayerClaimBlocks {
     private _amount: number;
     private _paymentTimeRemaining: number;
+    private _behavior: ClaimBlocksBehavior;
 
     constructor(amount: number, paymentTimeRemaining: number) {
         this._amount = amount;
         this._paymentTimeRemaining = paymentTimeRemaining;
+        this._behavior = ClaimBlocksBehavior.DEFAULT;
     }
 
     // Getters
@@ -561,21 +572,44 @@ export class PlayerClaimBlocks {
         return this._paymentTimeRemaining;
     }
 
-    // Setters
-    setAmount(newAmount: number): void {
-        this._amount = newAmount;
+    get behavior(): ClaimBlocksBehavior {
+        return this._behavior;
+    }
+
+    /**
+     * This should only be used within the op panel to edit player data
+     * 
+     * @param value - number of claim blocks
+     */
+    setAmount(value: number): void {
+        this._amount = value;
         saveDb();
     }
 
-    // Utility methods
+    /**
+     * A utility function that increases a players claim block balance.
+     * This should only be used for claim creation and resizing as it will be disabled if the player has unlimited claim blocks.
+     * 
+     * @param value - number of claim blocks
+     */
     incrementAmount(value: number): void {
-        this._amount += value;
-        saveDb();
+        if (this._behavior != ClaimBlocksBehavior.UNLIMITED) {
+            this._amount += value;
+            saveDb();   
+        }
     }
 
+    /**
+     * A utility function that decreases a players claim block balance.
+     * This should only be used for claim creation and resizing as it will be disabled if the player has unlimited claim blocks.
+     * 
+     * @param value - number of claim blocks
+     */
     decrementAmount(value: number): void {
-        this._amount -= value;
-        saveDb();
+        if (this._behavior != ClaimBlocksBehavior.UNLIMITED) {
+            this._amount -= value;
+            saveDb();
+        }
     }
 
     decrementPaymentTime(): void {
@@ -588,8 +622,16 @@ export class PlayerClaimBlocks {
         saveDb();
     }
 
+    setBehavior(value: ClaimBlocksBehavior): void {
+        this._behavior = value;
+        saveDb()
+    }
+
     static fromJSON(data: any): PlayerClaimBlocks {
-        return new PlayerClaimBlocks(data._amount || settings.startingClaimBlocks, data._paymentTimeRemaining || 60);
+        var playerClaimBlocks = new PlayerClaimBlocks(data._amount || settings.startingClaimBlocks, data._paymentTimeRemaining || 60);
+        playerClaimBlocks.setBehavior(data._behavior || ClaimBlocksBehavior.DEFAULT);
+
+        return playerClaimBlocks
     }
 }
 
@@ -609,8 +651,6 @@ export class PlayerData {
     private _claimBlocks: PlayerClaimBlocks;
     private _claims: Claim[];
     private _playerPermissionsList: PlayerPermissions[];
-    private _ignoreClaimBlockRequirements: boolean;
-    private _disableClaimBlockPayment: boolean;
 
     constructor(playerID: string, playerName: string) {
         this._schemaVersion = [1, 0, 2]; // version 1.0.2
@@ -628,8 +668,6 @@ export class PlayerData {
         this._claimBlocks = new PlayerClaimBlocks(settings.startingClaimBlocks, 60); // 60 minutes; 1 hour
         this._claims = [];
         this._playerPermissionsList = [];
-        this._ignoreClaimBlockRequirements = false;
-        this._disableClaimBlockPayment = false;
     }
 
     // Getters
@@ -687,14 +725,6 @@ export class PlayerData {
 
     get playerPermissionsList(): PlayerPermissions[] {
         return this._playerPermissionsList;
-    }
-
-    get ignoreClaimBlockRequirements(): boolean {
-        return this._ignoreClaimBlockRequirements;
-    }
-
-    get disableClaimBlockPayment(): boolean {
-        return this._disableClaimBlockPayment;
     }
 
     get schemaVersion(): number[] {
@@ -816,16 +846,6 @@ export class PlayerData {
         return unsavedPlayers;
     }
 
-    setIgnoreClaimBlockRequirements(value: boolean): void {
-        this._ignoreClaimBlockRequirements = value;
-        saveDb();
-    }
-
-    setDisableClaimBlockPayment(value: boolean): void {
-        this._disableClaimBlockPayment = value;
-        saveDb();
-    }
-
     /**
      * Deletes this PlayerData object from the database.
      */
@@ -875,9 +895,6 @@ export class PlayerData {
         .map(PlayerPermissions.fromJSON)
         .filter(permission => permission.id !== undefined && permission.name !== undefined) 
         : defaultPlayerData.playerPermissionsList;
-
-        playerData.setIgnoreClaimBlockRequirements(data._ignoreClaimBlockRequirements !== undefined ? data._ignoreClaimBlockRequirements : defaultPlayerData.ignoreClaimBlockRequirements);
-        playerData.setDisableClaimBlockPayment(data._disableClaimBlockPayment !== undefined ? data._disableClaimBlockPayment : defaultPlayerData.disableClaimBlockPayment);
 
         return playerData;
     }
