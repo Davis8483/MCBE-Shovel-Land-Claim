@@ -124,7 +124,7 @@ ui.edit_global_permissions_intent.button:edit=Edit §l§9Global§r Permissions
 
 ui.addon_info:title=Addon Info
 ui.addon_info:body.paragraph:1=§l§5Shovel§7 Land Claim§r\n§oCreated by nDavis§r
-## if your translating this file, this is where you can credit yourself. Ex: \n§oTranslated by John Doe§r
+## if your translating this file, this is where you can credit yourself. Ex: \n§oTranslated to Spanish by John Doe§r
 ui.addon_info:translator_credit= 
 ui.addon_info:body.paragraph:2=This addon was created as a passion project in my free time, I really hope you enjoy it! ^_^
 ui.addon_info:body.paragraph:3=If you have any questions, suggestions, or issues please feel free to reach out on github or discord.
