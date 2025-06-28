@@ -88,9 +88,11 @@ ui.op_manage_player.button:edit_claim_blocks=Edit Claim Blocks: §l%s§r
 ui.op_manage_player.button:delete_player_data=§cDelete Player Data§r
 
 ui.op_player_config:title=Player Config: %s
-ui.op_player_config.toggle:ignore_claim_block_requirements=Ignore Claim Block Requirements
-ui.op_player_config.toggle:disable_claim_block_hourly_payement=Disable Claim Block Hourly Payment
-ui.op_player_config.textbox:claim_blocks=Claim Block Balance
+ui.op_player_config.dropdown:claim_blocks_behavior=Claim Blocks Behavior
+ui.op_player_config.dropdown_option:default=Default
+ui.op_player_config.dropdown_option:disable_payment=Disable Hourly Payment
+ui.op_player_config.dropdown_option:unlimited=Unlimited
+ui.op_player_config.textbox:claim_blocks=Edit Claim Block Balance
 ui.op_player_config.textbox:claim_blocks_placeholder=Ex: 500
 ui.op_player_config.error:must_be_positive_number=§cYou must provide a positive number!§r
 
@@ -138,7 +140,8 @@ ui.manage.button:view=View Claim
 ui.manage.button:remove=§cRemove Claim§r
 
 ui.manage.remove:title=Remove Claim
-ui.manage.remove:body=Are you sure you want to remove this claim? The blocks will be returned to your balance.
+ui.manage.remove:body_1=Are you sure you want to remove this claim?
+ui.manage.remove:body_2=The blocks will be returned to your balance.
 ui.manage.remove:label:claim_blocks=§6Claim Blocks§r
 ui.manage.remove.button:confirm=§cRemove Claim§r
 ui.manage.remove.button:cancel=Cancel
@@ -183,7 +186,8 @@ ui.claim.new:title=New Claim
 ui.claim.new:submit=Create Claim
 
 ui.claim.resize:title=Resize Claim
-ui.claim.resize:body=Are you sure you want to resize this claim? The blocks will be added/subtracted from your balance.
+ui.claim.resize:body_1=Are you sure you want to resize this claim?
+ui.claim.resize:body_2=The blocks will be added/subtracted from your balance.
 ui.manage.resize:label:claim_blocks=§6Claim Blocks§r
 ui.claim.resize.button:cancel=Cancel
 ui.claim.resize.button:resize=§dResize Claim§r
