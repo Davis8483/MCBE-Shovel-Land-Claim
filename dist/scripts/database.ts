@@ -874,7 +874,12 @@ export class PlayerData {
 
         const defaultPlayerData = new PlayerData(data._id, data._name);
         const playerData = new PlayerData(data._id, data._name);
-        playerData.setSchemaVersion(data._schemaVersion || defaultPlayerData.schemaVersion)
+
+        // this will be used in future releases to migrate PlayerData to the latest version
+        const currentSchemaVersion = data._schemaVersion;
+        const latestSchemaVersion = defaultPlayerData.schemaVersion;
+
+        playerData.setSchemaVersion(latestSchemaVersion);
         playerData.setInClaim(data._inClaim !== undefined ? data._inClaim : defaultPlayerData.inClaim);
         playerData.setItemCharged(data._itemCharged !== undefined ? data._itemCharged : defaultPlayerData.itemCharged);
         playerData.setViewingClaim(data._viewingClaim !== undefined ? data._viewingClaim : defaultPlayerData.viewingClaim);
