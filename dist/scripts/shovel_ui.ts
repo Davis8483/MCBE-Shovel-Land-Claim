@@ -371,6 +371,7 @@ export class ShovelUI {
             .body({
                 "rawtext": [
                     { "translate": "ui.addon_info:body.paragraph:1" },
+                    { "translate": "ui.addon_info:translator_credit" },
                     { "text": "\n\n" },
                     { "translate": "ui.addon_info:body.paragraph:2" },
                     { "text": "\n\n" },
