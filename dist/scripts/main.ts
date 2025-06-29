@@ -805,7 +805,7 @@ system.runInterval(() => {
             playerData.setInClaim(false);
         }
     }
-});
+}, 10);
 
 // renders claim particles every 1 second
 system.runInterval(() => {
