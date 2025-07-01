@@ -100,13 +100,11 @@ export function updateShovelBehavior(player: Player, behaviorType: ShovelBehavio
 /**
  * Runs the callback for every claim saved in the database
  */
-export function runInAllClaims(callback: (playerID: string, playerName: string, claimData: Claim) => void) {
+export function runInAllClaims(callback: (claimData: Claim) => void) {
 
     for (var player of database) {
-
-        var claims = player.claims;
-        for (var claim of claims) {
-            callback(player.id, player.name, claim);
+        for (var claim of player.claims) {
+            callback(claim);
         }
     }
 }

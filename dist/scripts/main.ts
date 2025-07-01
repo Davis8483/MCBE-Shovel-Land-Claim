@@ -96,7 +96,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                     playerData.setResizingClaimName("");
                     playerData.setFirstPoint(data.block.location);
 
-                    runInAllClaims((playerID, playerName, claim) => {
+                    runInAllClaims((claim) => {
 
                         // user defined start and end points of the claim
                         var s = claim.start;
@@ -124,7 +124,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         // if broken block is on a claim corner
                         if (aIndex != null) {
                             isResize = true;
-                            if (playerID == data.player.id) {
+                            if (claim.getOwnerData().id == data.player.id) {
                                 playerData.setOppositeCorner({ "x": points[aIndex ^ 1][bIndex ^ 1][0], "y": data.block.y, "z": points[aIndex ^ 1][bIndex ^ 1][1] });
                                 playerData.setResizingClaimName(claim.name);
 
@@ -161,8 +161,8 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         const blockDifference = (newClaimLength * newClaimWidth) - (oldClaimLength * oldClaimWidth);
 
                         // make sure new claim isn't intersecting others not counting itself
-                        runInAllClaims((playerID, playerName, claim) => {
-                            if (claim.isOverlap(playerData.oppositeCorner, secondPoint) && ((playerID != data.player.id) || (claim.name != playerData.resizingClaimName))) {
+                        runInAllClaims((claim) => {
+                            if (claim.isOverlap(playerData.oppositeCorner, secondPoint) && ((claim.getOwnerData().id != data.player.id) || (claim.name != playerData.resizingClaimName))) {
                                 claimIntersectingClaim = true;
                             }
                         });
@@ -205,7 +205,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         const claimWidth = Math.abs(playerData.firstPoint.x - secondPoint.x) + 1;
                         const claimLength = Math.abs(playerData.firstPoint.z - secondPoint.z) + 1;
 
-                        runInAllClaims((playerID, playerName, claim) => {
+                        runInAllClaims((claim) => {
                             // make sure new claim isn't intersecting others
                             if (claim.isOverlap(playerData.firstPoint, secondPoint)) {
                                 claimIntersectingClaim = true;
@@ -264,7 +264,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
             data.cancel = true;
         }
         else if (data.dimension == world.getDimension("overworld")) {
-            runInAllClaims((playerID, playerName, claim) => {
+            runInAllClaims((claim) => {
                 // check if a block is broken by a player without permissions within the claim
                 if (claim.isOverlap(data.block, data.block) && !claim.hasPermission(PermissionTypes.BREAK_BLOCKS, data.player)) {
                     data.cancel = true;
@@ -290,7 +290,7 @@ world.beforeEvents.explosion.subscribe((data) => {
         var sendDisallowedNotification = false;
 
         // check if tnt blast effects a claim
-        runInAllClaims((playerID, playerName, claim) => {
+        runInAllClaims((claim) => {
 
             // if entity is a mob or player that doesn't have permissions
             if ((data.source.typeId != "minecraft:tnt") || !claim.hasPermission(PermissionTypes.USE_TNT)) {
@@ -354,7 +354,7 @@ world.afterEvents.pistonActivate.subscribe((data) => {
                 var b = block.offset(directionOffset);
             }
 
-            runInAllClaims((playerID, claimName, claim) => {
+            runInAllClaims((claim) => {
 
                 // if block is in claim but not piston
                 if (claim.isOverlap(b.location, b.location) && !claim.isOverlap(data.piston.block.location, data.piston.block.location)) {
@@ -399,7 +399,7 @@ world.beforeEvents.itemUse.subscribe((data) => {
     var disallowedItems = ["minecraft:splash_potion", "minecraft:lingering_potion", "minecraft:bow", "minecraft:crossbow"]
 
     if (disallowedItems.includes(data.itemStack.typeId) && (data.source.dimension == world.getDimension("overworld"))) {
-        runInAllClaims((playerID, playerName, claim) => {
+        runInAllClaims((claim) => {
 
             // if player has used the disallowed item in a claim
             if (claim.isOverlap(data.source.location, data.source.location) && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, data.source)) {
@@ -422,7 +422,7 @@ world.afterEvents.itemReleaseUse.subscribe((data) => {
 world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
     
     if (data.target.dimension == world.getDimension("overworld")) {
-        runInAllClaims((playerID, playerName, claim) => {
+        runInAllClaims((claim) => {
 
             const margin = 0.5;
             var start = { x: data.target.location.x - margin, y: data.target.location.y - margin, z: data.target.location.z - margin };
@@ -480,7 +480,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
     }
 
     if (data.block.dimension == world.getDimension("overworld")){
-        runInAllClaims((playerID, playerName, claim) => {
+        runInAllClaims((claim) => {
                 
             // door interaction permissions
             if (claim.isOverlap(data.block.location, data.block.location) && (data.block.typeId.includes("door") || data.block.typeId.includes("fence_gate")) && !data.player.isSneaking) {
@@ -570,7 +570,7 @@ system.runInterval(() => {
 
         e.setDynamicProperty("inClaim", false);
 
-        runInAllClaims((playerID, playerName, claim) => {
+        runInAllClaims((claim) => {
             if (e.isValid() && claim.isOverlap(e.location, e.location)) {
                 // update flag
                 e.setDynamicProperty("inClaim", true);
@@ -642,7 +642,7 @@ system.runInterval(() => {
                 playerData.setResizingClaimName("");
             }
 
-            runInAllClaims((playerID, playerName, claim) => {
+            runInAllClaims((claim) => {
 
                 // apply an offset to the player location to be more accurate with claim bounds
                 const location: Vector3 = { "x": p.location.x - 0.5, "y": p.location.y - 0.5, "z": p.location.z - 0.5 };
@@ -663,7 +663,7 @@ system.runInterval(() => {
                             {
                                 "rawtext": [
                                     { "translate": "actionbar.claim:name_color" },
-                                    { "text": `${claim.name}§r - ${playerName}` },
+                                    { "text": `${claim.name}§r - ${claim.getOwnerData().name}` },
                                 ]
                             });
                     }
@@ -811,7 +811,7 @@ system.runInterval(() => {
         const playerData = PlayerData.fromId(p.id);
 
         if (p.dimension == dimension) {
-            runInAllClaims((playerID, playerName, claim) => {
+            runInAllClaims((claim) => {
 
                 // user defined start and end points of the claim
                 var s = claim.start;
@@ -833,7 +833,7 @@ system.runInterval(() => {
 
                 var claimShovelOut = false;
 
-                if (p.id == playerID && p.getComponent(EntityComponentTypes.Inventory).container.getItem(p.selectedSlotIndex)?.matches(SHOVEL_ID)) {
+                if ((p.id == claim.getOwnerData().id) && p.getComponent(EntityComponentTypes.Inventory).container.getItem(p.selectedSlotIndex)?.matches(SHOVEL_ID)) {
                     // set flag
                     claimShovelOut = true;
                 }
