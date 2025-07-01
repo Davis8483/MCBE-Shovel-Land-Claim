@@ -266,7 +266,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
         else if (data.dimension == world.getDimension("overworld")) {
             runInAllClaims((playerID, playerName, claim) => {
                 // check if a block is broken by a player without permissions within the claim
-                if (claim.isOverlap(data.block, data.block) && (playerID != data.player.id) && !claim.hasPermission(PermissionTypes.BREAK_BLOCKS, data.player)) {
+                if (claim.isOverlap(data.block, data.block) && !claim.hasPermission(PermissionTypes.BREAK_BLOCKS, data.player)) {
                     data.cancel = true;
 
                     sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:break_blocks");
@@ -402,7 +402,7 @@ world.beforeEvents.itemUse.subscribe((data) => {
         runInAllClaims((playerID, playerName, claim) => {
 
             // if player has used the disallowed item in a claim
-            if (claim.isOverlap(data.source.location, data.source.location) && (playerID != data.source.id) && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, data.source)) {
+            if (claim.isOverlap(data.source.location, data.source.location) && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, data.source)) {
 
                 // cancel the action
                 data.cancel = true;
@@ -429,7 +429,7 @@ world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
             var end = { x: data.target.location.x + margin, y: data.target.location.y + margin, z: data.target.location.z + margin };
 
             // if player has interacted with an entity in a claim
-            if (claim.isOverlap(start, end) && (playerID != data.player.id)){
+            if (claim.isOverlap(start, end)){
                 // disallow player from interacting with rideable entities if they are not allowed to enter the claim
                 if (!claim.hasPermission(PermissionTypes.ENTER_CLAIM, data.player) && data.target.getComponent(EntityComponentTypes.Rideable)) {
                     // cancel the action
@@ -481,72 +481,68 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
 
     if (data.block.dimension == world.getDimension("overworld")){
         runInAllClaims((playerID, playerName, claim) => {
-        
-            // only check for permissions if player is not the owner
-            if (playerID != data.player.id){
                 
-                // door interaction permissions
-                if (claim.isOverlap(data.block.location, data.block.location) && (data.block.typeId.includes("door") || data.block.typeId.includes("fence_gate")) && !data.player.isSneaking) {
-                    if (!claim.hasPermission(PermissionTypes.USE_DOORS, data.player)){
-                        // cancel the action
-                        data.cancel = true;
+            // door interaction permissions
+            if (claim.isOverlap(data.block.location, data.block.location) && (data.block.typeId.includes("door") || data.block.typeId.includes("fence_gate")) && !data.player.isSneaking) {
+                if (!claim.hasPermission(PermissionTypes.USE_DOORS, data.player)){
+                    // cancel the action
+                    data.cancel = true;
 
-                        // notify player they don't have permissions
-                        sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:use_doors");
-                    
-                    }
+                    // notify player they don't have permissions
+                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:use_doors");
+                
                 }
-                // lever/button interaction permissions
-                else if (claim.isOverlap(data.block.location, data.block.location) && (data.block.matches("minecraft:lever") || data.block.typeId.includes("button")) && !data.player.isSneaking) {
-                    if (!claim.hasPermission(PermissionTypes.USE_SWITCHES, data.player)){
-                        // cancel the action
-                        data.cancel = true;
+            }
+            // lever/button interaction permissions
+            else if (claim.isOverlap(data.block.location, data.block.location) && (data.block.matches("minecraft:lever") || data.block.typeId.includes("button")) && !data.player.isSneaking) {
+                if (!claim.hasPermission(PermissionTypes.USE_SWITCHES, data.player)){
+                    // cancel the action
+                    data.cancel = true;
 
-                        // notify player they don't have permissions
-                        sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT,"chat.claim.permission:use_switches");
-                    }
+                    // notify player they don't have permissions
+                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT,"chat.claim.permission:use_switches");
                 }
-                // bed interaction permissions
-                else if (claim.isOverlap(data.block.location, data.block.location) && data.block.matches("minecraft:bed") && !data.player.isSneaking) {
-                    if (!claim.hasPermission(PermissionTypes.USE_BEDS, data.player)){
-                        // cancel the action
-                        data.cancel = true;
+            }
+            // bed interaction permissions
+            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.matches("minecraft:bed") && !data.player.isSneaking) {
+                if (!claim.hasPermission(PermissionTypes.USE_BEDS, data.player)){
+                    // cancel the action
+                    data.cancel = true;
 
-                        // notify player they don't have permissions
-                        sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:use_beds");
-                         
-                    }
+                    // notify player they don't have permissions
+                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:use_beds");
+                        
                 }
-                // opening chests/container permissions
-                else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Inventory) && !data.player.isSneaking) {
-                    if (!claim.hasPermission(PermissionTypes.OPEN_CONTAINERS, data.player)){
-                        // cancel the action
-                        data.cancel = true;
+            }
+            // opening chests/container permissions
+            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Inventory) && !data.player.isSneaking) {
+                if (!claim.hasPermission(PermissionTypes.OPEN_CONTAINERS, data.player)){
+                    // cancel the action
+                    data.cancel = true;
 
-                        // notify player they don't have permissions
-                        sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:open_containers");
-                    }
+                    // notify player they don't have permissions
+                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:open_containers");
                 }
-                // editing signs permissions
-                else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Sign) && !data.player.isSneaking && !data.itemStack?.matches("minecraft:honeycomb")) {
-                    if (!claim.hasPermission(PermissionTypes.EDIT_SIGNS, data.player)){
-                        // cancel the action
-                        data.cancel = true;
+            }
+            // editing signs permissions
+            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Sign) && !data.player.isSneaking && !data.itemStack?.matches("minecraft:honeycomb")) {
+                if (!claim.hasPermission(PermissionTypes.EDIT_SIGNS, data.player)){
+                    // cancel the action
+                    data.cancel = true;
 
-                        // notify player they don't have permissions
-                        sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:edit_signs");
-                    }
+                    // notify player they don't have permissions
+                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:edit_signs");
                 }
-                // block placing/using items on blocks permissions
-                else if ((claim.isOverlap(data.block, data.block) || claim.isOverlap(placedBlock, placedBlock)) && data.itemStack && !data.itemStack.matches(SHOVEL_ID)) {
-                    if (!claim.hasPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data.player)){
-                        // cancel the action
-                        data.cancel = true;
+            }
+            // block placing/using items on blocks permissions
+            else if ((claim.isOverlap(data.block, data.block) || claim.isOverlap(placedBlock, placedBlock)) && data.itemStack && !data.itemStack.matches(SHOVEL_ID)) {
+                if (!claim.hasPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data.player)){
+                    // cancel the action
+                    data.cancel = true;
 
-                        // notify player they don't have permissions
-                        sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:use_item_on_block");
-                          
-                    }
+                    // notify player they don't have permissions
+                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:use_item_on_block");
+                        
                 }
             }
         });
@@ -594,7 +590,7 @@ system.runInterval(() => {
                     }
                     else {
                         world.getPlayers().filter(p => p.id == projectile.owner?.id).forEach(p => {
-                            if ((playerID != p.id) && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, p)) {
+                            if (!claim.hasPermission(PermissionTypes.HURT_ENTITIES, p)) {
                                 e.remove();
 
                                 // notify player
@@ -657,7 +653,7 @@ system.runInterval(() => {
                     playerData.setInClaim(true);
 
                     // make sure player can't hurt entities if they don't have permission
-                    if ((playerID != p.id) && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, p)) {
+                    if (!claim.hasPermission(PermissionTypes.HURT_ENTITIES, p)) {
                         p.addEffect("weakness", 40, { "amplifier": 255, "showParticles": false });
                     }
 
@@ -673,7 +669,7 @@ system.runInterval(() => {
                     }
 
                     // if player is not allowed in claim, apply knockback to remove them
-                    if ((playerID != p.id) && !claim.hasPermission(PermissionTypes.ENTER_CLAIM, p) && !playerData.pendingEntranceDisallow) {
+                    if (!claim.hasPermission(PermissionTypes.ENTER_CLAIM, p) && !playerData.pendingEntranceDisallow) {
                         // player has entered claim
                         if (!inClaimOld && playerData.inClaim) {
 
@@ -734,7 +730,7 @@ system.runInterval(() => {
                     }
 
                     // don't allow the player to enter claim with a charged item
-                    if (!inClaimOld && playerData.itemCharged && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, p) && (playerID != p.id)) {
+                    if (!inClaimOld && playerData.itemCharged && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, p)) {
                         var inventory = p.getComponent(EntityComponentTypes.Inventory) as EntityInventoryComponent;
 
                         // copy the item we want to swap

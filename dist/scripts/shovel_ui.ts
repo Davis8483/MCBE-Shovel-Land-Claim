@@ -785,7 +785,7 @@ export class ShovelUI {
                     : listParent.claims.filter(c => c.isOverlap(p.location, p.location))[0];
 
                 // if a players enter claim permission has been removed while they are in the claim, notify the owner
-                if (claim && !claim.hasPermission(PermissionTypes.ENTER_CLAIM, p) && (playerData.id != claim.getOwnerData().id) && (playerID ? (playerData.id == playerID) : true)) {
+                if (claim && !claim.hasPermission(PermissionTypes.ENTER_CLAIM, p) && (playerID ? (playerData.id == playerID) : true)) {
                     
                     // set flag so the player is not ejected from the claim
                     playerData.setPendingEntranceDisallow(true);

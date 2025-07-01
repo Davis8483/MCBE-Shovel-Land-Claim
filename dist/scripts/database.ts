@@ -444,6 +444,11 @@ export class Claim {
     */
     hasPermission(permission: PermissionTypes, player?: Player): boolean {
 
+        // if the player is the owner of the claim then they have all permissions
+        if (player.id == this.getOwnerData().id) {
+            return true;
+        }
+
         var globalSearchResult = this.getOwnerData().playerPermissionsList.filter((p) => p.id == player.id);
         var claimSearchResult = this._playerPermissionsList.filter((p) => p.id == player.id);
         var perms: Permissions = this.permissions;
