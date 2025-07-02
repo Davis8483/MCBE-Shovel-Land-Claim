@@ -1,4 +1,4 @@
-import { EntityComponentTypes, EntityInventoryComponent, ItemLockMode, ItemStack, Player, Vector3, world } from "@minecraft/server";
+import { Entity, EntityComponentTypes, EntityInventoryComponent, EntityLeashableComponent, EntityQueryOptions, ItemLockMode, ItemStack, Player, StructureSaveMode, system, Vector3, world } from "@minecraft/server";
 import { Claim, database, settings, ShovelBehavior } from "./database";
 
 export const SHOVEL_ID = "slc:claim_shovel"
@@ -137,4 +137,46 @@ export function getClosestPlayer(blockLocation: Vector3): Player {
     }
 
     return closestPlayer;
+}
+
+/**
+ * Creates a save for an entity using the worlds structure manager.
+ * This is done in case the entity is killed by a disallowed player in one hit. (usually the health will be reset tho without a death, this is just a backup)
+ * 
+ * @param entity - Entity to save
+ */
+export function createEntitySave(entity: Entity): void {
+    // an extra delay to ensure all entity components have loaded properly
+    system.runTimeout(() => {
+        // make sure the entity still exists after the timeout
+        if (entity.isValid()) {
+
+            var queryOptions: EntityQueryOptions = {};
+            queryOptions.maxDistance = 1.5;
+            queryOptions.location = entity.location;
+
+            // prevent more than one entities from being saved to the structure
+            if (world.getDimension("overworld").getEntities(queryOptions).length == 1) {
+            
+                const structureID = (entity.id as unknown as number) * Math.random();
+
+                // filter out item stack entities to prevent performance issues
+                if (entity.id != "minecraft:item") {
+                    world.structureManager.createFromWorld("slc:" + structureID.toString(), world.getDimension("overworld"), entity.location, entity.location, {"includeBlocks": false, "includeEntities": true, "saveMode": StructureSaveMode.Memory});
+                }
+
+                entity.setDynamicProperty("structureID", structureID);
+            }
+
+            const leashComponent: EntityLeashableComponent = entity.getComponent(EntityComponentTypes.Leashable);
+
+            // if the entity is connected to a leash knot save its location
+            if (leashComponent && leashComponent.leashHolder && (leashComponent.leashHolderEntityId == "minecraft:leash_knot")) {
+                entity.setDynamicProperty("leashKnotLocation", leashComponent.leashHolder.location);
+            }
+            else {
+                entity.setDynamicProperty("leashKnotLocation"); // clear the property
+            }
+        }
+    }, 10)
 }

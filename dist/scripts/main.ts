@@ -1,9 +1,9 @@
-import { world, system, Player, Vector3, ItemStack, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, EntityProjectileComponent, MolangVariableMap, DimensionType, DimensionTypes, ItemLockMode, } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, EntityProjectileComponent, MolangVariableMap, DimensionType, DimensionTypes, ItemLockMode, EntityHealthComponent, EffectType, Dimension, EntityLeashableComponent, WorldAfterEvents, Structure, StructureSaveMode, Entity, } from '@minecraft/server';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { sendNotification } from './notifications.js';
 import { ShovelUI } from './shovel_ui.js';
-import { giveClaimShovel, unlockClaimShovel, runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior } from './utils.js'
+import { giveClaimShovel, unlockClaimShovel, runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior, createEntitySave } from './utils.js'
 
 world.afterEvents.playerJoin.subscribe((data) => {
 
@@ -388,35 +388,10 @@ world.afterEvents.pistonActivate.subscribe((data) => {
 
 world.beforeEvents.itemUse.subscribe((data) => {
 
-    PlayerData.fromId(data.source.id).setItemCharged(true);
-
     // disallow player from using items while viewing claim
     if (PlayerData.fromId(data.source.id).viewingClaim) {
         data.cancel = true;
     }
-
-    // disallowed items that could cause harm to an entity
-    var disallowedItems = ["minecraft:splash_potion", "minecraft:lingering_potion", "minecraft:bow", "minecraft:crossbow"]
-
-    if (disallowedItems.includes(data.itemStack.typeId) && (data.source.dimension == world.getDimension("overworld"))) {
-        runInAllClaims((claim) => {
-
-            // if player has used the disallowed item in a claim
-            if (claim.isOverlap(data.source.location, data.source.location) && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, data.source)) {
-
-                // cancel the action
-                data.cancel = true;
-
-                // notify player they don't have permissions
-                sendNotification(data.source, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:hurt_entities");
-                 
-            }
-        });
-    }
-});
-
-world.afterEvents.itemReleaseUse.subscribe((data) => {
-    PlayerData.fromId(data.source.id).setItemCharged(false);
 });
 
 world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
@@ -560,7 +535,194 @@ world.afterEvents.worldInitialize.subscribe(() => {
     world.getDimension("overworld").runCommandAsync("tickingarea remove claimView")
 });
 
-// player/entity management in claims
+/**
+ * Create an entity save after its loaded into the world, in case the entity is killed by a disallowed player.
+ */
+world.afterEvents.entityLoad.subscribe((data) => {
+    if (data.entity.dimension == world.getDimension("overworld")) {
+        createEntitySave(data.entity);
+    }
+})
+
+/**
+ * Create an entity save after its spawned, in case the entity is killed by a disallowed player.
+ * Also removes xp orbs spawned by disallowed killed entities.
+ */
+world.afterEvents.entitySpawn.subscribe((data) => {
+    if (data.entity.dimension == world.getDimension("overworld")) {
+        const disallowedEntityDeathLocation = world.getDynamicProperty("disallowedEntityDeathLocation") as Vector3; // the location that the xp orbs should be removed from
+        const xpRemoveRange = 10; // blocks away from the death location in the x and z
+
+        // if the entity is an xp orb, remove it if in range of the disallowed entities death location
+        if (data.entity.typeId == "minecraft:xp_orb" && disallowedEntityDeathLocation 
+            && (Math.sqrt((data.entity.location.x - disallowedEntityDeathLocation.x) ** 2 + (data.entity.location.z - disallowedEntityDeathLocation.z) ** 2) < xpRemoveRange)) {
+            data.entity.remove(); // bye bye xp :)
+
+            // unless already changed, remove the property after 2 seconds in case multiple xp orbs are spawned at once
+            const disallowedEntityDeathLocationOld = world.getDynamicProperty("disallowedEntityDeathLocation"); // save old value
+            system.runTimeout(() => {
+                if (disallowedEntityDeathLocationOld == world.getDynamicProperty("disallowedEntityDeathLocation")) {
+                    world.setDynamicProperty("disallowedEntityDeathLocation", undefined);
+                }
+            }, 2000);
+        }
+        // save the spawned entity
+        else {
+            createEntitySave(data.entity);
+        }
+    }
+});
+
+/**
+ * Create an entity save after a player has interacted with it or leashed it to a knot.
+ */
+world.afterEvents.playerInteractWithEntity.subscribe((data) => {
+    const dimension: Dimension = world.getDimension("overworld");
+
+    if (data.target.dimension == dimension) {
+        // if the target is a leash knot, save all entities that could be leashed to it
+        if (data.target.typeId == "minecraft:leash_knot") {
+            var queryOptions: EntityQueryOptions = {};
+            queryOptions.location = data.target.location;
+            queryOptions.maxDistance = 15;
+            dimension.getEntities(queryOptions).forEach((entity) => {
+                createEntitySave(entity);
+            })
+        }
+        // othewise just save the entity
+        else {
+            createEntitySave(data.target);
+        }
+    }
+});
+
+/**
+ * Detect if a player is leashing a mob to a fence and then save the entity.
+ */
+world.afterEvents.playerInteractWithBlock.subscribe((data) => {
+    const dimension: Dimension = world.getDimension("overworld");
+
+    if (data.player.dimension == dimension) {
+        var queryOptions: EntityQueryOptions = {};
+        queryOptions.maxDistance = 1;
+        queryOptions.type = "minecraft:leash_knot";
+        queryOptions.location = data.block.location;
+
+        var leashKnot = dimension.getEntities(queryOptions)[0];
+
+        // if a leashKnot exists at the block location, save all entities within a radius of 15 blocks
+        if (leashKnot) {
+            queryOptions.maxDistance = 15;
+            queryOptions.type = undefined;
+            dimension.getEntities(queryOptions).forEach((entity) => {
+                createEntitySave(entity);
+            })
+        }
+    }
+});
+
+/**
+ * If an entity is hurt by a disallowed player/mob reset its health, or (if killed) load its last save.
+ */
+world.afterEvents.entityHurt.subscribe((data) => {
+    const dimension: Dimension = world.getDimension("overworld");
+    const healthComponent: EntityHealthComponent = data.hurtEntity.getComponent(EntityComponentTypes.Health);
+    var damagePlayerSource: Player; // leaving as undefined will force hasPermission() to check the claims public permissions
+
+    // if the damaging entity is a player check their permissions to hurt it, otherwise if its a mob or unkown damage source use the claims public permissions
+    if (data.damageSource.damagingEntity && (data.damageSource.damagingEntity instanceof Player)) {
+        damagePlayerSource = data.damageSource.damagingEntity as Player;
+    }
+
+    if (data.hurtEntity.dimension == dimension) {
+        runInAllClaims((claimData: Claim) => {
+            if (claimData.isOverlap(data.hurtEntity.location, data.hurtEntity.location) && !claimData.hasPermission(PermissionTypes.HURT_ENTITIES, damagePlayerSource)) {
+               
+                // if it was a player that hurt the entity
+                if (damagePlayerSource) {
+
+                    // send the player a notification
+                    sendNotification(damagePlayerSource, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:hurt_entities");
+                }
+
+                // check if the game engine will count the entity as dead
+                if (healthComponent.currentValue > 0) {
+                    if (data.hurtEntity.typeId != "minecraft:player") {
+
+                        // if the entity is still considered alive we'll reset its health
+                        healthComponent.resetToDefaultValue();
+                    }
+
+                    createEntitySave(data.hurtEntity); // re-save the entity in case it doesn't have a save on file yet
+                }
+                // the engine considers the entity as dead so we'll go ahead and load its last save
+                else {
+
+                    // save the entity location so afterEvents.entitySpawn can clean up the xp
+                    world.setDynamicProperty("disallowedEntityDeathLocation", data.hurtEntity.location);
+
+                    // remove any dropped items
+                    var queryOptions: EntityQueryOptions = {};
+                    queryOptions.location = data.hurtEntity.location;
+                    queryOptions.maxDistance = 1;
+                    queryOptions.type = "minecraft:item";
+                    dimension.getEntities(queryOptions).forEach((entity) => {
+                        entity.remove();
+                    });
+
+                    const structureID = data.hurtEntity.getDynamicProperty("structureID") as string;
+
+                    // make sure the entity save exists
+                    if (structureID) {
+                        try {
+                            world.structureManager.place("slc:" + structureID, world.getDimension("overworld"), data.hurtEntity.location, {"includeBlocks": false, "includeEntities": true})
+                        }
+                        // if theres an error in the loading process, just spawn a new one
+                        catch (e) {
+                            dimension.spawnEntity(data.hurtEntity.typeId, data.hurtEntity.location);
+                        }
+                    }
+                    // the entity save couldn't be found, just spawn a new one
+                    else {
+                        dimension.spawnEntity(data.hurtEntity.typeId, data.hurtEntity.location);
+                    }
+
+                    const leashKnotLocation = data.hurtEntity.getDynamicProperty("leashKnotLocation") as Vector3;
+
+                    // if the entity was leashed to a knot, reattach it to the knot
+                    if (leashKnotLocation) {
+                        var queryOptions: EntityQueryOptions = {};
+                        queryOptions.maxDistance = 1;
+                        queryOptions.type = "minecraft:leash_knot";
+                        queryOptions.location = leashKnotLocation;
+                        var leashKnot = dimension.getEntities(queryOptions)[0];
+
+                        // the leash knot doesn't exist spawn a new one
+                        if (!leashKnot) {
+                            // use an in game command to summon a leash knot, for some reason the dimension.spawnEntity method won't
+                            dimension.runCommand(`summon minecraft:leash_knot ${leashKnotLocation.x} ${leashKnotLocation.y} ${leashKnotLocation.z}`)
+                            // leashKnot = dimension.spawnEntity("minecraft:leash_knot", leashKnotLocation);
+
+                            leashKnot = dimension.getEntities(queryOptions)[0];
+                        }
+
+                        var queryOptions: EntityQueryOptions = {};
+                        queryOptions.maxDistance = 1;
+                        queryOptions.type = data.hurtEntity.typeId;
+                        queryOptions.location = data.hurtEntity.location;
+                        dimension.getEntities(queryOptions).forEach((entity) => {
+                            const leashComponent: EntityLeashableComponent = entity.getComponent(EntityComponentTypes.Leashable);
+
+                            leashComponent.leashTo(leashKnot);
+                        });
+                    }
+                }
+            }
+        });
+    }
+});
+
+// core player/entity management in claims, runs every 10 ticks; 500 ms
 system.runInterval(() => {
 
     for (var e of world.getDimension("overworld").getEntities()) {
@@ -578,27 +740,6 @@ system.runInterval(() => {
                 // make sure fire charges and withers can't fly into claim
                 if (e.typeId == "minecraft:small_fireball" || e.typeId == "minecraft:wither") {
                     e.remove();
-                }
-
-                if (e.hasComponent(EntityComponentTypes.Projectile)) {
-                    const projectile = e.getComponent(EntityComponentTypes.Projectile) as EntityProjectileComponent;
-
-                    // disallow projectile from entering claim if it was not fired by a player
-                    if ((e.getDynamicProperty("inClaimOld") == false) && !projectile.owner) {
-                        e.remove();
-                        world.sendMessage("removed")
-                    }
-                    else {
-                        world.getPlayers().filter(p => p.id == projectile.owner?.id).forEach(p => {
-                            if (!claim.hasPermission(PermissionTypes.HURT_ENTITIES, p)) {
-                                e.remove();
-
-                                // notify player
-                                sendNotification(p, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:hurt_entities");
-                            }
-                        });
-                    }     
-
                 }
 
                 // set entrance velocity for entities
@@ -652,7 +793,7 @@ system.runInterval(() => {
 
                     playerData.setInClaim(true);
 
-                    // make sure player can't hurt entities if they don't have permission
+                    // add an aditional layer of protection to make sure player can't punch entities if they don't have permission
                     if (!claim.hasPermission(PermissionTypes.HURT_ENTITIES, p)) {
                         p.addEffect("weakness", 40, { "amplifier": 255, "showParticles": false });
                     }
@@ -728,53 +869,8 @@ system.runInterval(() => {
                             p.addEffect("wither", 40)
                         }
                     }
-
-                    // don't allow the player to enter claim with a charged item
-                    if (!inClaimOld && playerData.itemCharged && !claim.hasPermission(PermissionTypes.HURT_ENTITIES, p)) {
-                        var inventory = p.getComponent(EntityComponentTypes.Inventory) as EntityInventoryComponent;
-
-                        // copy the item we want to swap
-                        var swapItem = inventory.container.getItem((p.selectedSlotIndex + 1) % 9);
-
-                        inventory.container.moveItem(p.selectedSlotIndex, (p.selectedSlotIndex + 1) % 9, inventory.container);
-                        inventory.container.setItem(p.selectedSlotIndex, swapItem);
-
-                        playerData.setItemCharged(false);
-                    }
                 }
-
-                // var s = claim.start;
-                // var e = claim.end;
-
-                // // all 4 points of the claim
-                // var points = [
-                //     [[s.x, s.z], [s.x, e.z]],
-                //     [[e.x, s.z], [e.x, e.z]]
-                // ]
-
-                // var dimension = world.getDimension("overworld");
-
-                // // loop through all sides of the claim to remove flowing water/lava
-                // for (var a = 0; a < points.length; a++) {
-                //     for (var b = 0; b < points[a].length; b++) {
-
-                //         var sideStart = { "x": points[a][b][0] + 1, "y": dimension.heightRange.min, "z": points[a][b][1] + 1 };
-                //         var sideEnd = { "x": points[a ^ 1][b][0] - 1, "y": dimension.heightRange.max, "z": points[a ^ 1][b][1] - 1 };
-
-                //         var side = new BlockVolume(sideStart, sideEnd);
-
-                //         var flowingBlocks = dimension.getBlocks(side, {"includeTypes": ["minecraft:water", "minecraft:flowing_lava", "minecraft:stone"]}, true).getBlockLocationIterator()
-
-                //         for (var block of flowingBlocks) {
-
-                //             // remove the block
-                //             dimension.fillBlocks(new BlockVolume(block, block), "minecraft:air");
-                //         }
-                //     }
-                // }
             });
-
-
 
             // player has entered claim
             if (!inClaimOld && playerData.inClaim) {

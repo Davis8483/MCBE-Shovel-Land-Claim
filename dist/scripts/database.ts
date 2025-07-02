@@ -649,7 +649,6 @@ export class PlayerData {
     private _id: string;
     private _name: string;
     private _inClaim: boolean;
-    private _itemCharged: boolean;
     private _viewingClaim: boolean;
     private _resizingClaimName: string;
     private _firstPoint: Vector3;
@@ -666,7 +665,6 @@ export class PlayerData {
         this._id = playerID;
         this._name = playerName;
         this._inClaim = false;
-        this._itemCharged = false;
         this._viewingClaim = false;
         this._resizingClaimName = "";
         this._firstPoint = { x: 0, y: 0, z: 0 };
@@ -690,10 +688,6 @@ export class PlayerData {
 
     get inClaim(): boolean {
         return this._inClaim;
-    }
-
-    get itemCharged(): boolean {
-        return this._itemCharged;
     }
 
     get viewingClaim(): boolean {
@@ -753,11 +747,6 @@ export class PlayerData {
 
     setInClaim(value: boolean): void {
         this._inClaim = value;
-        saveDb();
-    }
-
-    setItemCharged(value: boolean): void {
-        this._itemCharged = value;
         saveDb();
     }
 
@@ -890,7 +879,6 @@ export class PlayerData {
 
         playerData.setSchemaVersion(latestSchemaVersion);
         playerData.setInClaim(data._inClaim !== undefined ? data._inClaim : defaultPlayerData.inClaim);
-        playerData.setItemCharged(data._itemCharged !== undefined ? data._itemCharged : defaultPlayerData.itemCharged);
         playerData.setViewingClaim(data._viewingClaim !== undefined ? data._viewingClaim : defaultPlayerData.viewingClaim);
         playerData.setResizingClaimName(data._resizingClaimName || defaultPlayerData._resizingClaimName);
         playerData.setFirstPoint(data._firstPoint || defaultPlayerData.firstPoint);
