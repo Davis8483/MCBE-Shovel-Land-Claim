@@ -727,34 +727,12 @@ system.runInterval(() => {
 
     for (var e of world.getDimension("overworld").getEntities()) {
 
-        // save the state of the entity's "in-claim" attribute before it is updated
-        e.setDynamicProperty("inClaimOld", e.getDynamicProperty("inClaim") as boolean | false);
-
-        e.setDynamicProperty("inClaim", false);
-
         runInAllClaims((claim) => {
             if (e.isValid() && claim.isOverlap(e.location, e.location)) {
-                // update flag
-                e.setDynamicProperty("inClaim", true);
 
                 // make sure fire charges and withers can't fly into claim
                 if (e.typeId == "minecraft:small_fireball" || e.typeId == "minecraft:wither") {
                     e.remove();
-                }
-
-                // set entrance velocity for entities
-                if (e.getDynamicProperty("inClaimOld") == false) {
-                    e.setDynamicProperty("entranceVelocity", e.getVelocity());
-                }
-
-                // disallow creepers from entering claims
-                if (e.getDynamicPropertyIds().includes("entranceVelocity") && e.typeId == "minecraft:creeper") {
-                    var xVelocity = (e.getDynamicProperty("entranceVelocity") as Vector3).x;
-                    var zVelocity = (e.getDynamicProperty("entranceVelocity") as Vector3).z;
-
-                    // eject from claim
-                    e.applyKnockback(-xVelocity, -zVelocity, 3, 0.5);
-
                 }
             }
         });
