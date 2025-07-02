@@ -38,6 +38,7 @@ chat.claim.permission:use_switches=§cYou're not allowed to use switches!§r
 chat.claim.permission:use_beds=§cYou're not allowed to use beds!§r
 chat.claim.permission:open_containers=§cYou're not allowed to open containers!§r
 chat.claim.permission:edit_signs=§cYou're not allowed to edit signs!§r
+chat.claim.fireballs=§cYou can't use fireballs in this claim!§r
 chat.claim:view=§cYou can only view a claim from the overworld!§r
 chat.claim:piston=§cYou can't use a piston from outside this claim!§r
 
