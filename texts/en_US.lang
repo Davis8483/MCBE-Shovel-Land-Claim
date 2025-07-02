@@ -5,6 +5,7 @@ chat.prefix=[§5SLC§r]
 chat.shovel:dimension_warning=§cYou can only create claims in the overworld§r
 
 chat.world:disabled_item=§cThis item/block has been disabled by your admin!§r
+chat.world:wither=§cYou're not allowed to spawn withers in the overworld!§r
 
 chat.claim:created=§aClaim created!§r
 chat.claim:removed=§cClaim removed.§r
