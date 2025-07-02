@@ -566,6 +566,22 @@ world.afterEvents.entitySpawn.subscribe((data) => {
                 }
             }, 2000);
         }
+        // disallow the wither from spawning in the overworld, as when damaged it will remove blocks and cause griefing
+        else if (data.entity.typeId == "minecraft:wither") {
+
+            // get the closest player to the wither spawn location, we will assume they spawned it
+            var closestPlayer: Player = getClosestPlayer(data.entity.location);
+
+            // notify player
+            sendNotification(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT, "chat.world:wither");
+
+            // return the items to the player
+            world.getDimension("overworld").spawnItem(new ItemStack("minecraft:wither_skeleton_skull", 3), data.entity.location);
+            world.getDimension("overworld").spawnItem(new ItemStack("minecraft:soul_sand", 4), data.entity.location);
+
+            // remove the wither
+            data.entity.remove();
+        }
         // save the spawned entity
         else {
             createEntitySave(data.entity);
@@ -730,8 +746,8 @@ system.runInterval(() => {
         runInAllClaims((claim) => {
             if (e.isValid() && claim.isOverlap(e.location, e.location)) {
 
-                // make sure fire charges and withers can't fly into claim
-                if (e.typeId == "minecraft:small_fireball" || e.typeId == "minecraft:wither") {
+                // make sure fire charges can't fly into claim
+                if (e.typeId == "minecraft:small_fireball") {
                     e.remove();
                 }
             }
