@@ -444,30 +444,34 @@ export class Claim {
     */
     hasPermission(permission: PermissionTypes, player?: Player): boolean {
 
-        // if the player is the owner of the claim then they have all permissions
-        if (player.id == this.getOwnerData().id) {
-            return true;
-        }
-
-        var globalSearchResult = this.getOwnerData().playerPermissionsList.filter((p) => p.id == player.id);
-        var claimSearchResult = this._playerPermissionsList.filter((p) => p.id == player.id);
         var perms: Permissions = this.permissions;
 
-        // check if player is in the claims permissions list
-        if (claimSearchResult.length > 0) {
-            perms = claimSearchResult[0];
-        }
-        // check if player is in global permissions list
-        else if (globalSearchResult.length > 0) {
-            perms = globalSearchResult[0];
+        if (player) {
+
+            // if the player is the owner of the claim then they have all permissions
+            if (player.id == this.getOwnerData().id) {
+                return true;
+            }
+
+            var globalSearchResult = this.getOwnerData().playerPermissionsList.filter((p) => p.id == player.id);
+            var claimSearchResult = this._playerPermissionsList.filter((p) => p.id == player.id);
+
+            // check if player is in the claims permissions list
+            if (claimSearchResult.length > 0) {
+                perms = claimSearchResult[0];
+            }
+            // check if player is in global permissions list
+            else if (globalSearchResult.length > 0) {
+                perms = globalSearchResult[0];
+            }
         }
 
         // check if the permission is valid
         if (perms.getPermission(permission) != undefined) {
             return perms.getPermission(permission);
         }
+        // the permission is somehow invalid, just return false
         else {
-            console.log(`Invalid permission: ${permission} for player: ${player.name}`);
             return false;
         }
     }
