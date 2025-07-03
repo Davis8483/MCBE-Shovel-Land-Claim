@@ -1,5 +1,5 @@
 import { Player, RawMessage } from '@minecraft/server';
-import { ActionFormData, ModalFormData, ModalFormResponse, MessageFormData } from '@minecraft/server-ui';
+import { ActionFormData, ModalFormData, ModalFormResponse, MessageFormData, ModalFormDataTextFieldOptions, ModalFormDataToggleOptions, ModalFormDataDropdownOptions, ModalFormDataSliderOptions } from '@minecraft/server-ui';
 
 var navigationStack: (() => void)[] = []; // Stack to manage back navigation
 
@@ -83,6 +83,38 @@ export class CallbackActionFormData {
     }
 
     /**
+     * Creates a label in the form.
+     * 
+     * @param text - The text to set as the label of the form.
+     * @returns - The current instance of the form for method chaining.
+     */
+    public label(text: RawMessage): this {
+        this.form.label(text);
+        return this;
+    }
+
+    /**
+     * Creates a divider in the form.
+     * 
+     * @returns - The current instance of the form for method chaining.
+     */
+    public divider(): this {
+        this.form.divider();
+        return this;
+    }
+
+    /**
+     * Creates a header in the form.
+     * 
+     * @param text - The text to set as the header of the form.
+     * @returns - The current instance of the form for method chaining.
+     */
+    public header(text: RawMessage): this {
+        this.form.header(text);
+        return this;
+    }
+
+    /**
      * Shows the action form to the player and executes the callback of the selected button.
      * 
      * @param player - The player to show the form to.
@@ -148,14 +180,14 @@ export class CallbackModalFormData {
      * 
      * @param label - The label for the text input.
      * @param placeholder - The placeholder text for the text input.
-     * @param defaultValue - The default value for the text input (optional).
+     * @param textFieldOptions - The default value for the text input (optional).
      * @param callback - The function to call when the button is pressed (optional).
      * @returns - The current instance of the form for method chaining.
      */
-    public textField(label: RawMessage, placeholder: RawMessage, defaultValue?: string, callback?: (value: string | RawMessage) => ModalDataCorrect | ModalDataError): this {
+    public textField(label: RawMessage, placeholder: RawMessage, textFieldOptions?: ModalFormDataTextFieldOptions, callback?: (value: string | RawMessage) => ModalDataCorrect | ModalDataError): this {
         this.callbacks.push({ callback: callback || (() => new ModalDataCorrect()) });
-        this.form.textField(label, placeholder, defaultValue);
-        this.formConstruction.push({ data: [label, placeholder, defaultValue], callback: (data) => this.textField(data[0], data[1], data[2], callback), isInputField: true });
+        this.form.textField(label, placeholder, textFieldOptions);
+        this.formConstruction.push({ data: [label, placeholder, textFieldOptions], callback: (data) => this.textField(data[0], data[1], data[2], callback), isInputField: true });
         return this;
     }
 
@@ -163,14 +195,14 @@ export class CallbackModalFormData {
      * Adds a toggle to the form with a callback function.
      * 
      * @param label - The label for the toggle.
-     * @param defaultValue - The default value for the toggle (optional).
+     * @param toggleOptions - The default value for the toggle (optional).
      * @param callback - The function to call when the button is pressed (optional).
      * @returns - The current instance of the form for method chaining.
      */
-    public toggle(label: RawMessage, defaultValue?: boolean, callback?: (value: boolean) => ModalDataCorrect | ModalDataError): this {
+    public toggle(label: RawMessage, toggleOptions?: ModalFormDataToggleOptions, callback?: (value: boolean) => ModalDataCorrect | ModalDataError): this {
         this.callbacks.push({ callback: callback || (() => new ModalDataCorrect()) });
-        this.form.toggle(label, defaultValue);
-        this.formConstruction.push({ data: [label, defaultValue], callback: (data) => this.toggle(data[0], data[1], callback), isInputField: true });
+        this.form.toggle(label, toggleOptions);
+        this.formConstruction.push({ data: [label, toggleOptions], callback: (data) => this.toggle(data[0], data[1], callback), isInputField: true });
         return this;
     }
 
@@ -183,10 +215,10 @@ export class CallbackModalFormData {
      * @param callback - The function to call when the button is pressed (optional).
      * @returns - The current instance of the form for method chaining.
      */
-    public dropdown(label: RawMessage, options: RawMessage[], defaultValueIndex?: number, callback?: (value: number) => ModalDataCorrect | ModalDataError): this {
+    public dropdown(label: RawMessage, options: RawMessage[], dropdownOptions?: ModalFormDataDropdownOptions, callback?: (value: number) => ModalDataCorrect | ModalDataError): this {
         this.callbacks.push({ callback: callback || (() => new ModalDataCorrect()) });
-        this.form.dropdown(label, options, defaultValueIndex);
-        this.formConstruction.push({ data: [label, options, defaultValueIndex], callback: (data) => this.dropdown(data[0], data[1], data[2], callback), isInputField: true });
+        this.form.dropdown(label, options, dropdownOptions);
+        this.formConstruction.push({ data: [label, options, dropdownOptions], callback: (data) => this.dropdown(data[0], data[1], data[2], callback), isInputField: true });
         return this;
     }
 
@@ -198,13 +230,13 @@ export class CallbackModalFormData {
      * @param maximumValue - The maximum value for the slider.
      * @param valueStep - The step value for the slider.
      * @param callback - The function to call when the button is pressed (optional).
-     * @param defaultValue - The default value for the slider (optional).
+     * @param sliderOptions - The default value for the slider (optional).
      * @returns - The current instance of the form for method chaining.
      */
-    public slider(label: RawMessage, minimumValue: number, maximumValue: number, valueStep: number, defaultValue?: number, callback?: (value: number) => ModalDataCorrect | ModalDataError): this {
+    public slider(label: RawMessage, minimumValue: number, maximumValue: number, sliderOptions?: ModalFormDataSliderOptions, callback?: (value: number) => ModalDataCorrect | ModalDataError): this {
         this.callbacks.push({ callback: callback || (() => new ModalDataCorrect()) });
-        this.form.slider(label, minimumValue, maximumValue, valueStep, defaultValue);
-        this.formConstruction.push({ data: [label, minimumValue, maximumValue, valueStep, defaultValue], callback: (data) => this.slider(data[0], data[1], data[2], data[3], data[4], callback), isInputField: true });
+        this.form.slider(label, minimumValue, maximumValue, sliderOptions);
+        this.formConstruction.push({ data: [label, minimumValue, maximumValue, sliderOptions], callback: (data) => this.slider(data[0], data[1], data[2], data[3], callback), isInputField: true });
         return this;
     }
 
@@ -219,6 +251,38 @@ export class CallbackModalFormData {
         this.formConstruction.push({ data: [text], callback: (data) => this.submitButton(data[0], callback), isInputField: false });
         return this;
     }
+
+        /**
+     * Creates a label in the form.
+     * 
+     * @param text - The text to set as the label of the form.
+     * @returns - The current instance of the form for method chaining.
+     */
+        public label(text: RawMessage): this {
+            this.form.label(text);
+            return this;
+        }
+    
+        /**
+         * Creates a divider in the form.
+         * 
+         * @returns - The current instance of the form for method chaining.
+         */
+        public divider(): this {
+            this.form.divider();
+            return this;
+        }
+    
+        /**
+         * Creates a header in the form.
+         * 
+         * @param text - The text to set as the header of the form.
+         * @returns - The current instance of the form for method chaining.
+         */
+        public header(text: RawMessage): this {
+            this.form.header(text);
+            return this;
+        }
 
     /**
      * Shows the modal form to the player and executes the callback of the selected button.
