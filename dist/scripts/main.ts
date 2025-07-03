@@ -50,7 +50,7 @@ world.afterEvents.playerLeave.subscribe((data) => {
 
     // remove claim view ticking area if player left while viewing a claim
     if (playerData.viewingClaim) {
-        world.getDimension("overworld").runCommandAsync("tickingarea remove claimView");
+        world.getDimension("overworld").runCommand("tickingarea remove claimView");
     }
 });
 
@@ -524,7 +524,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
     }
 });
 
-world.afterEvents.worldInitialize.subscribe(() => {
+system.beforeEvents.startup.subscribe(() => {
     // disable showing locked item text; the claim shovel is locked in the inventory
     world.gameRules.showTags = false;
 
@@ -532,7 +532,7 @@ world.afterEvents.worldInitialize.subscribe(() => {
     world.gameRules.doFireTick = false;
 
     // remove claim view ticking area if it exists
-    world.getDimension("overworld").runCommandAsync("tickingarea remove claimView")
+    world.getDimension("overworld").runCommand("tickingarea remove claimView")
 });
 
 /**
@@ -876,7 +876,7 @@ system.runInterval(() => {
                         // player did not teleport, bounce them out of the claim
                         else {
                             // apply knockback to the player and wither them
-                            p.applyKnockback(-velocity.x, -velocity.z, 3, 0.5);
+                            p.applyKnockback({"x": Math.sign(-velocity.x) * 3, "z": Math.sign(-velocity.z) * 3}, 0.5);
                             p.addEffect("wither", 40)
                         }
                     }

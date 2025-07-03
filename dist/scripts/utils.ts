@@ -149,7 +149,7 @@ export function createEntitySave(entity: Entity): void {
     // an extra delay to ensure all entity components have loaded properly
     system.runTimeout(() => {
         // make sure the entity still exists after the timeout
-        if (entity.isValid()) {
+        if (entity.isValid) {
 
             var queryOptions: EntityQueryOptions = {};
             queryOptions.maxDistance = 1.5;

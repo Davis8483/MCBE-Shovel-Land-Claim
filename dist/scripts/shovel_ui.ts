@@ -121,7 +121,7 @@ export class ShovelUI {
     private opAddonSettings() {
         const form = new CallbackModalFormData(() => this.opAddonSettings())
             .title({"translate": "ui.op_panel.addon_settings:title"})
-            .textField({"translate": "ui.op_panel.addon_settings.textbox:claim_block_payment"}, {"translate": "ui.op_panel.addon_settings.textbox:claim_block_payment_placeholder"}, settings.claimBlockHourlyPayment.toString(), (value) => {
+            .textField({"translate": "ui.op_panel.addon_settings.textbox:claim_block_payment"}, {"translate": "ui.op_panel.addon_settings.textbox:claim_block_payment_placeholder"}, {"defaultValue": settings.claimBlockHourlyPayment.toString()}, (value) => {
                 var newClaimBlockPayment = parseInt(value as string);
 
                 if (isNaN(newClaimBlockPayment) || newClaimBlockPayment < 0) {
@@ -135,7 +135,7 @@ export class ShovelUI {
                     return new ModalDataCorrect();
                 }
             })
-            .textField({"translate": "ui.op_panel.addon_settings.textbox:starting_claim_blocks"}, {"translate": "ui.op_panel.addon_settings.textbox:starting_claim_blocks_placeholder"}, settings.startingClaimBlocks.toString(), (value) => {
+            .textField({"translate": "ui.op_panel.addon_settings.textbox:starting_claim_blocks"}, {"translate": "ui.op_panel.addon_settings.textbox:starting_claim_blocks_placeholder"}, {"defaultValue": settings.startingClaimBlocks.toString()}, (value) => {
                 var newStartingClaimBlocks = parseInt(value as string);
 
                 if (isNaN(newStartingClaimBlocks) || newStartingClaimBlocks < 0) {
@@ -149,7 +149,7 @@ export class ShovelUI {
                     return new ModalDataCorrect();
                 }
             })
-            .textField({"translate": "ui.op_panel.addon_settings.textbox:claim_min_width"}, {"translate": "ui.op_panel.addon_settings.textbox:claim_min_width_placeholder"}, settings.claimMinimumWidth.toString(), (value) => {
+            .textField({"translate": "ui.op_panel.addon_settings.textbox:claim_min_width"}, {"translate": "ui.op_panel.addon_settings.textbox:claim_min_width_placeholder"}, {"defaultValue": settings.claimMinimumWidth.toString()}, (value) => {
                 var newClaimMinimumWidth = parseInt(value as string);
 
                 if (isNaN(newClaimMinimumWidth) || newClaimMinimumWidth < 0) {
@@ -163,7 +163,7 @@ export class ShovelUI {
                     return new ModalDataCorrect();
                 }
             })
-            .textField({"translate": "ui.op_panel.addon_settings.textbox:max_claim_amount"}, {"translate": "ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder"}, settings.maxClaimAmount.toString(), (value) => {
+            .textField({"translate": "ui.op_panel.addon_settings.textbox:max_claim_amount"}, {"translate": "ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder"}, {"defaultValue": settings.maxClaimAmount.toString()}, (value) => {
                 var newMaxClaimAmount = parseInt(value as string);
 
                 if (isNaN(newMaxClaimAmount) || newMaxClaimAmount < 0) {
@@ -186,7 +186,7 @@ export class ShovelUI {
                     {"translate": "ui.op_panel.addon_settings.dropdown_option:give_at_spawn"},
                     {"translate": "ui.op_panel.addon_settings.dropdown_option:must_be_crafted"}
                 ],
-                settings.claimShovelItemBehavior, (value) => {
+                {"defaultValueIndex": settings.claimShovelItemBehavior}, (value) => {
 
                 // loop through all online players to modify their inventory
                 for (var p of world.getAllPlayers()) {
@@ -247,13 +247,13 @@ export class ShovelUI {
                     {"translate": "ui.op_player_config.dropdown_option:disable_payment"},
                     {"translate": "ui.op_player_config.dropdown_option:unlimited"}
                 ],
-                playerData.claimBlocks.behavior, (value) => {
+                {"defaultValueIndex": playerData.claimBlocks.behavior}, (value) => {
 
                     playerData.claimBlocks.setBehavior(value)
 
                     return new ModalDataCorrect();
                 })
-            .textField({"translate": "ui.op_player_config.textbox:claim_blocks"}, {"translate": "ui.op_player_config.textbox:claim_blocks_placeholder"}, playerData.claimBlocks.amount.toString(), (value) => {
+            .textField({"translate": "ui.op_player_config.textbox:claim_blocks"}, {"translate": "ui.op_player_config.textbox:claim_blocks_placeholder"}, {"defaultValue": playerData.claimBlocks.amount.toString()}, (value) => {
                 var newClaimBlocks = parseInt(value as string);
 
                 if (isNaN(newClaimBlocks) || newClaimBlocks < 0) {
@@ -326,7 +326,7 @@ export class ShovelUI {
             .title({"translate": "ui.op_edit_disallowed_blocks:title"})
 
         if (add) {
-            form.textField({"translate": "ui.op_edit_disallowed_blocks.textbox:block_id"}, {"translate": "ui.op_edit_disallowed_blocks.textbox:block_id_placeholder"}, "", (value) => {
+            form.textField({"translate": "ui.op_edit_disallowed_blocks.textbox:block_id"}, {"translate": "ui.op_edit_disallowed_blocks.textbox:block_id_placeholder"}, {}, (value) => {
                 var blockId = value as string;
 
                 if (blockId == "") {
@@ -699,59 +699,59 @@ export class ShovelUI {
                     ]
                 }
             )
-            .toggle({"translate": "ui.manage.permissions:enter_claim"}, defaults.getPermission(PermissionTypes.ENTER_CLAIM), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:enter_claim"}, {"defaultValue": defaults.getPermission(PermissionTypes.ENTER_CLAIM)}, (value)=> {
                 target.setPermission(PermissionTypes.ENTER_CLAIM, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:break_blocks"}, defaults.getPermission(PermissionTypes.BREAK_BLOCKS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:break_blocks"}, {"defaultValue": defaults.getPermission(PermissionTypes.BREAK_BLOCKS)}, (value)=> {
                 target.setPermission(PermissionTypes.BREAK_BLOCKS, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:use_items_on_blocks"}, defaults.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:use_items_on_blocks"}, {"defaultValue": defaults.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS)}, (value)=> {
                 target.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:hurt_entities"}, defaults.getPermission(PermissionTypes.HURT_ENTITIES), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:hurt_entities"}, {"defaultValue":defaults.getPermission(PermissionTypes.HURT_ENTITIES)}, (value)=> {
                 target.setPermission(PermissionTypes.HURT_ENTITIES, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:interact_with_entities"}, defaults.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:interact_with_entities"}, {"defaultValue": defaults.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES)}, (value)=> {
                 target.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:use_doors"}, defaults.getPermission(PermissionTypes.USE_DOORS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:use_doors"}, {"defaultValue": defaults.getPermission(PermissionTypes.USE_DOORS)}, (value)=> {
                 target.setPermission(PermissionTypes.USE_DOORS, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:use_switches"}, defaults.getPermission(PermissionTypes.USE_SWITCHES), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:use_switches"}, {"defaultValue": defaults.getPermission(PermissionTypes.USE_SWITCHES)}, (value)=> {
                 target.setPermission(PermissionTypes.USE_SWITCHES, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:use_beds"}, defaults.getPermission(PermissionTypes.USE_BEDS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:use_beds"}, {"defaultValue": defaults.getPermission(PermissionTypes.USE_BEDS)}, (value)=> {
                 target.setPermission(PermissionTypes.USE_BEDS, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:open_containers"}, defaults.getPermission(PermissionTypes.OPEN_CONTAINERS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:open_containers"}, {"defaultValue": defaults.getPermission(PermissionTypes.OPEN_CONTAINERS)}, (value)=> {
                 target.setPermission(PermissionTypes.OPEN_CONTAINERS, value);
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:edit_signs"}, defaults.getPermission(PermissionTypes.EDIT_SIGNS), (value)=> {
+            .toggle({"translate": "ui.manage.permissions:edit_signs"}, {"defaultValue": defaults.getPermission(PermissionTypes.EDIT_SIGNS)}, (value)=> {
                 target.setPermission(PermissionTypes.EDIT_SIGNS, value);
 
                 return new ModalDataCorrect();
             })
 
         if (!playerID) {
-            form.toggle({"translate": "ui.manage.permissions:use_tnt"}, defaults.getPermission(PermissionTypes.USE_TNT), (value)=> {
+            form.toggle({"translate": "ui.manage.permissions:use_tnt"}, {"defaultValue": defaults.getPermission(PermissionTypes.USE_TNT)}, (value)=> {
                 target.setPermission(PermissionTypes.USE_TNT, value);
 
                 return new ModalDataCorrect();
@@ -845,7 +845,7 @@ export class ShovelUI {
             playerData.setViewingClaim(true);
 
             // disable player movement, besides sneaking which is used to cancel the view
-            this.player.inputPermissions.cameraEnabled = false;
+            this.player.inputPermissions.setPermissionCategory(InputPermissionCategory.Camera, false);
             this.player.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement, false);
 
             // hide hud
@@ -866,8 +866,8 @@ export class ShovelUI {
             }
 
             // load the claim, make sure to remove old ticking area if it exsists
-            this.player.runCommandAsync("tickingarea remove claimView"); // this will not break other players viewing session, their chunnk will still be rendered until the camera is gone
-            this.player.runCommandAsync(`tickingarea add ${claim.start.x} ${claim.start.y} ${claim.start.z} ${claim.end.x} ${claim.end.y} ${claim.end.z} claimView`);
+            this.player.runCommand("tickingarea remove claimView"); // this will not break other players viewing session, their chunnk will still be rendered until the camera is gone
+            this.player.runCommand(`tickingarea add ${claim.start.x} ${claim.start.y} ${claim.start.z} ${claim.end.x} ${claim.end.y} ${claim.end.z} claimView`);
 
             // all 4 points of the claim
             var points = [
@@ -983,7 +983,7 @@ export class ShovelUI {
         }
 
         // unload the claim
-        player.runCommandAsync("tickingarea remove claimView");
+        player.runCommand("tickingarea remove claimView");
                     
         transition.fadeTime.holdTime = 1;
         player.camera.fade(transition);
@@ -994,7 +994,7 @@ export class ShovelUI {
             playerData.setViewingClaim(false);
 
             // enable player movement again
-            player.inputPermissions.cameraEnabled = true;
+            player.inputPermissions.setPermissionCategory(InputPermissionCategory.Camera, true);
             player.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement, true);
 
             // show hud
@@ -1056,7 +1056,7 @@ export class ShovelUI {
                     { "text": newClaim ? "" : `: ${claim.name}` }
                 ]
             })
-            .textField({"translate": "ui.claim.config.textbox:name"}, {"translate": "ui.claim.config:name_placeholder"}, claim.name, (value) => {
+            .textField({"translate": "ui.claim.config.textbox:name"}, {"translate": "ui.claim.config:name_placeholder"}, {"defaultValue": claim.name}, (value) => {
                 var isUniqueName = true;
 
                 // names are used to identify claims, make sure player is using a unique name
@@ -1077,8 +1077,8 @@ export class ShovelUI {
 
                 return new ModalDataCorrect();
             })
-            .dropdown({"translate": "ui.claim.config.dropdown:icon"}, Object.keys(this.claimIcons).map((i)=>({"translate": i} as RawMessage)), Object.values(this.claimIcons).indexOf(claim.icon))
-            .toggle({"translate": "ui.claim.config.toggle:border_particles"}, claim.particlesEnabled)
+            .dropdown({"translate": "ui.claim.config.dropdown:icon"}, Object.keys(this.claimIcons).map((i)=>({"translate": i} as RawMessage)), {"defaultValueIndex": Object.values(this.claimIcons).indexOf(claim.icon)})
+            .toggle({"translate": "ui.claim.config.toggle:border_particles"}, {"defaultValue": claim.particlesEnabled})
             .submitButton({"translate": newClaim ? "ui.claim.new:submit" : "ui.claim.config.submit"}, (response) => {
                 var name = response.formValues[0].toString();
                 var iconPath = this.claimIcons[Object.keys(this.claimIcons)[response.formValues[1].toString()]];
