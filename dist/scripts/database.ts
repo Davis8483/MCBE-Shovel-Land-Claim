@@ -911,14 +911,12 @@ function saveSettings() {
 
 // save the database and settings when the world is shutting down
 system.beforeEvents.shutdown.subscribe(() => {
-    world.sendMessage("shutdown: saved database and settings");
     saveDb();
     saveSettings();
 });
 
 // periodically save the database and settings every 5 minutes in case of a crash
 system.runInterval(() => {
-    world.sendMessage("saved database and settings");
     saveDb();
     saveSettings();
 }, 20 * 60 * 5); // 20 ticks per second, 60 seconds per minute, 5 minutes
