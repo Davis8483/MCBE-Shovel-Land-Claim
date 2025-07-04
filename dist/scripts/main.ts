@@ -524,7 +524,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
     }
 });
 
-system.beforeEvents.startup.subscribe(() => {
+world.afterEvents.worldLoad.subscribe(() => {
     // disable showing locked item text; the claim shovel is locked in the inventory
     world.gameRules.showTags = false;
 
