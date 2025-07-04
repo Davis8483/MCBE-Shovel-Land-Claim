@@ -133,20 +133,6 @@ export class Settings{
     }
 }
 
-// make sure settings exist
-if (!world.getDynamicPropertyIds().includes("settings")) {
-    world.setDynamicProperty("settings", JSON.stringify(new Settings()));
-}
-
-// load settings and make sure it contains necessary keys
-export var settings = Settings.fromJSON(JSON.parse(world.getDynamicProperty("settings").toString()));
-
-// provide a function for saving the setttings
-function saveSettings() {
-    world.setDynamicProperty("settings", JSON.stringify(settings));
-}
-
-// MARK: load database ----------------------------------------------------------------------------------------------------------
 export enum PermissionTypes {
     ENTER_CLAIM = "enterClaim",
     BREAK_BLOCKS = "breakBlocks",
@@ -917,21 +903,32 @@ export class PlayerData {
 }
 
 export var database: PlayerData[] = [];
+export var settings: Settings;
 
-// compile database into a dict
-for (var id of world.getDynamicPropertyIds()) {
-    const property = world.getDynamicProperty(id);
+world.afterEvents.worldLoad.subscribe(() => {
+    // make sure settings exist
+    if (!world.getDynamicPropertyIds().includes("settings")) {
+        world.setDynamicProperty("settings", JSON.stringify(new Settings()));
+    }
 
-    if (id.includes("db.")) {
-        const parsedData = JSON.parse(property.toString());
+    // load settings and make sure it contains necessary keys
+    settings = Settings.fromJSON(JSON.parse(world.getDynamicProperty("settings").toString()));
 
-        // player id and name is required make sure it exists
-        if (Object.keys(parsedData).includes("_id") && Object.keys(parsedData).includes("_name")) {
-            const validatedData = PlayerData.fromJSON(parsedData);
-            database.push(validatedData);
+    // compile database into a dict
+    for (var id of world.getDynamicPropertyIds()) {
+        const property = world.getDynamicProperty(id);
+
+        if (id.includes("db.")) {
+            const parsedData = JSON.parse(property.toString());
+
+            // player id and name is required make sure it exists
+            if (Object.keys(parsedData).includes("_id") && Object.keys(parsedData).includes("_name")) {
+                const validatedData = PlayerData.fromJSON(parsedData);
+                database.push(validatedData);
+            }
         }
     }
-}
+});
 
 /**
  * Transfers the database from memory into long term storage using dynamic world properties
@@ -941,4 +938,11 @@ function saveDb() {
         // deconstruct database to save each players data as an individual dynamic property
         world.setDynamicProperty(`db.${playerData.id}`, JSON.stringify(playerData));
     }
+}
+
+/**
+ * Provide a function for saving the setttings
+ */
+function saveSettings() {
+    world.setDynamicProperty("settings", JSON.stringify(settings));
 }
