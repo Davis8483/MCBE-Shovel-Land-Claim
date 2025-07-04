@@ -915,8 +915,8 @@ system.beforeEvents.shutdown.subscribe(() => {
     saveSettings();
 });
 
-// periodically save the database and settings every 5 minutes in case of a crash
+// periodically save the database and settings every minute in case of a crash
 system.runInterval(() => {
     saveDb();
     saveSettings();
-}, 20 * 60 * 5); // 20 ticks per second, 60 seconds per minute, 5 minutes
+}, 20 * 60); // 20 ticks per second
