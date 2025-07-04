@@ -1,4 +1,4 @@
-import { world, Vector3, Player } from "@minecraft/server";
+import { world, Vector3, Player, system } from "@minecraft/server";
 
 export enum ShovelBehavior {
     LOCK_TO_INVENTORY = 0,
@@ -65,15 +65,12 @@ export class Settings{
 
     setClaimBlockHourlyPayment(value: number) {
         this._claimBlockHourlyPayment = value;
-        saveSettings();
     }
     setStartingClaimBlocks(value: number) {
         this._startingClaimBlocks = value;
-        saveSettings();
     }
     setClaimMinimumWidth(value: number) {
         this._claimMinimumWidth = value;
-        saveSettings();
     }
     /**
      * 
@@ -81,7 +78,6 @@ export class Settings{
      */
     setMaxClaimAmount(value: number) {
         this._maxClaimAmount = value;
-        saveSettings();
     }
     /**
      * Adds a block to the disallowed blocks list
@@ -90,7 +86,6 @@ export class Settings{
      */
     addDisallowedBlock(blockId: string) {
         this._disallowedBlocks.push(blockId);
-        saveSettings();
     }
 
     /**
@@ -100,7 +95,6 @@ export class Settings{
      */
     removeDisallowedBlock(blockId: string) {
         this._disallowedBlocks = this._disallowedBlocks.filter((block) => block !== blockId);
-        saveSettings();
     }
     
     /**
@@ -110,7 +104,6 @@ export class Settings{
      */
     setclaimShovelItemBehavior(value: ShovelBehavior) {
         this._claimShovelItemBehavior = value;
-        saveSettings();
     }
     
     /**
@@ -201,7 +194,6 @@ export class Permissions {
         else {
             console.log(`Invalid permission: ${permission}`);
         }
-        saveDb();
     }
 
     /**
@@ -340,32 +332,26 @@ export class Claim {
     // Setters
     setName(value: string) {
         this._name = value;
-        saveDb();
     }
 
     setStart(value: Vector3) {
         this._start = value;
-        saveDb();
     }
 
     setEnd(value: Vector3) {
         this._end = value;
-        saveDb();
     }
 
     setIcon(value: string) {
         this._icon = value;
-        saveDb();
     }
 
     setParticlesEnabled(value: boolean) {
         this._particlesEnabled = value;
-        saveDb();
     }
 
     addPlayerPermissions(playerPermissions: PlayerPermissions) {
         this._playerPermissionsList.push(playerPermissions);
-        saveDb();
     }
 
     removePlayerPermissions(playerId: string) {
@@ -381,8 +367,6 @@ export class Claim {
         }
 
         this._playerPermissionsList.splice(this._playerPermissionsList.indexOf(playerPermissions), 1);
-
-        saveDb();
     }
 
     getSize(): {width: number, length: number, area: number} {
@@ -578,7 +562,6 @@ export class PlayerClaimBlocks {
      */
     setAmount(value: number): void {
         this._amount = value;
-        saveDb();
     }
 
     /**
@@ -590,7 +573,6 @@ export class PlayerClaimBlocks {
     incrementAmount(value: number): void {
         if (this._behavior != ClaimBlocksBehavior.UNLIMITED) {
             this._amount += value;
-            saveDb();   
         }
     }
 
@@ -603,23 +585,19 @@ export class PlayerClaimBlocks {
     decrementAmount(value: number): void {
         if (this._behavior != ClaimBlocksBehavior.UNLIMITED) {
             this._amount -= value;
-            saveDb();
         }
     }
 
     decrementPaymentTime(): void {
         this._paymentTimeRemaining -= 1;
-        saveDb();
     }
 
     resetPaymentTime(): void {
         this._paymentTimeRemaining = 60; // reset to 60 minutes; 1 hour
-        saveDb();
     }
 
     setBehavior(value: ClaimBlocksBehavior): void {
         this._behavior = value;
-        saveDb()
     }
 
     static fromJSON(data: any): PlayerClaimBlocks {
@@ -723,62 +701,50 @@ export class PlayerData {
     // Setters
     setSchemaVersion(version: number[]): void {
         this._schemaVersion = version;
-        saveDb();
     }
 
     setName(newName: string): void {
         this._name = newName;
-        saveDb();
     }
 
     setInClaim(value: boolean): void {
         this._inClaim = value;
-        saveDb();
     }
 
     setViewingClaim(value: boolean): void {
         this._viewingClaim = value;
-        saveDb();
     }
 
     setResizingClaimName(value: string): void {
         this._resizingClaimName = value;
-        saveDb();
     }
 
     setFirstPoint(value: Vector3): void {
         this._firstPoint = value;
-        saveDb();
     }
 
     setOppositeCorner(value: Vector3): void {
         this._oppositeCorner = value;
-        saveDb();
     }
 
     setEntranceVelocity(value: Vector3): void {
         this._entranceVelocity = value;
-        saveDb();
     }
 
     setPreviousLocation(value: Vector3): void {
         this._previousLocation = value;
-        saveDb();
     }
 
     setPendingEntranceDisallow(value: boolean): void {
         this._pendingEntranceDisallow = value;
-        saveDb();
     }
 
     addClaim(claim: Claim): void {
         this._claims.push(claim);
-        saveDb();
     }
 
     removeClaim(claim: Claim): void {
         this._claims = this._claims.filter((c) => c !== claim);
-        saveDb();
     }
 
     getClaim(claimName: string): Claim | undefined {
@@ -787,12 +753,10 @@ export class PlayerData {
 
     addPlayerPermissions(playerPermissions: PlayerPermissions): void {
         this._playerPermissionsList.push(playerPermissions);
-        saveDb();
     }
 
     removePlayerPermissions(playerId: string): void {
         this._playerPermissionsList = this._playerPermissionsList.filter((p) => p.id !== playerId);
-        saveDb();
     }
 
     getPlayerPermissions(playerId: string): PlayerPermissions | undefined {
@@ -850,8 +814,6 @@ export class PlayerData {
             pData.removePlayerPermissions(this._id);
 
         }
-
-        saveDb();
     }
 
     static fromJSON(data: any): PlayerData {
@@ -946,3 +908,17 @@ function saveDb() {
 function saveSettings() {
     world.setDynamicProperty("settings", JSON.stringify(settings));
 }
+
+// save the database and settings when the world is shutting down
+system.beforeEvents.shutdown.subscribe(() => {
+    world.sendMessage("shutdown: saved database and settings");
+    saveDb();
+    saveSettings();
+});
+
+// periodically save the database and settings every 5 minutes in case of a crash
+system.runInterval(() => {
+    world.sendMessage("saved database and settings");
+    saveDb();
+    saveSettings();
+}, 20 * 60 * 5); // 20 ticks per second, 60 seconds per minute, 5 minutes
