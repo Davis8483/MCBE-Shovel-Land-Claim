@@ -770,6 +770,7 @@ world.afterEvents.projectileHitBlock.subscribe((data) => {
 
 // core player management in claims, runs every 10 ticks; 500 ms
 system.runInterval(() => {
+    const playerTeleportThreshold = 10; // max distance a player can move every 10 ticks before they are considered to have teleported
 
     for (var p of world.getAllPlayers()) {
 
@@ -802,6 +803,8 @@ system.runInterval(() => {
                 // if player is in the claim
                 if (claim.isOverlap(location, location)) {
 
+                    const distanceMoved = playerData.distanceToPrevLocation();
+
                     playerData.setInClaim(true);
 
                     // add an aditional layer of protection to make sure player can't punch entities if they don't have permission
@@ -828,16 +831,9 @@ system.runInterval(() => {
                             // save entrance velocity
                             playerData.setEntranceVelocity(p.getVelocity());
 
-                            // detect if player teleported into claim; entrance velocity is 0
-                            if (playerData.entranceVelocity.x == 0 || playerData.entranceVelocity.z == 0){
-
-                                // wait a second before playing sound so it is played at the teleported to location
-                                system.runTimeout(() => {
-                                    sendNotification(p, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:teleport_enter_claim");
-                                }, 10);
-                            }
-                            // player did not teleport, send a normal notif
-                            else {
+                            // don't send the notif if a player teleports into a claim, tp disallow notifs are handled later
+                            if (!(distanceMoved && (distanceMoved > playerTeleportThreshold))) {
+                                // player did not teleport, send a normal notif
                                 sendNotification(p, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:enter_claim");
                             }
                         }
@@ -863,14 +859,22 @@ system.runInterval(() => {
                             }, 20);
                         }
 
-                        // detect if player teleported into claim; entrance velocity is 0
-                        if (playerData.entranceVelocity.x == 0 || playerData.entranceVelocity.z == 0) {
+                        // detect if player teleported into claim
+                        if (distanceMoved && (distanceMoved > playerTeleportThreshold)) {
 
-                            // check to make sure tp location is outside of claim
+                            // check to make sure prev location is outside of claim
                             if (!claim.isOverlap(playerData.previousLocation, playerData.previousLocation)) {
 
                                 // teleport player back to last known location before teleport
                                 p.teleport(playerData.previousLocation);
+
+                                // wait a second before sending the notification, so the sound is played after the tp at the right location
+                                system.runTimeout(() => {
+                                    sendNotification(p, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:teleport_enter_claim");
+                                }, 10);
+                            }
+                            else {
+                                world.sendMessage("im a weird edge case that shouldn't exist, rawrrrr :3") // plsssss remove this before commiting
                             }
                         }
                         // player did not teleport, bounce them out of the claim

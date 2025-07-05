@@ -1,4 +1,4 @@
-import { world, Vector3, Player, system } from "@minecraft/server";
+import { world, Vector3, Player, system, EntityQueryOptions } from "@minecraft/server";
 
 export enum ShovelBehavior {
     LOCK_TO_INVENTORY = 0,
@@ -792,6 +792,34 @@ export class PlayerData {
         });
 
         return unsavedPlayers;
+    }
+
+    /**
+     * Calculates the distance between the current location and the previous location.
+     * Used to determine if the player has teleported.
+     * Player must be online otherwise it will return undefined.
+     * 
+     * @return - The distance between the current location and the previous location in blocks
+     */
+    distanceToPrevLocation(): number | undefined {
+
+        const player = world.getPlayers().find(p => p.id === this._id);
+
+        if (!player) {
+            return undefined; // player is not online
+        }
+
+        const currentLocation = player.location;
+        const previousLocation = this._previousLocation;
+
+        // calculate the distance using pythagorean theorem
+        const distance = Math.sqrt(
+            Math.pow(currentLocation.x - previousLocation.x, 2) +
+            Math.pow(currentLocation.y - previousLocation.y, 2) +
+            Math.pow(currentLocation.z - previousLocation.z, 2)
+        );
+
+        return distance;
     }
 
     /**
