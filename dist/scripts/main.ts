@@ -877,7 +877,7 @@ system.runInterval(() => {
                         // player did not teleport, bounce them out of the claim
                         else {
                             // apply knockback to the player and wither them
-                            p.applyKnockback({"x": Math.sign(-velocity.x) * 3, "z": Math.sign(-velocity.z) * 3}, 0.5);
+                            p.applyKnockback({"x": (-velocity.x + (Math.sign(-velocity.x) * 0.05)) * 10, "z": (-velocity.z + (Math.sign(-velocity.z) * 0.05)) * 10}, 0.5);
                             p.addEffect("wither", 40)
                         }
                     }
