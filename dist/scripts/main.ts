@@ -873,9 +873,6 @@ system.runInterval(() => {
                                     sendNotification(p, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:teleport_enter_claim");
                                 }, 10);
                             }
-                            else {
-                                world.sendMessage("im a weird edge case that shouldn't exist, rawrrrr :3") // plsssss remove this before commiting
-                            }
                         }
                         // player did not teleport, bounce them out of the claim
                         else {
