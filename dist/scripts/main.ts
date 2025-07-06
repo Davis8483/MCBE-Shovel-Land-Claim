@@ -25,19 +25,24 @@ world.afterEvents.playerJoin.subscribe((data) => {
     // if player is not in a claim this flag will automatically be set back to false
     playerData.setPendingEntranceDisallow(true);
 
+    // Wait for the player to be fully loaded and defined within the world
+    let intervalId = system.runInterval(() => {
+        const player = world.getAllPlayers().find(p => p.id === data.playerId);
+        if (player) {
+            system.clearRun(intervalId);
 
-    const player = world.getAllPlayers().find(p => p.id === data.playerId);
-    
-    // updates how the shovel is stored/given to the player; ex: locking to inventory
-    updateShovelBehavior(player, settings.claimShovelItemBehavior)
+            // updates how the shovel is stored/given to the player; ex: locking to inventory
+            updateShovelBehavior(player, settings.claimShovelItemBehavior)
 
-    // if the player hasn't seen the changelog yet
-    if (!playerData.shownChangeLog) {
-        new ShovelUI(player).viewChangeLog();
+            // if the player hasn't seen the changelog yet
+            if (!playerData.shownChangeLog) {
+                new ShovelUI(player).viewChangeLog();
 
-        // set shownChangeLog to true so it doesn't show again
-        playerData.setShownChangeLog(true);
-    }
+                // set shownChangeLog to true so it doesn't show again
+                playerData.setShownChangeLog(true);
+            }
+        }
+    }, 10);
 });
 
 world.afterEvents.playerLeave.subscribe((data) => {
