@@ -609,7 +609,8 @@ export class PlayerClaimBlocks {
 }
 
 export class PlayerData {
-    private _schemaVersion: number[];
+    private _schemaVersion: string;
+    private _shownChangeLog: boolean;
     private _id: string;
     private _name: string;
     private _inClaim: boolean;
@@ -625,7 +626,8 @@ export class PlayerData {
     private _playerPermissionsList: PlayerPermissions[];
 
     constructor(playerID: string, playerName: string) {
-        this._schemaVersion = [1, 0, 2]; // version 1.0.2
+        this._schemaVersion = "v1.0.3";
+        this._shownChangeLog = true; // default to true so new players don't see the changelog
         this._id = playerID;
         this._name = playerName;
         this._inClaim = false;
@@ -694,12 +696,24 @@ export class PlayerData {
         return this._playerPermissionsList;
     }
 
-    get schemaVersion(): number[] {
+    get schemaVersion(): string {
         return this._schemaVersion;
     }
 
-    // Setters
-    setSchemaVersion(version: number[]): void {
+    get shownChangeLog(): boolean {
+        return this._shownChangeLog;
+    }
+
+    /**
+     * Setting this to false will show the changelog to the player.
+     * 
+     * @param value - Whether the changelog has been shown to the player or not.
+     */
+    setShownChangeLog(value: boolean): void {
+        this._shownChangeLog = value;
+    }
+
+    setSchemaVersion(version: string): void {
         this._schemaVersion = version;
     }
 
@@ -853,7 +867,18 @@ export class PlayerData {
         const currentSchemaVersion = data._schemaVersion;
         const latestSchemaVersion = defaultPlayerData.schemaVersion;
 
+        // upgrading from v1.0.2 to v1.0.3, schema version is broken in v1.0.2
+        if (currentSchemaVersion == undefined) {
+            /**
+             * v1.0.3 only adds new properties, this should be handeled already by this fromJSON function
+             */
+            
+            // fromJSON only loads existing players, set the flag so they see the changelog
+            playerData.setShownChangeLog(false);
+        }
+
         playerData.setSchemaVersion(latestSchemaVersion);
+        playerData.setShownChangeLog(data._shownChangeLog !== undefined ? data._shownChangeLog : defaultPlayerData.shownChangeLog);
         playerData.setInClaim(data._inClaim !== undefined ? data._inClaim : defaultPlayerData.inClaim);
         playerData.setViewingClaim(data._viewingClaim !== undefined ? data._viewingClaim : defaultPlayerData.viewingClaim);
         playerData.setResizingClaimName(data._resizingClaimName || defaultPlayerData._resizingClaimName);

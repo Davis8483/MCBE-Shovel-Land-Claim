@@ -38,7 +38,7 @@ export class ShovelUI {
         var playerData: PlayerData = PlayerData.fromId(this.player.id);
 
         const form = new CallbackActionFormData(() => this.main())
-            .title({"translate": "ui.main:title"})
+            .title({"translate": "ui.main:title", "with": [playerData.schemaVersion]})
             .body({
                 "rawtext": [
                     { "translate": "ui.main:body.paragraph:1" },
@@ -385,6 +385,7 @@ export class ShovelUI {
                     { "text": "\n\n" }
                 ]
             })
+            .button({"translate": "ui.addon_info.button:changelog"}, undefined, () => {this.viewChangeLog();})
             .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();})
             .show(this.player);
     }
@@ -1109,6 +1110,29 @@ export class ShovelUI {
                     navigateBack();
                 }
             });
+
+        form.show(this.player);
+    }
+
+    public viewChangeLog() {
+        const playerData = PlayerData.fromId(this.player.id);
+        const version = playerData.schemaVersion;
+
+        const form = new CallbackActionFormData(() => this.viewChangeLog())
+            .title({"translate": "ui.changelog:title", "with": [version]})
+            .body({"translate": "ui.addon_info:body.paragraph:1"})
+            .label({"translate": "ui.changelog.label:1", "with": [version]})
+            .divider()
+            .label({"translate": "ui.changelog.label:2"})
+            .label({"translate": "ui.changelog.label:3"})
+            .label({"translate": "ui.changelog.label:4"})
+            .label({"translate": "ui.changelog.label:5"})
+            .label({"translate": "ui.changelog.label:6"})
+            .label({"translate": "ui.changelog.label:7"})
+            .label({"translate": "ui.changelog.label:8"})
+            .label({"translate": "ui.changelog.label:9"})
+            .label({"translate": "ui.changelog.label:10"})
+            .button({"translate": "ui.changelog.button:back"}, undefined, () => {this.main();});
 
         form.show(this.player);
     }

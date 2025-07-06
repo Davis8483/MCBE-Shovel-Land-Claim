@@ -7,40 +7,36 @@ import { giveClaimShovel, unlockClaimShovel, runInAllClaims, getClosestPlayer, S
 
 world.afterEvents.playerJoin.subscribe((data) => {
 
-    // verify player data is on file
-    var playerFound = false;
-
-    for (var pD of database) {
-        if (pD.id == data.playerId) {
-
-            // update player name in db to current; in case they changed it
-            pD.setName(data.playerName);
-
-            // set other values to default
-            pD.setViewingClaim(false);
-            pD.setResizingClaimName("");
-
-            // if player is not in a claim this flag will automatically be set back to false
-            pD.setPendingEntranceDisallow(true);
-
-            playerFound = true;
-            break;
-        }
-    }
+    const playerData= PlayerData.fromId(data.playerId);
 
     // player is not saved in db
-    if (!playerFound) {
+    if (!playerData) {
         // create new player in db
         database.push(new PlayerData(data.playerId, data.playerName));
     }
 
-    // get player object
-    for (var p of world.getAllPlayers()){
-        if (p.id == data.playerId){
+    // update player name in db to current; in case they changed it
+    playerData.setName(data.playerName);
 
-            // updates how the shovel is stored/given to the player; ex: locking to inventory
-            updateShovelBehavior(p, settings.claimShovelItemBehavior)
-        }
+    // set other values to default
+    playerData.setViewingClaim(false);
+    playerData.setResizingClaimName("");
+
+    // if player is not in a claim this flag will automatically be set back to false
+    playerData.setPendingEntranceDisallow(true);
+
+
+    const player = world.getAllPlayers().find(p => p.id === data.playerId);
+    
+    // updates how the shovel is stored/given to the player; ex: locking to inventory
+    updateShovelBehavior(player, settings.claimShovelItemBehavior)
+
+    // if the player hasn't seen the changelog yet
+    if (!playerData.shownChangeLog) {
+        new ShovelUI(player).viewChangeLog();
+
+        // set shownChangeLog to true so it doesn't show again
+        playerData.setShownChangeLog(true);
     }
 });
 
