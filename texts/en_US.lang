@@ -48,7 +48,7 @@ chat.shovel:how_to_craft=Craft a §5Claim Shovel§r by surrounding any vanilla s
 ui.global.button:back=<< Back
 ui.global.button:save=Save
 
-ui.main:title=§5Shovel§r Land Claim v1.0.2
+ui.main:title=§5Shovel§r Land Claim %s
 ui.main.op_mode:title=Manage Player: %s
 ui.main:body.paragraph:1=Welcome to Land Claim!
 ui.main:body.paragraph:2=§bCreate a claim§r by breaking two opposite corners.
@@ -133,6 +133,7 @@ ui.addon_info:body.paragraph:3=If you have any questions, suggestions, or issues
 ui.addon_info:body.paragraph:4=§l§9GitHub§r: https://github.com/Davis8483/MCBE-Shovel-Land-Claim
 ui.addon_info:body.paragraph:5=§l§9Discord§r: https://discord.gg/JGsXDubjek
 ui.addon_info:body.paragraph:6=§oShovel Land Claim by nDavis is licensed under CC BY-NC-SA 4.0§r
+ui.addon_info.button:changelog=View Latest Changelog
 
 ui.manage:title=Manage Claim
 ui.manage.body:claim_start=Claim Start: §cX§r=%s §9Z§r=%s
@@ -210,5 +211,18 @@ ui.claim.icons:bed=Bed
 ui.claim.icons:farmland=Farmland
 ui.claim.icons:weapons=Weapons
 ui.claim.icons:flowers=Flowers
+
+ui.changelog:title=%s Changelog
+ui.changelog.label:1=§9Welcome to %s, this update is primarily for bug fixes and operator features.
+ui.changelog.label:2=- Eliminated the server/realm lag caused by this addon.
+ui.changelog.label:3=- Reimplemented entity protection to be event driven making it extremely reliable, especially when hit with disallowed projectiles.
+ui.changelog.label:4=- Fixed issue causing hotbar items to sometimes swap when entering a claim.
+ui.changelog.label:5=- Fixed issue with teleport detection; this is done to revert a teleport if your not allowed in a claim.
+ui.changelog.label:6=- Added an op option to change how the claim shovel is distributed to players. Options: Lock to Inventory, Give at Spawn, Must be Crafted. Found in the addon config page.
+ui.changelog.label:7=- New player config page in the op manage player menu.
+ui.changelog.label:8=- Moved edit claim blocks to the op player config page.
+ui.changelog.label:9=- Added an op option to change claim block behavior. Options: Default, Disable Payment, Unlimited. Found in the player config page.
+ui.changelog.label:10=- Added in game changelogs... hi there :D
+ui.changelog.button:back=<< Main Menu
 
 actionbar.claim:name_color=§5
