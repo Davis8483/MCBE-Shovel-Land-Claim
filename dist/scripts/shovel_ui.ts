@@ -97,7 +97,7 @@ export class ShovelUI {
 
         const form = new CallbackActionFormData(() => this.opPanel())
             .title({"translate": "ui.op_panel:title"})
-            .button({"translate": "ui.op_panel.addon_settings:title"}, "textures/ui/icon_setting.png", () => {this.opAddonSettings()})
+            .button({"translate": "ui.op_panel.addon_settings:title"}, "textures/ui/icon_setting.png", () => {this.opAddonConfig()})
             .button({"translate": "ui.op_panel.button:manage_players"}, "textures/ui/multiplayer_glyph_color.png", () => {this.opPlayerList()})
             .button({"translate": "ui.op_panel.button:disallowed_blocks"}, "textures/blocks/barrier.png", () => {this.opDisallowedBlocks()})
             .button({"translate": "ui.global.button:back"}, undefined, () => {this.opModeActive = false; navigateBack();})
@@ -118,9 +118,13 @@ export class ShovelUI {
         form.show(this.player);
     }
 
-    private opAddonSettings() {
-        const form = new CallbackModalFormData(() => this.opAddonSettings())
+    private opAddonConfig() {
+        var startingClaimBlocksOld = settings.startingClaimBlocks
+
+        const form = new CallbackModalFormData(() => this.opAddonConfig())
             .title({"translate": "ui.op_panel.addon_settings:title"})
+            .header({"translate": "ui.op_panel.addon_settings.header:claim_blocks_section"})
+            .divider()
             .textField({"translate": "ui.op_panel.addon_settings.textbox:claim_block_payment"}, {"translate": "ui.op_panel.addon_settings.textbox:claim_block_payment_placeholder"}, {"defaultValue": settings.claimBlockHourlyPayment.toString()}, (value) => {
                 var newClaimBlockPayment = parseInt(value as string);
 
@@ -149,6 +153,26 @@ export class ShovelUI {
                     return new ModalDataCorrect();
                 }
             })
+            .toggle({"translate": "ui.op_panel.addon_settings.toggle:update_existing_balances"}, {"defaultValue": false, "tooltip": {"translate": "ui.op_panel.addon_settings.tooltip:update_existing_balances"}}, (value) => {
+                // if toggle is enabled
+                if (value) {
+                    // if Starting Balance field was changed go through and update all player balances to reflect it
+                    if (startingClaimBlocksOld != settings.startingClaimBlocks) {
+                        database.forEach((p: PlayerData) => {
+                            p.claimBlocks.incrementAmount(settings.startingClaimBlocks - startingClaimBlocksOld)
+                        })
+                    }
+                    // the Starting Balance field was not changed, raise an error for the user
+                    else {
+                        return new ModalDataError("ui.op_panel.addon_settings.error:must_change_starting_claim_blocks")
+                    }
+                }
+
+                return new ModalDataCorrect();
+            })
+            .label({"text": ""})
+            .header({"translate": "ui.op_panel.addon_settings.header:claim_section"})
+            .divider()
             .textField({"translate": "ui.op_panel.addon_settings.textbox:claim_min_width"}, {"translate": "ui.op_panel.addon_settings.textbox:claim_min_width_placeholder"}, {"defaultValue": settings.claimMinimumWidth.toString()}, (value) => {
                 var newClaimMinimumWidth = parseInt(value as string);
 
@@ -177,10 +201,10 @@ export class ShovelUI {
                     return new ModalDataCorrect();
                 }
             })
-
-            
-
-            form.dropdown({"translate": "ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior"},
+            .label({"text": ""})
+            .header({"translate": "ui.op_panel.addon_settings.header:claim_shovel_section"})
+            .divider()
+            .dropdown({"translate": "ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior"},
                 [
                     {"translate": "ui.op_panel.addon_settings.dropdown_option:lock_to_inventory"},
                     {"translate": "ui.op_panel.addon_settings.dropdown_option:give_at_spawn"},
@@ -198,6 +222,7 @@ export class ShovelUI {
 
                 return new ModalDataCorrect();
             })
+            .label({"text": ""})
             .submitButton({"translate": "ui.op_panel.addon_settings.button:save"}, (response) => {
                 playSound(this.player, AddonSounds.Claim.SAVE);
                 navigateBack();
