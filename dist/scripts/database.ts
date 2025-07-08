@@ -867,16 +867,6 @@ export class PlayerData {
         const currentSchemaVersion = data._schemaVersion;
         const latestSchemaVersion = defaultPlayerData.schemaVersion;
 
-        // upgrading from v1.0.2 to v1.0.3, schema version is broken in v1.0.2
-        if (currentSchemaVersion == undefined) {
-            /**
-             * v1.0.3 only adds new properties, this should be handeled already by this fromJSON function
-             */
-            
-            // fromJSON only loads existing players, set the flag so they see the changelog
-            playerData.setShownChangeLog(false);
-        }
-
         playerData.setSchemaVersion(latestSchemaVersion);
         playerData.setShownChangeLog(data._shownChangeLog !== undefined ? data._shownChangeLog : defaultPlayerData.shownChangeLog);
         playerData.setInClaim(data._inClaim !== undefined ? data._inClaim : defaultPlayerData.inClaim);
@@ -898,6 +888,16 @@ export class PlayerData {
         .map(PlayerPermissions.fromJSON)
         .filter(permission => permission.id !== undefined && permission.name !== undefined) 
         : defaultPlayerData.playerPermissionsList;
+
+        // upgrading from v1.0.2 to v1.0.3, schema version is broken in v1.0.2
+        if (currentSchemaVersion == undefined) {
+            /**
+             * v1.0.3 only adds new properties, this should be handeled already by this fromJSON function
+             */
+            
+            // fromJSON only loads existing players, set the flag so they see the changelog
+            playerData.setShownChangeLog(false);
+        }
 
         return playerData;
     }

@@ -33,14 +33,6 @@ world.afterEvents.playerJoin.subscribe((data) => {
 
             // updates how the shovel is stored/given to the player; ex: locking to inventory
             updateShovelBehavior(player, settings.claimShovelItemBehavior)
-
-            // if the player hasn't seen the changelog yet
-            if (!playerData.shownChangeLog) {
-                new ShovelUI(player).viewChangeLog();
-
-                // set shownChangeLog to true so it doesn't show again
-                playerData.setShownChangeLog(true);
-            }
         }
     }, 10);
 });
@@ -66,8 +58,20 @@ world.afterEvents.playerSpawn.subscribe((data) => {
 
 // open menu when claim shovel is used
 world.afterEvents.itemUse.subscribe((data) => {
+    const playerData = PlayerData.fromId(data.source.id)
+
     if (data.itemStack.typeId == SHOVEL_ID) {
-        new ShovelUI(data.source).main();
+        // if the player hasn't seen the changelog yet
+        if (!playerData.shownChangeLog) {
+            new ShovelUI(data.source).viewChangeLog();
+
+            // set shownChangeLog to true so it doesn't show again
+            playerData.setShownChangeLog(true);
+        }
+        // otherwise just show the main menu
+        else {
+            new ShovelUI(data.source).main();
+        }
     };
 });
 
