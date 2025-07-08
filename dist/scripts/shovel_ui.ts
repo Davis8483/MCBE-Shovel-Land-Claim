@@ -1158,6 +1158,7 @@ export class ShovelUI {
             .label({"translate": "ui.changelog.label:9"})
             .label({"translate": "ui.changelog.label:10"})
             .label({"translate": "ui.changelog.label:11"})
+            .label({"translate": "ui.changelog.label:12"})
             .button({"translate": "ui.changelog.button:back"}, undefined, () => {this.main();});
 
         form.show(this.player);
