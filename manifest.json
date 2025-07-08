@@ -3,15 +3,7 @@
 	"metadata": {
 		"authors": [
 			"nDavis"
-		],
-		"generated_with": {
-			"bridge": [
-				"2.7.43"
-			],
-			"dash": [
-				"0.11.7"
-			]
-		}
+		]
 	},
 	"header": {
 		"name": "Shovel Land Claim v1.0.3",
