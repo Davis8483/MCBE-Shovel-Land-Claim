@@ -1,4 +1,4 @@
-import { Player, RawMessage } from '@minecraft/server';
+import { Player, RawMessage, world } from '@minecraft/server';
 import { ActionFormData, ModalFormData, ModalFormResponse, MessageFormData, ModalFormDataTextFieldOptions, ModalFormDataToggleOptions, ModalFormDataDropdownOptions, ModalFormDataSliderOptions } from '@minecraft/server-ui';
 
 var navigationStack: (() => void)[] = []; // Stack to manage back navigation
@@ -252,37 +252,40 @@ export class CallbackModalFormData {
         return this;
     }
 
-        /**
+    /**
      * Creates a label in the form.
      * 
      * @param text - The text to set as the label of the form.
      * @returns - The current instance of the form for method chaining.
      */
-        public label(text: RawMessage): this {
-            this.form.label(text);
-            return this;
-        }
-    
-        /**
-         * Creates a divider in the form.
-         * 
-         * @returns - The current instance of the form for method chaining.
-         */
-        public divider(): this {
-            this.form.divider();
-            return this;
-        }
-    
-        /**
-         * Creates a header in the form.
-         * 
-         * @param text - The text to set as the header of the form.
-         * @returns - The current instance of the form for method chaining.
-         */
-        public header(text: RawMessage): this {
-            this.form.header(text);
-            return this;
-        }
+    public label(text: RawMessage): this {
+        this.form.label(text);
+        this.formConstruction.push({ data: [text], callback: (data) => this.label(data[0]), isInputField: false });
+        return this;
+    }
+
+    /**
+     * Creates a divider in the form.
+     * 
+     * @returns - The current instance of the form for method chaining.
+     */
+    public divider(): this {
+        this.form.divider();
+        this.formConstruction.push({ data: [], callback: () => this.divider(), isInputField: false });
+        return this;
+    }
+
+    /**
+     * Creates a header in the form.
+     * 
+     * @param text - The text to set as the header of the form.
+     * @returns - The current instance of the form for method chaining.
+     */
+    public header(text: RawMessage): this {
+        this.form.header(text);
+        this.formConstruction.push({ data: [text], callback: (data) => this.header(data[0]), isInputField: false });
+        return this;
+    }
 
     /**
      * Shows the modal form to the player and executes the callback of the selected button.
@@ -294,8 +297,10 @@ export class CallbackModalFormData {
             var hasError = false;
 
             if (!response.canceled) {
-                for (var i = 0; i < response.formValues.length; i++) {
-                    const value = response.formValues[i];
+                const formValues = response.formValues.filter(value => value !== undefined && value !== null); // Filter out undefined or null values
+                
+                for (var i = 0; i < formValues.length; i++) {
+                    const value = formValues[i];
                     const fieldReturnState = this.callbacks[i].callback(value);
 
                     if (fieldReturnState instanceof ModalDataError) {
