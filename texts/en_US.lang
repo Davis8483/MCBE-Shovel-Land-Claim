@@ -230,7 +230,8 @@ ui.changelog.label:8=- New player config page in the op manage player menu.
 ui.changelog.label:9=- Moved edit claim blocks to the op player config page.
 ui.changelog.label:10=- Added an op option to change claim block behavior. Options: Default, Disable Payment, Unlimited. Found in the player config page.
 ui.changelog.label:11=- Added Update Existing Block Balances toggle to the op addon config menu.
-ui.changelog.label:12=- Added in game changelogs... hi there :D
+ui.changelog.label:12=- Fixed disallow messages sometimes being spammed.
+ui.changelog.label:13=- Added in game changelogs... hi there :D
 ui.changelog.button:back=<< Main Menu
 
 actionbar.claim:name_color=§5
