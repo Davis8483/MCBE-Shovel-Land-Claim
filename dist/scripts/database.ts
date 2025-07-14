@@ -1,4 +1,4 @@
-import { world, Vector3, Player, system, EntityQueryOptions } from "@minecraft/server";
+import { world, Vector3, Player, system } from "@minecraft/server";
 
 export enum ShovelBehavior {
     LOCK_TO_INVENTORY = 0,

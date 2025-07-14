@@ -1,9 +1,9 @@
-import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, EntityProjectileComponent, MolangVariableMap, DimensionType, DimensionTypes, ItemLockMode, EntityHealthComponent, EffectType, Dimension, EntityLeashableComponent, WorldAfterEvents, Structure, StructureSaveMode, Entity, Block, BlockVolumeBase, BlockVolume, } from '@minecraft/server';
-import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
+import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, EntityRideableComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume } from '@minecraft/server';
+import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { sendNotification } from './notifications.js';
 import { ShovelUI } from './shovel_ui.js';
-import { giveClaimShovel, unlockClaimShovel, runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior, createEntitySave } from './utils.js'
+import { runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior, createEntitySave } from './utils.js'
 
 world.afterEvents.playerJoin.subscribe((data) => {
 

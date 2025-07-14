@@ -1,5 +1,5 @@
 import { Entity, EntityComponentTypes, EntityInventoryComponent, EntityLeashableComponent, EntityQueryOptions, ItemLockMode, ItemStack, Player, StructureSaveMode, system, Vector3, world } from "@minecraft/server";
-import { Claim, database, settings, ShovelBehavior } from "./database";
+import { Claim, database, ShovelBehavior } from "./database";
 
 export const SHOVEL_ID = "slc:claim_shovel"
 

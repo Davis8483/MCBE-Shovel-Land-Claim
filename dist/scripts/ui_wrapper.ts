@@ -1,4 +1,4 @@
-import { Player, RawMessage, world } from '@minecraft/server';
+import { Player, RawMessage } from '@minecraft/server';
 import { ActionFormData, ModalFormData, ModalFormResponse, MessageFormData, ModalFormDataTextFieldOptions, ModalFormDataToggleOptions, ModalFormDataDropdownOptions, ModalFormDataSliderOptions } from '@minecraft/server-ui';
 
 var navigationStack: (() => void)[] = []; // Stack to manage back navigation
