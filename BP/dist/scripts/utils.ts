@@ -1,5 +1,5 @@
 import { Entity, EntityComponentTypes, EntityInventoryComponent, EntityLeashableComponent, EntityQueryOptions, ItemLockMode, ItemStack, Player, StructureSaveMode, system, Vector3, world } from "@minecraft/server";
-import { Claim, database, settings, ShovelBehavior } from "./database";
+import { Claim, database, ShovelBehavior } from "./database";
 
 export const SHOVEL_ID = "slc:claim_shovel"
 
@@ -140,6 +140,20 @@ export function getClosestPlayer(blockLocation: Vector3): Player {
 }
 
 /**
+ * Deletes the entity save for the specified entity ID from the worlds structure manager.
+ * 
+ * @param entityID - The ID of the entity to delete the save for
+ */
+export function deleteEntitySave(entityID: string): void {
+    const structureID = "slc:" + entityID;
+    const existingStructure = world.structureManager.get(structureID);
+
+    if (existingStructure) {
+        world.structureManager.delete(existingStructure);
+    }
+}
+
+/**
  * Creates a save for an entity using the worlds structure manager.
  * This is done in case the entity is killed by a disallowed player in one hit. (usually the health will be reset tho without a death, this is just a backup)
  * 
@@ -158,11 +172,14 @@ export function createEntitySave(entity: Entity): void {
             // prevent more than one entities from being saved to the structure
             if (world.getDimension("overworld").getEntities(queryOptions).length == 1) {
             
-                const structureID = (entity.id as unknown as number) * Math.random();
+                const structureID = "slc:" + entity.id;
+
+                // try to delete the existing save for the entity if it exists
+                deleteEntitySave(entity.id);
 
                 // filter out item stack entities to prevent performance issues
-                if (entity.id != "minecraft:item") {
-                    world.structureManager.createFromWorld("slc:" + structureID.toString(), world.getDimension("overworld"), entity.location, entity.location, {"includeBlocks": false, "includeEntities": true, "saveMode": StructureSaveMode.Memory});
+                if (entity.typeId != "minecraft:item") {
+                    world.structureManager.createFromWorld(structureID, world.getDimension("overworld"), entity.location, entity.location, {"includeBlocks": false, "includeEntities": true, "saveMode": StructureSaveMode.World});
                 }
 
                 entity.setDynamicProperty("structureID", structureID);

@@ -1,9 +1,9 @@
-import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, EntityRideableComponent, RawMessage, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, EntityProjectileComponent, MolangVariableMap, DimensionType, DimensionTypes, ItemLockMode, EntityHealthComponent, EffectType, Dimension, EntityLeashableComponent, WorldAfterEvents, Structure, StructureSaveMode, Entity, Block, BlockVolumeBase, BlockVolume, } from '@minecraft/server';
-import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
+import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, EntityRideableComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume } from '@minecraft/server';
+import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { sendNotification } from './notifications.js';
 import { ShovelUI } from './shovel_ui.js';
-import { giveClaimShovel, unlockClaimShovel, runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior, createEntitySave } from './utils.js'
+import { runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior, createEntitySave, deleteEntitySave } from './utils.js'
 
 world.afterEvents.playerJoin.subscribe((data) => {
 
@@ -550,6 +550,20 @@ world.afterEvents.entityLoad.subscribe((data) => {
 })
 
 /**
+ * Delete entity save after its removed from the world, this is done to prevent memory leaks.
+ */
+world.afterEvents.entityRemove.subscribe((data) => {
+
+    const disallowedEntityDeathId = world.getDynamicProperty("disallowedEntityDeathId") as string;
+
+    // if the entity the entities death was caused by a disallowed player, prevent the save from being removed
+    if (disallowedEntityDeathId != data.removedEntityId) {
+        deleteEntitySave(data.removedEntityId);
+    }
+
+});
+
+/**
  * Create an entity save after its spawned, in case the entity is killed by a disallowed player.
  * Also removes xp orbs spawned by disallowed killed entities.
  */
@@ -557,6 +571,8 @@ world.afterEvents.entitySpawn.subscribe((data) => {
     if (data.entity.dimension == world.getDimension("overworld")) {
         const disallowedEntityDeathLocation = world.getDynamicProperty("disallowedEntityDeathLocation") as Vector3; // the location that the xp orbs should be removed from
         const xpRemoveRange = 10; // blocks away from the death location in the x and z
+
+        const disallowedEntityDeathId = world.getDynamicProperty("disallowedEntityDeathId") as string;
 
         // if the entity is an xp orb, remove it if in range of the disallowed entities death location
         if (data.entity.typeId == "minecraft:xp_orb" && disallowedEntityDeathLocation 
@@ -587,8 +603,10 @@ world.afterEvents.entitySpawn.subscribe((data) => {
             // remove the wither
             data.entity.remove();
         }
-        // save the spawned entity
-        else {
+        // if the entity was killed by a disallowed player, we don't want to save it again
+        else if (data.entity.id != disallowedEntityDeathId) {
+
+            // save the entity
             createEntitySave(data.entity);
         }
     }
@@ -682,6 +700,9 @@ world.afterEvents.entityHurt.subscribe((data) => {
                     // save the entity location so afterEvents.entitySpawn can clean up the xp
                     world.setDynamicProperty("disallowedEntityDeathLocation", data.hurtEntity.location);
 
+                    // save the id of the entity that was killed by a disallowed player so we don't accidentaly make a new save of it
+                    world.setDynamicProperty("disallowedEntityDeathId", data.hurtEntity.id);
+
                     // remove any dropped items
                     var queryOptions: EntityQueryOptions = {};
                     queryOptions.location = data.hurtEntity.location;
@@ -696,7 +717,7 @@ world.afterEvents.entityHurt.subscribe((data) => {
                     // make sure the entity save exists
                     if (structureID) {
                         try {
-                            world.structureManager.place("slc:" + structureID, world.getDimension("overworld"), data.hurtEntity.location, {"includeBlocks": false, "includeEntities": true})
+                            world.structureManager.place(structureID, world.getDimension("overworld"), data.hurtEntity.location, {"includeBlocks": false, "includeEntities": true})
                         }
                         // if theres an error in the loading process, just spawn a new one
                         catch (e) {

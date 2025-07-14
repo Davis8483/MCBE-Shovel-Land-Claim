@@ -3,7 +3,7 @@ import { CallbackActionFormData, CallbackModalFormData, CallbackMessageFormData,
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { sendNotification } from './notifications.js';
-import { giveClaimShovel, unlockClaimShovel, updateShovelBehavior } from './utils.js';
+import { updateShovelBehavior } from './utils.js';
 
 export class ShovelUI {
     private player: Player;
