@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "@scenejs/render": "^0.16.0",
-    "puppeteer": "^24.7.2"
-  }
-}
