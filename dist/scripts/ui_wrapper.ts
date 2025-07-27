@@ -172,10 +172,83 @@ export class ModalDataError {
  */
 export class ModalDataCorrect {}
 
+// Unified form element types that handle both data and positioning
+interface BaseFormElement {
+    elementType: string;
+    isInputField: boolean;
+}
+
+interface TitleElement extends BaseFormElement {
+    elementType: 'title';
+    data: RawMessage;
+    isInputField: false;
+}
+
+interface LabelElement extends BaseFormElement {
+    elementType: 'label';
+    data: RawMessage;
+    isInputField: false;
+}
+
+interface DividerElement extends BaseFormElement {
+    elementType: 'divider';
+    isInputField: false;
+}
+
+interface HeaderElement extends BaseFormElement {
+    elementType: 'header';
+    data: RawMessage;
+    isInputField: false;
+}
+
+interface SubmitButtonElement extends BaseFormElement {
+    elementType: 'submitButton';
+    data: RawMessage;
+    isInputField: false;
+}
+
+interface TextFieldElement extends BaseFormElement {
+    elementType: 'textField';
+    label: RawMessage;
+    placeholder: RawMessage;
+    options?: ModalFormDataTextFieldOptions;
+    callback?: (value: string | RawMessage) => ModalDataCorrect | ModalDataError;
+    isInputField: true;
+}
+
+interface ToggleElement extends BaseFormElement {
+    elementType: 'toggle';
+    label: RawMessage;
+    options?: ModalFormDataToggleOptions;
+    callback?: (value: boolean) => ModalDataCorrect | ModalDataError;
+    isInputField: true;
+}
+
+interface DropdownElement extends BaseFormElement {
+    elementType: 'dropdown';
+    label: RawMessage;
+    dropdownOptions: RawMessage[];
+    options?: ModalFormDataDropdownOptions;
+    callback?: (value: number) => ModalDataCorrect | ModalDataError;
+    isInputField: true;
+}
+
+interface SliderElement extends BaseFormElement {
+    elementType: 'slider';
+    label: RawMessage;
+    minimumValue: number;
+    maximumValue: number;
+    options?: ModalFormDataSliderOptions;
+    callback?: (value: number) => ModalDataCorrect | ModalDataError;
+    isInputField: true;
+}
+
+type FormElement = TitleElement | LabelElement | DividerElement | HeaderElement | SubmitButtonElement | TextFieldElement | ToggleElement | DropdownElement | SliderElement;
+type InputFormElement = TextFieldElement | ToggleElement | DropdownElement | SliderElement;
+
 export class CallbackModalFormData {
     private form: ModalFormData;
-    private formConstruction: Array<{ data: Array<any>, callback: (data: any) => void, isInputField: boolean}> = []; // Logs all methods used to create the form so it can be recreated if theres an error in fields.
-    private callbacks: Array<{ callback: (formValue: string | RawMessage | number | boolean) => ModalDataCorrect | ModalDataError }> = [];
+    private formElements: FormElement[] = []; // Single ordered list maintaining sequence
     private submitCallback: ((response: ModalFormResponse) => void) = () => {};
 
     /**
@@ -199,7 +272,7 @@ export class CallbackModalFormData {
      */
     public title(titleText: RawMessage): this {
         this.form.title(titleText);
-        this.formConstruction.push({ data: [titleText], callback: (data) => this.title(data[0]), isInputField: false });
+        this.formElements.push({ elementType: 'title', data: titleText, isInputField: false });
         return this;
     }
 
@@ -213,9 +286,16 @@ export class CallbackModalFormData {
      * @returns - The current instance of the form for method chaining.
      */
     public textField(label: RawMessage, placeholder: RawMessage, textFieldOptions?: ModalFormDataTextFieldOptions, callback?: (value: string | RawMessage) => ModalDataCorrect | ModalDataError): this {
-        this.callbacks.push({ callback: callback || (() => new ModalDataCorrect()) });
+        const element: TextFieldElement = {
+            elementType: 'textField',
+            label,
+            placeholder,
+            options: textFieldOptions,
+            callback: callback || (() => new ModalDataCorrect()),
+            isInputField: true
+        };
+        this.formElements.push(element);
         this.form.textField(label, placeholder, textFieldOptions);
-        this.formConstruction.push({ data: [label, placeholder, textFieldOptions], callback: (data) => this.textField(data[0], data[1], data[2], callback), isInputField: true });
         return this;
     }
 
@@ -228,9 +308,15 @@ export class CallbackModalFormData {
      * @returns - The current instance of the form for method chaining.
      */
     public toggle(label: RawMessage, toggleOptions?: ModalFormDataToggleOptions, callback?: (value: boolean) => ModalDataCorrect | ModalDataError): this {
-        this.callbacks.push({ callback: callback || (() => new ModalDataCorrect()) });
+        const element: ToggleElement = {
+            elementType: 'toggle',
+            label,
+            options: toggleOptions,
+            callback: callback || (() => new ModalDataCorrect()),
+            isInputField: true
+        };
+        this.formElements.push(element);
         this.form.toggle(label, toggleOptions);
-        this.formConstruction.push({ data: [label, toggleOptions], callback: (data) => this.toggle(data[0], data[1], callback), isInputField: true });
         return this;
     }
 
@@ -244,9 +330,16 @@ export class CallbackModalFormData {
      * @returns - The current instance of the form for method chaining.
      */
     public dropdown(label: RawMessage, options: RawMessage[], dropdownOptions?: ModalFormDataDropdownOptions, callback?: (value: number) => ModalDataCorrect | ModalDataError): this {
-        this.callbacks.push({ callback: callback || (() => new ModalDataCorrect()) });
+        const element: DropdownElement = {
+            elementType: 'dropdown',
+            label,
+            dropdownOptions: options,
+            options: dropdownOptions,
+            callback: callback || (() => new ModalDataCorrect()),
+            isInputField: true
+        };
+        this.formElements.push(element);
         this.form.dropdown(label, options, dropdownOptions);
-        this.formConstruction.push({ data: [label, options, dropdownOptions], callback: (data) => this.dropdown(data[0], data[1], data[2], callback), isInputField: true });
         return this;
     }
 
@@ -262,9 +355,17 @@ export class CallbackModalFormData {
      * @returns - The current instance of the form for method chaining.
      */
     public slider(label: RawMessage, minimumValue: number, maximumValue: number, sliderOptions?: ModalFormDataSliderOptions, callback?: (value: number) => ModalDataCorrect | ModalDataError): this {
-        this.callbacks.push({ callback: callback || (() => new ModalDataCorrect()) });
+        const element: SliderElement = {
+            elementType: 'slider',
+            label,
+            minimumValue,
+            maximumValue,
+            options: sliderOptions,
+            callback: callback || (() => new ModalDataCorrect()),
+            isInputField: true
+        };
+        this.formElements.push(element);
         this.form.slider(label, minimumValue, maximumValue, sliderOptions);
-        this.formConstruction.push({ data: [label, minimumValue, maximumValue, sliderOptions], callback: (data) => this.slider(data[0], data[1], data[2], data[3], callback), isInputField: true });
         return this;
     }
 
@@ -276,7 +377,7 @@ export class CallbackModalFormData {
     public submitButton(text: RawMessage, callback?: (response: ModalFormResponse) => void) {
         this.form.submitButton(text);
         this.submitCallback = callback || ((ModalFormResponse) => {});
-        this.formConstruction.push({ data: [text], callback: (data) => this.submitButton(data[0], callback), isInputField: false });
+        this.formElements.push({ elementType: 'submitButton', data: text, isInputField: false });
         return this;
     }
 
@@ -288,7 +389,7 @@ export class CallbackModalFormData {
      */
     public label(text: RawMessage): this {
         this.form.label(text);
-        this.formConstruction.push({ data: [text], callback: (data) => this.label(data[0]), isInputField: false });
+        this.formElements.push({ elementType: 'label', data: text, isInputField: false });
         return this;
     }
 
@@ -299,7 +400,7 @@ export class CallbackModalFormData {
      */
     public divider(): this {
         this.form.divider();
-        this.formConstruction.push({ data: [], callback: () => this.divider(), isInputField: false });
+        this.formElements.push({ elementType: 'divider', isInputField: false });
         return this;
     }
 
@@ -311,8 +412,98 @@ export class CallbackModalFormData {
      */
     public header(text: RawMessage): this {
         this.form.header(text);
-        this.formConstruction.push({ data: [text], callback: (data) => this.header(data[0]), isInputField: false });
+        this.formElements.push({ elementType: 'header', data: text, isInputField: false });
         return this;
+    }
+
+    /**
+     * Type-safe helper to update field options with error values
+     */
+    private updateFieldOptionsWithValue(element: InputFormElement, value: any): void {
+        switch (element.elementType) {
+            case 'textField':
+                if (element.options) {
+                    element.options.defaultValue = value as string;
+                }
+                break;
+            case 'toggle':
+                if (element.options) {
+                    element.options.defaultValue = value as boolean;
+                }
+                break;
+            case 'dropdown':
+                if (element.options) {
+                    element.options.defaultValueIndex = value as number;
+                }
+                break;
+            case 'slider':
+                if (element.options) {
+                    element.options.defaultValue = value as number;
+                }
+                break;
+        }
+    }
+
+    /**
+     * Type-safe helper to rebuild the form from stored element definitions in exact order
+     */
+    private rebuildForm(): void {
+        this.form = new ModalFormData();
+        
+        // Rebuild all elements in the exact order they were added
+        for (const element of this.formElements) {
+            switch (element.elementType) {
+                case 'title':
+                    this.form.title(element.data);
+                    break;
+                case 'label':
+                    this.form.label(element.data);
+                    break;
+                case 'divider':
+                    this.form.divider();
+                    break;
+                case 'header':
+                    this.form.header(element.data);
+                    break;
+                case 'submitButton':
+                    this.form.submitButton(element.data);
+                    break;
+                case 'textField':
+                    this.form.textField(element.label, element.placeholder, element.options);
+                    break;
+                case 'toggle':
+                    this.form.toggle(element.label, element.options);
+                    break;
+                case 'dropdown':
+                    this.form.dropdown(element.label, element.dropdownOptions, element.options);
+                    break;
+                case 'slider':
+                    this.form.slider(element.label, element.minimumValue, element.maximumValue, element.options);
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Type-safe helper to call field callback with proper typing
+     */
+    private callFieldCallback(element: InputFormElement, value: any): ModalDataCorrect | ModalDataError {
+        if (!element.callback) {
+            return new ModalDataCorrect();
+        }
+
+        switch (element.elementType) {
+            case 'textField':
+                return element.callback(value as string | RawMessage);
+            case 'toggle':
+                return element.callback(value as boolean);
+            case 'dropdown':
+                return element.callback(value as number);
+            case 'slider':
+                return element.callback(value as number);
+            default:
+                return new ModalDataCorrect();
+        }
     }
 
     /**
@@ -325,43 +516,36 @@ export class CallbackModalFormData {
             var hasError = false;
 
             if (!response.canceled) {
-                const formValues = response.formValues.filter(value => value !== undefined && value !== null); // Filter out undefined or null values
+                const formValues = response.formValues.filter(value => value !== undefined && value !== null);
                 
-                for (var i = 0; i < formValues.length; i++) {
+                // Get only the input field elements to match with form values
+                const inputElements = this.formElements.filter(element => element.isInputField) as InputFormElement[];
+                
+                for (var i = 0; i < formValues.length && i < inputElements.length; i++) {
                     const value = formValues[i];
-                    const fieldReturnState = this.callbacks[i].callback(value);
+                    const element = inputElements[i];
+                    const fieldReturnState = this.callFieldCallback(element, value);
 
                     if (fieldReturnState instanceof ModalDataError) {
-                        hasError = true; // set flag to reshow form
-                        var label = this.formConstruction.filter(field => field.isInputField)[i].data[0] as RawMessage; // get label of field
+                        hasError = true;
                         
-                        // adds error message to the field label as a newline
-                        this.formConstruction.filter(field => field.isInputField)[i].data[0] = { 
+                        // Update the field label with error message
+                        element.label = { 
                             "rawtext": [
-                                label, // Assuming `label` is already a valid RawMessage
+                                element.label as RawMessage,
                                 { "text": "\n" } as RawMessage,
                                 { "translate": fieldReturnState.errorMessage } as RawMessage
                             ] 
                         };
-
                     }
+
+                    // Update the field options with the current value for reshowing; if there is an error that is!
+                    this.updateFieldOptionsWithValue(element, value);
                 }
-                // if any field returned an error, reshow the form with the error messages
+                
+                // If any field returned an error, rebuild and reshow the form
                 if (hasError) {
-                    this.form = new ModalFormData(); // reset form
-
-                    // make a copy of the form construction array
-                    const formConstructionCopy = this.formConstruction.map((field) => {
-                        return { ...field };
-                    });
-
-                    // reset the form construction array
-                    this.formConstruction = [];
-
-                    // recreate the form using the copied array
-                    formConstructionCopy.forEach((field) => {
-                        field.callback(field.data);
-                    });
+                    this.rebuildForm();
                     this.show(player); // reshow form
                     return;
                 }
