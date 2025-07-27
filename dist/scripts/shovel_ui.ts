@@ -1,5 +1,5 @@
 import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility, RawMessage } from '@minecraft/server';
-import { CallbackActionFormData, CallbackModalFormData, CallbackMessageFormData, clearNavigationStack, ModalDataCorrect, ModalDataError, navigateBack, popNavigationStack } from './ui_wrapper.js';
+import { NavigationStack, CallbackActionFormData, CallbackModalFormData, CallbackMessageFormData, ModalDataCorrect, ModalDataError } from './ui_wrapper.js';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { sendNotification } from './notifications.js';
@@ -19,6 +19,8 @@ export class ShovelUI {
         "ui.claim.icons:flowers": "textures/ui/icon_spring.png"
     };
 
+    private navigationStack: NavigationStack = new NavigationStack();
+
     /**
      * Creates a new ShovelUI object.
      * 
@@ -27,8 +29,6 @@ export class ShovelUI {
     constructor(player: Player) {
         this.player = player;
         this.opModeActive = false; // set to false by default
-
-        clearNavigationStack();
     }
 
     /**
@@ -37,7 +37,7 @@ export class ShovelUI {
     public main() {
         var playerData: PlayerData = PlayerData.fromId(this.player.id);
 
-        const form = new CallbackActionFormData(() => this.main())
+        const form = new CallbackActionFormData(this.navigationStack, () => this.main())
             .title({"translate": "ui.main:title", "with": [playerData.schemaVersion]})
             .body({
                 "rawtext": [
@@ -95,17 +95,17 @@ export class ShovelUI {
     private opPanel() {
         this.opModeActive = true; // set to true when in op mode
 
-        const form = new CallbackActionFormData(() => this.opPanel())
+        const form = new CallbackActionFormData(this.navigationStack, () => this.opPanel())
             .title({"translate": "ui.op_panel:title"})
             .button({"translate": "ui.op_panel.addon_settings:title"}, "textures/ui/icon_setting.png", () => {this.opAddonConfig()})
             .button({"translate": "ui.op_panel.button:manage_players"}, "textures/ui/multiplayer_glyph_color.png", () => {this.opPlayerList()})
             .button({"translate": "ui.op_panel.button:disallowed_blocks"}, "textures/blocks/barrier.png", () => {this.opDisallowedBlocks()})
-            .button({"translate": "ui.global.button:back"}, undefined, () => {this.opModeActive = false; navigateBack();})
+            .button({"translate": "ui.global.button:back"}, undefined, () => {this.opModeActive = false; this.navigationStack.back();})
             .show(this.player);
     }
 
     private opPlayerList() {
-        const form = new CallbackActionFormData(() => this.opPlayerList())
+        const form = new CallbackActionFormData(this.navigationStack, () => this.opPlayerList())
             .title({"translate": "ui.op_panel.player_list:title"})
 
         for (const p of database) {
@@ -114,14 +114,14 @@ export class ShovelUI {
             form.button({"rawtext": [{"text": p.name + "\n"}, {"translate": isOnline? "ui.op_panel.player_list.online": "ui.op_panel.player_list.offline"}]}, isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.opManagePlayer(p.id)});
         }
 
-        form.button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();})
+        form.button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();})
         form.show(this.player);
     }
 
     private opAddonConfig() {
         var startingClaimBlocksOld = settings.startingClaimBlocks
 
-        const form = new CallbackModalFormData(() => this.opAddonConfig())
+        const form = new CallbackModalFormData(this.navigationStack, () => this.opAddonConfig())
             .title({"translate": "ui.op_panel.addon_settings:title"})
             .header({"translate": "ui.op_panel.addon_settings.header:claim_blocks_section"})
             .divider()
@@ -225,7 +225,7 @@ export class ShovelUI {
             .label({"text": ""})
             .submitButton({"translate": "ui.op_panel.addon_settings.button:save"}, (response) => {
                 playSound(this.player, AddonSounds.Claim.SAVE);
-                navigateBack();
+                this.navigationStack.back();
             });
         form.show(this.player);
     }
@@ -233,7 +233,7 @@ export class ShovelUI {
     private opManagePlayer(playerId: string) {
         var playerData: PlayerData = PlayerData.fromId(playerId || this.player.id);
 
-        const form = new CallbackActionFormData(() => this.opManagePlayer(playerId))
+        const form = new CallbackActionFormData(this.navigationStack, () => this.opManagePlayer(playerId))
             .title(this.opModeActive? {"translate": "ui.main.op_mode:title", "with": [playerData.name]} : {"translate": "ui.main:title"})
 
             form.button({"translate": "ui.op_manage_player.button:player_config"}, "textures/ui/icon_setting.png", () => {this.opPlayerConfig(playerId)})
@@ -254,7 +254,7 @@ export class ShovelUI {
                     this.opDeletePlayerConfirm(playerId);
                 })
             }
-            form.button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
+            form.button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();});
 
 
         form.show(this.player);
@@ -264,7 +264,7 @@ export class ShovelUI {
 
         var playerData: PlayerData = PlayerData.fromId(playerId);
 
-        const form = new CallbackModalFormData(() => this.opPlayerConfig(playerId))
+        const form = new CallbackModalFormData(this.navigationStack, () => this.opPlayerConfig(playerId))
             .title({"translate": "ui.op_player_config:title", "with": [playerData.name]})
             .dropdown({"translate": "ui.op_player_config.dropdown:claim_blocks_behavior"},
                 [
@@ -297,18 +297,18 @@ export class ShovelUI {
                 playSound(this.player, AddonSounds.Claim.SAVE);
 
                 // navigate back to the previous menu
-                navigateBack();
+                this.navigationStack.back();
             })
         form.show(this.player);
     }
 
     private opDeletePlayerConfirm(playerId: string) {
-        const form = new CallbackMessageFormData(() => this.opDeletePlayerConfirm(playerId))
+        const form = new CallbackMessageFormData(this.navigationStack, () => this.opDeletePlayerConfirm(playerId))
             .title({"translate": "ui.op_delete_player:title"})
             .body({"translate": "ui.op_delete_player:body"})
             .button1({"translate": "ui.op_delete_player.button:cancel"}, () => {
                 // return to previous menu
-                navigateBack();
+                this.navigationStack.back();
             })
             .button2({"translate": "ui.op_delete_player.button:confirm"}, () => {
                 // remove player from database
@@ -316,8 +316,8 @@ export class ShovelUI {
                 playSound(this.player, AddonSounds.Claim.DELETE);
 
                 // return to previous menu
-                popNavigationStack(); // remove the player list menu from the stack
-                navigateBack();
+                this.navigationStack.pop();
+                this.navigationStack.back();
             });
 
         form.show(this.player);
@@ -327,16 +327,16 @@ export class ShovelUI {
      * Shows the disallowed blocks menu for the OP panel.
      */
     private opDisallowedBlocks() {
-        const form = new CallbackActionFormData(() => this.opDisallowedBlocks())
+        const form = new CallbackActionFormData(this.navigationStack, () => this.opDisallowedBlocks())
             .title({"translate": "ui.op_disallowed_blocks:title"});
 
         for (const bId of settings.disallowedBlocks) {
-            form.button({"text": bId }, "textures/blocks/structure_void.png", () => {popNavigationStack(); this.opDisallowedBlocks()});
+            form.button({"text": bId }, "textures/blocks/structure_void.png", () => {this.navigationStack.pop(); this.opDisallowedBlocks()});
         }
 
         form.button({"translate": "ui.op_disallowed_blocks.button:add_block"}, "textures/ui/realms_slot_check.png", () => {this.opEditDisallowedBlocks(true)})
             .button({"translate": "ui.op_disallowed_blocks.button:remove_block"}, "textures/ui/redX1.png", () => {this.opEditDisallowedBlocks(false)})
-            .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
+            .button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();});
 
         form.show(this.player);
     }
@@ -347,7 +347,7 @@ export class ShovelUI {
      * @param add - Wether to add or remove the block from the disallowed blocks list
      */
     private opEditDisallowedBlocks(add: boolean) {
-        const form = new CallbackModalFormData(() => this.opEditDisallowedBlocks(add))
+        const form = new CallbackModalFormData(this.navigationStack, () => this.opEditDisallowedBlocks(add))
             .title({"translate": "ui.op_edit_disallowed_blocks:title"})
 
         if (add) {
@@ -384,14 +384,14 @@ export class ShovelUI {
             playSound(this.player, AddonSounds.Claim.SAVE);
 
             // navigate back to the previous menu
-            navigateBack();
+            this.navigationStack.back();
         });
 
         form.show(this.player);
     }
 
     private addonInfo() {
-        const form = new CallbackActionFormData(() => this.addonInfo())
+        const form = new CallbackActionFormData(this.navigationStack, () => this.addonInfo())
             .title({"translate": "ui.addon_info:title"})
             .body({
                 "rawtext": [
@@ -411,7 +411,7 @@ export class ShovelUI {
                 ]
             })
             .button({"translate": "ui.addon_info.button:changelog"}, undefined, () => {this.viewChangeLog();})
-            .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();})
+            .button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();})
             .show(this.player);
     }
 
@@ -443,7 +443,7 @@ export class ShovelUI {
 
         const blockDifference = (oldClaimLength * oldClaimWidth) - (newClaimLength * newClaimWidth)
 
-        const form = new CallbackMessageFormData(()=> this.resizeClaim(claim, start, end))
+        const form = new CallbackMessageFormData(this.navigationStack, ()=> this.resizeClaim(claim, start, end))
             .title({"translate": "ui.claim.resize:title"})
             .body({
                 "rawtext": [
@@ -482,7 +482,7 @@ export class ShovelUI {
     private claimsList(ownerId: string) {
         var playerData: PlayerData = PlayerData.fromId(ownerId);
 
-        const form = new CallbackActionFormData(() => this.claimsList(ownerId))
+        const form = new CallbackActionFormData(this.navigationStack, () => this.claimsList(ownerId))
             .title({
                 rawtext: [
                     {"translate": "ui.manage:title"},
@@ -500,7 +500,7 @@ export class ShovelUI {
                 }, c.icon, () => {this.manageClaim(c)});
         }
 
-        form.button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
+        form.button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();});
         form.show(this.player);
     }
 
@@ -510,7 +510,7 @@ export class ShovelUI {
      * @param claim - The claim to manage
      */
     private manageClaim(claim: Claim) {
-        const form = new CallbackActionFormData(() => this.manageClaim(claim))
+        const form = new CallbackActionFormData(this.navigationStack, () => this.manageClaim(claim))
             .title({
                 "rawtext": [
                     { "translate": "ui.manage:title" },
@@ -531,7 +531,7 @@ export class ShovelUI {
             .button({"translate": "ui.manage.button:player_permissions"}, "textures/ui/friend1_black_outline_2x.png", () => {this.playerPermissionsList(claim)})
             .button({"translate": "ui.manage.button:view"}, "textures/ui/magnifyingGlass.png", () => {this.viewClaim(claim)})
             .button({"translate": "ui.manage.button:remove"}, "textures/ui/icon_trash.png", () => {this.removeClaim(claim)})
-            .button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
+            .button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();});
 
         form.show(this.player);
     }
@@ -544,7 +544,7 @@ export class ShovelUI {
      */
     private editGlobalPermissionIntent(listParent: Claim, playerID: string) {
         // we're telling the navigation stack to go back to the player permissions list menu instead of this one :thumbs_up:
-        const form = new CallbackMessageFormData(() => this.playerPermissionsList(listParent))
+        const form = new CallbackMessageFormData(this.navigationStack, () => this.playerPermissionsList(listParent))
             .title({"translate": "ui.edit_global_permissions_intent.title"})
             .body({"translate": "ui.edit_global_permissions_intent.body"})
             .button1({"translate": "ui.edit_global_permissions_intent.button:overwrite"}, () => {this.managePermissions(listParent, playerID)})
@@ -561,7 +561,7 @@ export class ShovelUI {
      */
     private playerPermissionsList(listParent: Claim | PlayerData) {
 
-        const form = new CallbackActionFormData(() => this.playerPermissionsList(listParent))
+        const form = new CallbackActionFormData(this.navigationStack, () => this.playerPermissionsList(listParent))
             .title({
                 "rawtext": [
                     { "translate": listParent instanceof Claim ? "ui.manage.permissions.player.selection:title": "ui.manage.gloabl_permissions.player.selection:title" },
@@ -595,7 +595,7 @@ export class ShovelUI {
             form.button({"translate": "ui.manage.permissions.player.selection:remove_player"}, "textures/ui/redX1.png", () => {this.playerPermissionsListModify(false, listParent)});
         }
 
-        form.button({"translate": "ui.global.button:back"}, undefined, () => {navigateBack();});
+        form.button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();});
 
         form.show(this.player);
     }
@@ -611,7 +611,7 @@ export class ShovelUI {
         // get unsaved players list
         var unsavedPlayers: string[] = listParent.getUnsavedPlayers();
 
-        const form = new CallbackModalFormData(() => this.playerPermissionsListModify(add, listParent))
+        const form = new CallbackModalFormData(this.navigationStack, () => this.playerPermissionsListModify(add, listParent))
             .title(add ? {
                 "rawtext": [
                     { "translate": "ui.manage.permissions.player.selection.modify.add:title" }
@@ -630,7 +630,7 @@ export class ShovelUI {
                 if (add) {
 
                     // if player was added open the permissions menu for them
-                    popNavigationStack(); // remove the player permissions list menu from the stack
+                    this.navigationStack.pop(); // remove the player permissions list menu from the stack
                     this.managePermissions(listParent, playerID);
                 }
                 else {
@@ -677,7 +677,7 @@ export class ShovelUI {
                     }
                     else {
                         // return to previous menu
-                        navigateBack();
+                        this.navigationStack.back();
                     }
                 }
             });
@@ -713,7 +713,7 @@ export class ShovelUI {
 
         const target = playerID ? playerPermissions : (listParent instanceof Claim ? listParent.permissions : undefined); // target is either the claim or the player permissions object
         const defaults = playerID ? playerPermissions : (listParent instanceof Claim ? listParent.permissions : undefined); // defaults is either the claim or the player permissions object
-        const form = new CallbackModalFormData(() => this.managePermissions(listParent, playerID))
+        const form = new CallbackModalFormData(this.navigationStack, () => this.managePermissions(listParent, playerID))
             .title(playerID ? {
                 "rawtext": [
                     { "translate": listParent instanceof Claim? "ui.manage.permissions.player:title" : "ui.manage.global_permissions.player:title", "with": [playerPermissions.name, listParent.name] },
@@ -828,7 +828,7 @@ export class ShovelUI {
             }
             else {
                 // return to previous menu
-                navigateBack();
+                this.navigationStack.back();
             }
         });
         form.show(this.player);
@@ -841,7 +841,7 @@ export class ShovelUI {
      * @param claimName - The name of the claim
      */
     private pendingEntranceDisallow(players: PlayerData[] = [], claimName: string) {
-        const form = new CallbackActionFormData(() => this.pendingEntranceDisallow(players, claimName))
+        const form = new CallbackActionFormData(this.navigationStack, () => this.pendingEntranceDisallow(players, claimName))
             .title({"translate": "ui.pending_entrance_disallow:title"})
             .body({
             "rawtext": [
@@ -849,7 +849,7 @@ export class ShovelUI {
                 { "text": "\n\n" },
                 ...players.map(p => ({"text": "§l- " + p.name + "\n "}))
             ]})
-            .button({"translate": "ui.pending_entrance_disallow.button:ok"}, undefined, () => {popNavigationStack(); navigateBack();});
+            .button({"translate": "ui.pending_entrance_disallow.button:ok"}, undefined, () => {this.navigationStack.pop(); this.navigationStack.back();});
 
             form.show(this.player);
     }
@@ -1032,7 +1032,7 @@ export class ShovelUI {
     private removeClaim(claim: Claim) {
         var playerData: PlayerData = claim.getOwnerData();
 
-        const form = new CallbackMessageFormData(() => this.removeClaim(claim))
+        const form = new CallbackMessageFormData(this.navigationStack, () => this.removeClaim(claim))
             .title({"translate": "ui.manage.remove:title"})
             .body({
                 "rawtext": [
@@ -1047,7 +1047,7 @@ export class ShovelUI {
             })
             .button1({"translate": "ui.manage.remove.button:cancel"}, () => {
                 // return to previous page on menu
-                navigateBack();
+                this.navigationStack.back();
             })
             .button2({"translate": "ui.manage.remove.button:confirm"}, () => {
                 // delete claim
@@ -1059,8 +1059,8 @@ export class ShovelUI {
                 playerData.claimBlocks.incrementAmount(claim.getSize().width * claim.getSize().length);
 
                 // return to previous page on menu
-                popNavigationStack(); // remove the manage claim menu from the stack
-                navigateBack();
+                this.navigationStack.pop(); // remove the manage claim menu from the stack
+                this.navigationStack.back();
             });
 
         form.show(this.player);
@@ -1075,7 +1075,7 @@ export class ShovelUI {
         var playerData: PlayerData = claim.getOwnerData() || PlayerData.fromId(this.player.id);
         var newClaim: boolean = claim.getOwnerData() == undefined; // if the claim has no owner, it is a new claim
 
-        const form = new CallbackModalFormData(() => this.claimConfig(claim))
+        const form = new CallbackModalFormData(this.navigationStack, () => this.claimConfig(claim))
             .title({
                 "rawtext": [
                     { "translate": newClaim ? "ui.claim.new:title" : "ui.claim.config:title" },
@@ -1132,7 +1132,7 @@ export class ShovelUI {
                     playSound(this.player, AddonSounds.Claim.SAVE);
 
                     // return to previous menu
-                    navigateBack();
+                    this.navigationStack.back();
                 }
             });
 
@@ -1143,7 +1143,7 @@ export class ShovelUI {
         const playerData = PlayerData.fromId(this.player.id);
         const version = playerData.schemaVersion;
 
-        const form = new CallbackActionFormData(() => this.viewChangeLog())
+        const form = new CallbackActionFormData(this.navigationStack, () => this.viewChangeLog())
             .title({"translate": "ui.changelog:title", "with": [version]})
             .body({"translate": "ui.addon_info:body.paragraph:1"})
             .label({"translate": "ui.changelog.label:1", "with": [version]})

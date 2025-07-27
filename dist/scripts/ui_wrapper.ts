@@ -1,47 +1,61 @@
 import { Player, RawMessage } from '@minecraft/server';
 import { ActionFormData, ModalFormData, ModalFormResponse, MessageFormData, ModalFormDataTextFieldOptions, ModalFormDataToggleOptions, ModalFormDataDropdownOptions, ModalFormDataSliderOptions } from '@minecraft/server-ui';
 
-var navigationStack: (() => void)[] = []; // Stack to manage back navigation
 
-/**
- * Used to navigate to the previous menu in the stack.
- */
-export function navigateBack(): void {
-    if (navigationStack.length > 0) { 
-        navigationStack.pop(); // Remove the last screen from the stack
+export class NavigationStack {
+    stack: (() => void)[] = []; // Stack to manage back navigation
 
-        const previousScreen = navigationStack.pop(); // Get the previous screen
-        if (previousScreen) {
-            previousScreen(); // Call the function to show the previous screen
+    /**
+     * Used to navigate to the previous menu in the stack.
+     */
+    public back(): void {
+        if (this.stack.length > 0) { 
+            this.stack.pop(); // Remove the last screen from the stack
+
+            const previousScreen = this.stack.pop(); // Get the previous screen
+            if (previousScreen) {
+                previousScreen(); // Call the function to show the previous screen
+            }
         }
+    }
+
+    /**
+     * Pushes a new screen onto the navigation stack.
+     * 
+     * @param callback - The function call that shows the current menu.
+     */
+    public push(callback: () => void): void {
+        this.stack.push(callback); // Push the callback function to the stack
+    }
+
+    /**
+     * Removes the last screen from the navigation stack.
+     */
+    public pop(): void {
+        this.stack.pop(); // Remove the last screen from the stack
+    }
+
+    /**
+     * Clears the navigation stack.
+     */
+    public clear(): void {
+        this.stack = []; // Clear the navigation stack
     }
 }
 
-/**
- * Removes the last screen from the navigation stack.
- */
-export function popNavigationStack(): void {
-    navigationStack.pop(); // Remove the last screen from the stack
-}
-
-/**
- * Clears the navigation stack.
- */
-export function clearNavigationStack(): void {
-    navigationStack = []; // Clear the navigation stack
-};
-
-/**
- * A wrapper class for ActionFormData that allows for callback functions to be passed in for button actions.
- */
 export class CallbackActionFormData {
     private form: ActionFormData;
     private callbacks: Array<{callback: () => void}> = [];
 
     /**
+     * A wrapper class for ActionFormData that allows for callback functions to be passed in for button actions.
+     * 
+     * tbh, the navigation stack could be handeled outside of this class but I don't want you to forget about it ❤️
+     * 
+     * @param navigationStack - The navigation stack to manage back navigation.
      * @param navigationCallback - The callback function to navigate back to this menu.
      */
-    constructor(navigationCallback: () => void) {
+    constructor(navigationStack: NavigationStack, navigationCallback: () => void) {
         navigationStack.push(navigationCallback); // Push the return callback to the stack
         this.form = new ActionFormData();
     }
@@ -146,9 +160,6 @@ export class ModalDataError {
  */
 export class ModalDataCorrect {}
 
-/**
- * A wrapper class for ModalFormData that allows for callback functions to be passed in for button actions.
- */
 export class CallbackModalFormData {
     private form: ModalFormData;
     private formConstruction: Array<{ data: Array<any>, callback: (data: any) => void, isInputField: boolean}> = []; // Logs all methods used to create the form so it can be recreated if theres an error in fields.
@@ -156,10 +167,15 @@ export class CallbackModalFormData {
     private submitCallback: ((response: ModalFormResponse) => void) = () => {};
 
     /**
-     * @param backCallback - The callback function to navigate back to this menu.
+     * A wrapper class for ModalFormData that allows for callback functions to be passed in for button actions.
+     * 
+     * tbh, the navigation stack could be handeled outside of this class but I don't want you to forget about it ❤️
+     * 
+     * @param navigationStack - The navigation stack to manage back navigation.
+     * @param navigationCallback - The callback function to navigate back to this menu.
      */
-    constructor(backCallback: () => void) {
-        navigationStack.push(backCallback); // Push the return callback to the stack
+    constructor(navigationStack: NavigationStack, navigationCallback: () => void) {
+        navigationStack.push(navigationCallback); // Push the return callback to the stack
         this.form = new ModalFormData();
     }
 
@@ -350,11 +366,14 @@ export class CallbackMessageFormData {
     private callbacks: Array<{ callback: () => void }> = [];
 
     /**
-     * * A wrapper class for MessageFormData that allows for callback functions to be passed in for button actions.
+     * A wrapper class for MessageFormData that allows for callback functions to be passed in for button actions.
      * 
+     * tbh, the navigation stack could be handeled outside of this class but I don't want you to forget about it ❤️
+     * 
+     * @param navigationStack - The navigation stack to manage back navigation.
      * @param navigationCallback - The callback function to navigate back to this menu.
      */
-    constructor(navigationCallback: () => void) {
+    constructor(navigationStack: NavigationStack, navigationCallback: () => void) {
         navigationStack.push(navigationCallback); // Push the return callback to the stack
         this.form = new MessageFormData();
     }
