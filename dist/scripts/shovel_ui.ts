@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility, RawMessage } from '@minecraft/server';
+import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility, RawMessage, InputButton } from '@minecraft/server';
 import { NavigationStack, CallbackActionFormData, CallbackModalFormData, CallbackMessageFormData, ModalDataCorrect, ModalDataError } from './ui_wrapper.js';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
@@ -865,6 +865,17 @@ export class ShovelUI {
         // only run if player is in overworld
         if (this.player.dimension == world.getDimension("overworld")) {
 
+            // continuously check if player is crouching, if so exit claim view
+            var exitCheckerSysRunId = system.runInterval(() => {
+                if (this.player.inputInfo.getButtonState(InputButton.Sneak)) {
+                    // stop the exit checker
+                    system.clearRun(exitCheckerSysRunId);
+
+                    // exit claim view
+                    this.exitClaimView(this.player);
+                }
+            }, 2);
+
             var playerData = PlayerData.fromId(this.player.id);
 
             // set flag
@@ -956,7 +967,11 @@ export class ShovelUI {
                         else {
                             system.runTimeout(() => {
                                 if (playerData.viewingClaim) {
-                                    ShovelUI.exitClaimView(player);
+                                    // stop the exit checker
+                                    system.clearRun(exitCheckerSysRunId);
+
+                                    // exit claim view
+                                    this.exitClaimView(player);
                                 }
                             }, 60);
                         }
@@ -991,7 +1006,7 @@ export class ShovelUI {
      * 
      * @param player - The player to exit the claim view for
      */
-    static exitClaimView(player: Player) {
+    public exitClaimView(player: Player) {
         var playerData = PlayerData.fromId(player.id);
 
         // fade parameters
@@ -1025,6 +1040,9 @@ export class ShovelUI {
 
             // show hud
             player.onScreenDisplay.setHudVisibility(HudVisibility.Reset);
+
+            // re-show the last menu to the player
+            this.navigationStack.showCurrent();
 
         }, 30);
     };

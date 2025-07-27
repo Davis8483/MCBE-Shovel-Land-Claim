@@ -41,6 +41,18 @@ export class NavigationStack {
     public clear(): void {
         this.stack = []; // Clear the navigation stack
     }
+
+    /**
+     * Shows the current screen in the navigation stack.
+     */
+    public showCurrent(): void {
+        if (this.stack.length > 0) {
+            const currentScreen = this.stack[this.stack.length - 1]; // Get the last screen in the stack
+            if (currentScreen) {
+                currentScreen(); // Call the function to show the current screen
+            }
+        }
+    }
 }
 
 export class CallbackActionFormData {

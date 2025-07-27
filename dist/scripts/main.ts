@@ -811,11 +811,6 @@ system.runInterval(() => {
             // set flag to false before for loop updates it
             playerData.setInClaim(false);
 
-            // if player is crouching set viewing claim flag to false to cancel it and return to first person
-            if (p.isSneaking && playerData.viewingClaim) {
-                ShovelUI.exitClaimView(p);
-            }
-
             // if player is no longer holding the claim shovel, set the resizing claim name to empty
             if (!p.getComponent(EntityComponentTypes.Inventory).container.getItem(p.selectedSlotIndex)?.matches(SHOVEL_ID)) {
                 playerData.setResizingClaimName("");
