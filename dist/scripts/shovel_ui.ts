@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility, RawMessage, InputButton } from '@minecraft/server';
+import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility, RawMessage, InputButton, ButtonState } from '@minecraft/server';
 import { NavigationStack, CallbackActionFormData, CallbackModalFormData, CallbackMessageFormData, ModalDataCorrect, ModalDataError } from './ui_wrapper.js';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
@@ -864,26 +864,27 @@ export class ShovelUI {
 
         // only run if player is in overworld
         if (this.player.dimension == world.getDimension("overworld")) {
-
-            // continuously check if player is crouching, if so exit claim view
-            var exitCheckerSysRunId = system.runInterval(() => {
-                if (this.player.inputInfo.getButtonState(InputButton.Sneak)) {
-                    // stop the exit checker
-                    system.clearRun(exitCheckerSysRunId);
-
+            
+            // register an after event to detect if the player is trying to exit the claim viewer
+            const sneakExitEventHandler = world.afterEvents.playerButtonInput.subscribe((data) => {
+                if ((data.button == InputButton.Sneak) && (data.newButtonState == ButtonState.Pressed) && (data.player == this.player)){
+                    
+                    // unregister this event
+                    world.afterEvents.playerButtonInput.unsubscribe(sneakExitEventHandler);
+                    
                     // exit claim view
-                    this.exitClaimView(this.player);
+                    ShovelUI.exitClaimView(this.player, this.navigationStack);
                 }
-            }, 2);
+            })
 
             var playerData = PlayerData.fromId(this.player.id);
 
             // set flag
             playerData.setViewingClaim(true);
 
-            // disable player movement, besides sneaking which is used to cancel the view
+            // disable player movement
             this.player.inputPermissions.setPermissionCategory(InputPermissionCategory.Camera, false);
-            this.player.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement, false);
+            this.player.inputPermissions.setPermissionCategory(InputPermissionCategory.Movement, false);
 
             // hide hud
             this.player.onScreenDisplay.setHudVisibility(HudVisibility.Hide);
@@ -937,7 +938,7 @@ export class ShovelUI {
             }
 
             // called recursively to cycle through all points
-            const nextCorner = function(index: number, player: Player) {
+            const nextCorner = function(index: number, player: Player, navStack: NavigationStack) {
 
                 // the very first point should be set without a delay
                 if (index == 0) {
@@ -961,17 +962,18 @@ export class ShovelUI {
 
                         // next corner
                         if (index < 3) {
-                            nextCorner(index + 1, player);
+                            nextCorner(index + 1, player, navStack);
                         }
                         // animation is over, return to first person
                         else {
                             system.runTimeout(() => {
                                 if (playerData.viewingClaim) {
-                                    // stop the exit checker
-                                    system.clearRun(exitCheckerSysRunId);
+
+                                    // unregister the event
+                                    world.afterEvents.playerButtonInput.unsubscribe(sneakExitEventHandler);
 
                                     // exit claim view
-                                    this.exitClaimView(player);
+                                    ShovelUI.exitClaimView(player, navStack);
                                 }
                             }, 60);
                         }
@@ -991,7 +993,7 @@ export class ShovelUI {
 
                 this.player.camera.setCamera("minecraft:free", cornerView);
                 system.runTimeout(() => {
-                    nextCorner(0, this.player);
+                    nextCorner(0, this.player, this.navigationStack);
                 }, 100)
             }, 20);
         }
@@ -1005,8 +1007,9 @@ export class ShovelUI {
      * Exits the claim view and returns the player to first person.
      * 
      * @param player - The player to exit the claim view for
+     * @param navStack - The navigation stack to return to
      */
-    public exitClaimView(player: Player) {
+    static exitClaimView(player: Player, navStack: NavigationStack) {
         var playerData = PlayerData.fromId(player.id);
 
         // fade parameters
@@ -1036,13 +1039,13 @@ export class ShovelUI {
 
             // enable player movement again
             player.inputPermissions.setPermissionCategory(InputPermissionCategory.Camera, true);
-            player.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement, true);
+            player.inputPermissions.setPermissionCategory(InputPermissionCategory.Movement, true);
 
             // show hud
             player.onScreenDisplay.setHudVisibility(HudVisibility.Reset);
 
             // re-show the last menu to the player
-            this.navigationStack.showCurrent();
+            navStack.showCurrent();
 
         }, 30);
     };
