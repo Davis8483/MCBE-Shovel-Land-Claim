@@ -249,6 +249,7 @@ type InputFormElement = TextFieldElement | ToggleElement | DropdownElement | Sli
 
 export class CallbackModalFormData {
     private form: ModalFormData;
+    private errorSoundId: string;
     private formElements: FormElement[] = []; // Single ordered list maintaining sequence
     private submitCallback: ((response: ModalFormResponse) => void) = () => {};
 
@@ -257,11 +258,13 @@ export class CallbackModalFormData {
      * 
      * tbh, the navigation stack could be handeled outside of this class but I don't want you to forget about it ❤️
      * 
+     * @param errorSoundId - The in game sound ID to play when a players input has an error causing the form to re-show.
      * @param navigationStack - The navigation stack to manage back navigation.
      * @param navigationCallback - The callback function to navigate back to this menu.
      */
-    constructor(navigationStack: NavigationStack, navigationCallback: () => void) {
+    constructor(errorSoundId: string, navigationStack: NavigationStack, navigationCallback: () => void) {
         navigationStack.push(navigationCallback); // Push the return callback to the stack
+        this.errorSoundId = errorSoundId;
         this.form = new ModalFormData();
     }
 
@@ -544,6 +547,9 @@ export class CallbackModalFormData {
                 
                 // If any field returned an error, rebuild and reshow the form
                 if (inputElements.some(element => element.state instanceof ModalDataError)) {
+                    // Play the error sound
+                    player.playSound(this.errorSoundId);
+
                     this.rebuildForm();
                     this.show(player); // reshow form
                     return;

@@ -121,7 +121,7 @@ export class ShovelUI {
     private opAddonConfig() {
         var startingClaimBlocksOld = settings.startingClaimBlocks
 
-        const form = new CallbackModalFormData(this.navigationStack, () => this.opAddonConfig())
+        const form = new CallbackModalFormData(AddonSounds.Global.NEGATIVE_EVENT, this.navigationStack, () => this.opAddonConfig())
             .title({"translate": "ui.op_panel.addon_settings:title"})
             .header({"translate": "ui.op_panel.addon_settings.header:claim_blocks_section"})
             .divider()
@@ -129,7 +129,6 @@ export class ShovelUI {
                 var newClaimBlockPayment = parseInt(value as string);
 
                 if (isNaN(newClaimBlockPayment) || newClaimBlockPayment < 0) {
-                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
                     return new ModalDataError("ui.op_panel.addon_settings.error:must_be_positive_number");
                 }
                 else {
@@ -143,7 +142,6 @@ export class ShovelUI {
                 var newStartingClaimBlocks = parseInt(value as string);
 
                 if (isNaN(newStartingClaimBlocks) || newStartingClaimBlocks < 0) {
-                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
                     return new ModalDataError("ui.op_panel.addon_settings.error:must_be_positive_number");
                 }
                 else {
@@ -177,7 +175,6 @@ export class ShovelUI {
                 var newClaimMinimumWidth = parseInt(value as string);
 
                 if (isNaN(newClaimMinimumWidth) || newClaimMinimumWidth < 0) {
-                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
                     return new ModalDataError("ui.op_panel.addon_settings.error:must_be_positive_number");
                 }
                 else {
@@ -191,7 +188,6 @@ export class ShovelUI {
                 var newMaxClaimAmount = parseInt(value as string);
 
                 if (isNaN(newMaxClaimAmount) || newMaxClaimAmount < 0) {
-                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
                     return new ModalDataError("ui.op_panel.addon_settings.error:must_be_positive_number");
                 }
                 else {
@@ -264,7 +260,7 @@ export class ShovelUI {
 
         var playerData: PlayerData = PlayerData.fromId(playerId);
 
-        const form = new CallbackModalFormData(this.navigationStack, () => this.opPlayerConfig(playerId))
+        const form = new CallbackModalFormData(AddonSounds.Global.NEGATIVE_EVENT, this.navigationStack, () => this.opPlayerConfig(playerId))
             .title({"translate": "ui.op_player_config:title", "with": [playerData.name]})
             .dropdown({"translate": "ui.op_player_config.dropdown:claim_blocks_behavior"},
                 [
@@ -282,7 +278,6 @@ export class ShovelUI {
                 var newClaimBlocks = parseInt(value as string);
 
                 if (isNaN(newClaimBlocks) || newClaimBlocks < 0) {
-                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
                     return new ModalDataError("ui.op_player_config.error:must_be_positive_number");
                 }
                 else {
@@ -347,7 +342,7 @@ export class ShovelUI {
      * @param add - Wether to add or remove the block from the disallowed blocks list
      */
     private opEditDisallowedBlocks(add: boolean) {
-        const form = new CallbackModalFormData(this.navigationStack, () => this.opEditDisallowedBlocks(add))
+        const form = new CallbackModalFormData(AddonSounds.Global.NEGATIVE_EVENT, this.navigationStack, () => this.opEditDisallowedBlocks(add))
             .title({"translate": "ui.op_edit_disallowed_blocks:title"})
 
         if (add) {
@@ -355,11 +350,9 @@ export class ShovelUI {
                 var blockId = value as string;
 
                 if (blockId == "") {
-                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
                     return new ModalDataError("ui.op_edit_disallowed_blocks.error:must_not_be_empty");
                 }
                 else if (settings.disallowedBlocks.includes(blockId)) {
-                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
                     return new ModalDataError("ui.op_edit_disallowed_blocks.error:block_already_disallowed");
                 }
                 else {
@@ -611,7 +604,7 @@ export class ShovelUI {
         // get unsaved players list
         var unsavedPlayers: string[] = listParent.getUnsavedPlayers();
 
-        const form = new CallbackModalFormData(this.navigationStack, () => this.playerPermissionsListModify(add, listParent))
+        const form = new CallbackModalFormData(AddonSounds.Global.NEGATIVE_EVENT, this.navigationStack, () => this.playerPermissionsListModify(add, listParent))
             .title(add ? {
                 "rawtext": [
                     { "translate": "ui.manage.permissions.player.selection.modify.add:title" }
@@ -713,7 +706,7 @@ export class ShovelUI {
 
         const target = playerID ? playerPermissions : (listParent instanceof Claim ? listParent.permissions : undefined); // target is either the claim or the player permissions object
         const defaults = playerID ? playerPermissions : (listParent instanceof Claim ? listParent.permissions : undefined); // defaults is either the claim or the player permissions object
-        const form = new CallbackModalFormData(this.navigationStack, () => this.managePermissions(listParent, playerID))
+        const form = new CallbackModalFormData(AddonSounds.Global.NEGATIVE_EVENT, this.navigationStack, () => this.managePermissions(listParent, playerID))
             .title(playerID ? {
                 "rawtext": [
                     { "translate": listParent instanceof Claim? "ui.manage.permissions.player:title" : "ui.manage.global_permissions.player:title", "with": [playerPermissions.name, listParent.name] },
@@ -1096,7 +1089,7 @@ export class ShovelUI {
         var playerData: PlayerData = claim.getOwnerData() || PlayerData.fromId(this.player.id);
         var newClaim: boolean = claim.getOwnerData() == undefined; // if the claim has no owner, it is a new claim
 
-        const form = new CallbackModalFormData(this.navigationStack, () => this.claimConfig(claim))
+        const form = new CallbackModalFormData(AddonSounds.Global.NEGATIVE_EVENT, this.navigationStack, () => this.claimConfig(claim))
             .title({
                 "rawtext": [
                     { "translate": newClaim ? "ui.claim.new:title" : "ui.claim.config:title" },
@@ -1114,11 +1107,9 @@ export class ShovelUI {
                 }
 
                 if ((value as String).length == 0) {
-                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
                     return new ModalDataError("ui.claim.config.error:no_name");
                 }
                 else if (!isUniqueName) {
-                    playSound(this.player, AddonSounds.Global.NEGATIVE_EVENT);
                     return new ModalDataError("ui.claim.config.error:unique_name");
                 }
 
