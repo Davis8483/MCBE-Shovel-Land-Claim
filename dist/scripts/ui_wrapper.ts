@@ -1,4 +1,4 @@
-import { Player, RawMessage } from '@minecraft/server';
+import { FeedItem, Player, RawMessage } from '@minecraft/server';
 import { ActionFormData, ModalFormData, ModalFormResponse, MessageFormData, ModalFormDataTextFieldOptions, ModalFormDataToggleOptions, ModalFormDataDropdownOptions, ModalFormDataSliderOptions } from '@minecraft/server-ui';
 
 
@@ -176,6 +176,7 @@ export class ModalDataCorrect {}
 interface BaseFormElement {
     elementType: string;
     isInputField: boolean;
+    state: ModalDataCorrect | ModalDataError;
 }
 
 interface TitleElement extends BaseFormElement {
@@ -272,7 +273,7 @@ export class CallbackModalFormData {
      */
     public title(titleText: RawMessage): this {
         this.form.title(titleText);
-        this.formElements.push({ elementType: 'title', data: titleText, isInputField: false });
+        this.formElements.push({ elementType: 'title', data: titleText, isInputField: false, state: new ModalDataCorrect() });
         return this;
     }
 
@@ -292,7 +293,8 @@ export class CallbackModalFormData {
             placeholder,
             options: textFieldOptions,
             callback: callback || (() => new ModalDataCorrect()),
-            isInputField: true
+            isInputField: true,
+            state: new ModalDataCorrect()
         };
         this.formElements.push(element);
         this.form.textField(label, placeholder, textFieldOptions);
@@ -313,7 +315,8 @@ export class CallbackModalFormData {
             label,
             options: toggleOptions,
             callback: callback || (() => new ModalDataCorrect()),
-            isInputField: true
+            isInputField: true,
+            state: new ModalDataCorrect()
         };
         this.formElements.push(element);
         this.form.toggle(label, toggleOptions);
@@ -336,7 +339,8 @@ export class CallbackModalFormData {
             dropdownOptions: options,
             options: dropdownOptions,
             callback: callback || (() => new ModalDataCorrect()),
-            isInputField: true
+            isInputField: true,
+            state: new ModalDataCorrect()
         };
         this.formElements.push(element);
         this.form.dropdown(label, options, dropdownOptions);
@@ -362,7 +366,8 @@ export class CallbackModalFormData {
             maximumValue,
             options: sliderOptions,
             callback: callback || (() => new ModalDataCorrect()),
-            isInputField: true
+            isInputField: true,
+            state: new ModalDataCorrect()
         };
         this.formElements.push(element);
         this.form.slider(label, minimumValue, maximumValue, sliderOptions);
@@ -377,7 +382,7 @@ export class CallbackModalFormData {
     public submitButton(text: RawMessage, callback?: (response: ModalFormResponse) => void) {
         this.form.submitButton(text);
         this.submitCallback = callback || ((ModalFormResponse) => {});
-        this.formElements.push({ elementType: 'submitButton', data: text, isInputField: false });
+        this.formElements.push({ elementType: 'submitButton', data: text, isInputField: false, state: new ModalDataCorrect() });
         return this;
     }
 
@@ -389,7 +394,7 @@ export class CallbackModalFormData {
      */
     public label(text: RawMessage): this {
         this.form.label(text);
-        this.formElements.push({ elementType: 'label', data: text, isInputField: false });
+        this.formElements.push({ elementType: 'label', data: text, isInputField: false, state: new ModalDataCorrect() });
         return this;
     }
 
@@ -400,7 +405,7 @@ export class CallbackModalFormData {
      */
     public divider(): this {
         this.form.divider();
-        this.formElements.push({ elementType: 'divider', isInputField: false });
+        this.formElements.push({ elementType: 'divider', isInputField: false, state: new ModalDataCorrect() });
         return this;
     }
 
@@ -412,7 +417,7 @@ export class CallbackModalFormData {
      */
     public header(text: RawMessage): this {
         this.form.header(text);
-        this.formElements.push({ elementType: 'header', data: text, isInputField: false });
+        this.formElements.push({ elementType: 'header', data: text, isInputField: false, state: new ModalDataCorrect() });
         return this;
     }
 
@@ -452,6 +457,10 @@ export class CallbackModalFormData {
         
         // Rebuild all elements in the exact order they were added
         for (const element of this.formElements) {
+
+            // Any error messages should be added to the rawtext of the label
+            const errorMsg: RawMessage[] = element.state instanceof ModalDataError ? [{ text: "\n" }, { translate: element.state.errorMessage }] : [];
+
             switch (element.elementType) {
                 case 'title':
                     this.form.title(element.data);
@@ -469,16 +478,16 @@ export class CallbackModalFormData {
                     this.form.submitButton(element.data);
                     break;
                 case 'textField':
-                    this.form.textField(element.label, element.placeholder, element.options);
+                    this.form.textField({ rawtext: [element.label, ...errorMsg] }, element.placeholder, element.options);
                     break;
                 case 'toggle':
-                    this.form.toggle(element.label, element.options);
+                    this.form.toggle({ rawtext: [element.label, ...errorMsg] }, element.options);
                     break;
                 case 'dropdown':
-                    this.form.dropdown(element.label, element.dropdownOptions, element.options);
+                    this.form.dropdown({ rawtext: [element.label, ...errorMsg] }, element.dropdownOptions, element.options);
                     break;
                 case 'slider':
-                    this.form.slider(element.label, element.minimumValue, element.maximumValue, element.options);
+                    this.form.slider({ rawtext: [element.label, ...errorMsg] }, element.minimumValue, element.maximumValue, element.options);
                     break;
             }
         }
@@ -513,9 +522,9 @@ export class CallbackModalFormData {
      */
     public show(player: Player): void {
         this.form.show(player).then((response) => {
-            var hasError = false;
 
             if (!response.canceled) {
+                // list of values that have been filled out by the player
                 const formValues = response.formValues.filter(value => value !== undefined && value !== null);
                 
                 // Get only the input field elements to match with form values
@@ -526,25 +535,15 @@ export class CallbackModalFormData {
                     const element = inputElements[i];
                     const fieldReturnState = this.callFieldCallback(element, value);
 
-                    if (fieldReturnState instanceof ModalDataError) {
-                        hasError = true;
-                        
-                        // Update the field label with error message
-                        element.label = { 
-                            "rawtext": [
-                                element.label as RawMessage,
-                                { "text": "\n" } as RawMessage,
-                                { "translate": fieldReturnState.errorMessage } as RawMessage
-                            ] 
-                        };
-                    }
+                    // update state so if errors are present a message can be inserted
+                    element.state = fieldReturnState;
 
                     // Update the field options with the current value for reshowing; if there is an error that is!
                     this.updateFieldOptionsWithValue(element, value);
                 }
                 
                 // If any field returned an error, rebuild and reshow the form
-                if (hasError) {
+                if (inputElements.some(element => element.state instanceof ModalDataError)) {
                     this.rebuildForm();
                     this.show(player); // reshow form
                     return;
