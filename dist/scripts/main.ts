@@ -1,7 +1,7 @@
 import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, EntityRideableComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InputButton, ButtonState } from '@minecraft/server';
 import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
-import { sendNotification } from './notifications.js';
+import { NotificationManager, NotificationManagerStack } from './notifications.js';
 import { ShovelUI } from './shovel_ui.js';
 import { runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior, createEntitySave, deleteEntitySave } from './utils.js'
 
@@ -59,18 +59,19 @@ world.afterEvents.playerSpawn.subscribe((data) => {
 // open menu when claim shovel is used
 world.afterEvents.itemUse.subscribe((data) => {
     const playerData = PlayerData.fromId(data.source.id)
+    const notifManager = NotificationManagerStack.getById(data.source.id);
 
     if (data.itemStack.typeId == SHOVEL_ID) {
         // if the player hasn't seen the changelog yet
         if (!playerData.shownChangeLog) {
-            new ShovelUI(data.source).viewChangeLog();
+            new ShovelUI(data.source, notifManager).viewChangeLog();
 
             // set shownChangeLog to true so it doesn't show again
             playerData.setShownChangeLog(true);
         }
         // otherwise just show the main menu
         else {
-            new ShovelUI(data.source).main();
+            new ShovelUI(data.source, notifManager).main();
         }
     };
 });
@@ -78,7 +79,8 @@ world.afterEvents.itemUse.subscribe((data) => {
 // Set/adjust claim points if player is sneaking
 world.beforeEvents.playerBreakBlock.subscribe((data) => {
 
-    var playerData = PlayerData.fromId(data.player.id);
+    const playerData = PlayerData.fromId(data.player.id);
+    const notifManager = NotificationManagerStack.getById(data.player.id);
 
     // handle creating claims by setting first and second point
     if ((data.itemStack != undefined) && (data.itemStack.typeId == SHOVEL_ID)) {
@@ -134,16 +136,16 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                                 playerData.setOppositeCorner({ "x": points[aIndex ^ 1][bIndex ^ 1][0], "y": data.block.y, "z": points[aIndex ^ 1][bIndex ^ 1][1] });
                                 playerData.setResizingClaimName(claim.name);
 
-                                sendNotification(data.player, AddonSounds.Shovel.RESIZE, "chat.point.resize:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
+                                notifManager.send(data.player, AddonSounds.Shovel.RESIZE, undefined, "chat.point.resize:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
 
                             } else {
-                                sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.point.resize:disallowed");
+                                notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.point.resize:disallowed");
                             }
                         }
                     });
 
                     if (!isResize) {
-                        sendNotification(data.player, AddonSounds.Shovel.SELECT, "chat.point.new:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
+                        notifManager.send(data.player, AddonSounds.Shovel.SELECT, undefined, "chat.point.new:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
                     }
                 }
                 // if player is crouching
@@ -183,25 +185,25 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
 
                         // intersecting claim warning message, cancel resize
                         if (claimIntersectingClaim) {
-                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:claim_intersecting");
+                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:claim_intersecting");
                         }
                         // player is in the way warning message, cancel resize
                         else if (playerIntersectingClaim) {
-                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:player_intersecting");
+                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:player_intersecting");
                         }
                         // claim isn't wide enough warning message, cancel resize
                         else if (newClaimWidth < settings.claimMinimumWidth || newClaimLength < settings.claimMinimumWidth) {
-                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:width", settings.claimMinimumWidth.toString());
+                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:width", settings.claimMinimumWidth.toString());
                         }
                         // not enough claim blocks warning message, cancel resize
                         else if ((playerData.claimBlocks.behavior != ClaimBlocksBehavior.UNLIMITED) && (playerData.claimBlocks.amount < blockDifference)) {
-                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:blocks_resize", ((blockDifference) - playerData.claimBlocks.amount).toString());
+                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:blocks_resize", ((blockDifference) - playerData.claimBlocks.amount).toString());
                         }
                         // all requirements met, open the claim resizing ui
                         else {
                             system.run(() => {
                                 playSound(data.player, AddonSounds.Shovel.SELECT);
-                                new ShovelUI(data.player).resizeClaim(resizingClaim, playerData.oppositeCorner, secondPoint);
+                                new ShovelUI(data.player, notifManager).resizeClaim(resizingClaim, playerData.oppositeCorner, secondPoint);
                             });
                         }
                     }
@@ -228,29 +230,29 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
 
                         // intersecting claim warning message, cancel creation
                         if (claimIntersectingClaim) {
-                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:claim_intersecting");
+                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:claim_intersecting");
                         }
                         // player is in the way warning message, cancel creation
                         else if (playerIntersectingClaim) {
-                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:player_intersecting");
+                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:player_intersecting");
                         }
                         // claim is not wide enough warning message, cancel creation
                         else if (claimWidth < settings.claimMinimumWidth || claimLength < settings.claimMinimumWidth) {
-                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:width", settings.claimMinimumWidth.toString());
+                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:width", settings.claimMinimumWidth.toString());
                         }
                         // not enough claim blocks warning message, cancel creation
                         else if ((playerData.claimBlocks.behavior != ClaimBlocksBehavior.UNLIMITED) && (playerData.claimBlocks.amount < (claimWidth * claimLength))) {
-                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:blocks_new", ((claimWidth * claimLength) - playerData.claimBlocks.amount).toString());
+                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:blocks_new", ((claimWidth * claimLength) - playerData.claimBlocks.amount).toString());
                         }
                         // check if this new claim doesn't exceed the players max number of claims
                         else if ((settings.maxClaimAmount > 0) && (playerData.claims.length >= settings.maxClaimAmount)) {
-                            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:max_claims", playerData.claims.length.toString());
+                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:max_claims", playerData.claims.length.toString());
                         }
                         // all requirements are met, open the claim creation ui
                         else {
                             system.run(() => {
                                 playSound(data.player, AddonSounds.Shovel.SELECT);
-                                new ShovelUI(data.player).newClaim(playerData.firstPoint, secondPoint);
+                                new ShovelUI(data.player, notifManager).newClaim(playerData.firstPoint, secondPoint);
                             });
                         }
                     }
@@ -261,7 +263,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
         }
         // player is not in the overworld, warn them that they are not allowed to create a claim here
         else {
-            sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.shovel:dimension_warning");
+            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.shovel:dimension_warning");
         }
 
     }
@@ -275,7 +277,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                 if (claim.isOverlap(data.block, data.block) && !claim.hasPermission(PermissionTypes.BREAK_BLOCKS, data.player)) {
                     data.cancel = true;
 
-                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:break_blocks");
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:break_blocks");
 
                 }
             });
@@ -290,7 +292,8 @@ world.beforeEvents.explosion.subscribe((data) => {
         var impactedBlocks = data.getImpactedBlocks();
 
         // find player closest to the explosion, we'll assume this is the player that placed the tnt
-        var closestPlayer: Player = getClosestPlayer(data.source.location);
+        const closestPlayer: Player = getClosestPlayer(data.source.location);
+        const notifManager = NotificationManagerStack.getById(closestPlayer.id);
 
         // flag to send notification
         var sendDisallowedNotification = false;
@@ -323,7 +326,7 @@ world.beforeEvents.explosion.subscribe((data) => {
 
         // if tnt effected a claim notify player
         if ((data.source.typeId == "minecraft:tnt") && sendDisallowedNotification) {
-            sendNotification(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:use_tnt");
+            notifManager.send(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:use_tnt");
         }
 
     }
@@ -379,14 +382,15 @@ world.afterEvents.pistonActivate.subscribe((data) => {
             data.dimension.runCommand(`setblock ${data.piston.block.location.x} ${data.piston.block.location.y} ${data.piston.block.location.z} air`)
 
             // drop the piston item
-            var pistonDrop = new ItemStack(data.piston.typeId)
+            const pistonDrop = new ItemStack(data.piston.typeId)
             data.dimension.spawnItem(pistonDrop, data.block.location);
 
             // get closest player to piston, we will assume they activated it
-            var closestPlayer: Player = getClosestPlayer(data.piston.block.location)
+            const closestPlayer: Player = getClosestPlayer(data.piston.block.location)
+            const notifManager = NotificationManagerStack.getById(closestPlayer.id);
 
             // notify player
-            sendNotification(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:piston");
+            notifManager.send(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:piston");
         }
     }
 
@@ -401,7 +405,9 @@ world.beforeEvents.itemUse.subscribe((data) => {
 });
 
 world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
-    
+
+    const notifManager = NotificationManagerStack.getById(data.player.id);
+
     if (data.target.dimension == world.getDimension("overworld")) {
         runInAllClaims((claim) => {
 
@@ -417,7 +423,7 @@ world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
                     data.cancel = true;
 
                     // notify player they don't have permissions
-                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:enter_claim");
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:enter_claim");
                 }
 
                 // disallow player from interacting with entities based on permissions
@@ -427,7 +433,7 @@ world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
                     data.cancel = true;
 
                     // notify player they don't have permissions
-                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:interact_with_entities");
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:interact_with_entities");
                 }
             }
         });
@@ -435,11 +441,13 @@ world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
 });
 
 world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
-    
+
+    const notifManager = NotificationManagerStack.getById(data.player.id);
+
     // blocks that are disabled by admin; can't be placed
     if (data.itemStack && settings.disallowedBlocks.includes(data.itemStack.typeId)) {
         // notify player
-        sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.world:disabled_item");
+        notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.world:disabled_item");
 
         data.cancel = true;
     }
@@ -470,8 +478,8 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                     data.cancel = true;
 
                     // notify player they don't have permissions
-                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:use_doors");
-                
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:use_doors");
+
                 }
             }
             // lever/button interaction permissions
@@ -481,7 +489,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                     data.cancel = true;
 
                     // notify player they don't have permissions
-                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT,"chat.claim.permission:use_switches");
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:use_switches");
                 }
             }
             // bed interaction permissions
@@ -491,8 +499,8 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                     data.cancel = true;
 
                     // notify player they don't have permissions
-                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:use_beds");
-                        
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:use_beds");
+
                 }
             }
             // opening chests/container permissions
@@ -502,7 +510,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                     data.cancel = true;
 
                     // notify player they don't have permissions
-                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:open_containers");
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:open_containers");
                 }
             }
             // editing signs permissions
@@ -512,7 +520,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                     data.cancel = true;
 
                     // notify player they don't have permissions
-                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:edit_signs");
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:edit_signs");
                 }
             }
             // block placing/using items on blocks permissions
@@ -522,8 +530,8 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                     data.cancel = true;
 
                     // notify player they don't have permissions
-                    sendNotification(data.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:use_item_on_block");
-                        
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:use_item_on_block");
+
                 }
             }
         });
@@ -592,10 +600,11 @@ world.afterEvents.entitySpawn.subscribe((data) => {
         else if (data.entity.typeId == "minecraft:wither") {
 
             // get the closest player to the wither spawn location, we will assume they spawned it
-            var closestPlayer: Player = getClosestPlayer(data.entity.location);
+            const closestPlayer: Player = getClosestPlayer(data.entity.location);
+            const notifManager = NotificationManagerStack.getById(closestPlayer.id);
 
             // notify player
-            sendNotification(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT, "chat.world:wither");
+            notifManager.send(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.world:wither");
 
             // return the items to the player
             world.getDimension("overworld").spawnItem(new ItemStack("minecraft:wither_skeleton_skull", 3), data.entity.location);
@@ -681,8 +690,10 @@ world.afterEvents.entityHurt.subscribe((data) => {
                 // if it was a player that hurt the entity
                 if (damagePlayerSource) {
 
+                    const notifManager = NotificationManagerStack.getById(damagePlayerSource.id);
+
                     // send the player a notification
-                    sendNotification(damagePlayerSource, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:hurt_entities");
+                    notifManager.send(damagePlayerSource, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:hurt_entities");
                 }
 
                 // check if the game engine will count the entity as dead
@@ -786,10 +797,11 @@ world.afterEvents.projectileHitBlock.subscribe((data) => {
                 world.getDimension("overworld").fillBlocks(blockVolume, "minecraft:air", {"blockFilter": {"includeTypes": ["minecraft:fire"]}});
 
                 // get the closest player to the fireball, we will assume they set up the dispenser to shoot it
-                var closestPlayer: Player = getClosestPlayer(block.location);
+                const closestPlayer: Player = getClosestPlayer(block.location);
+                const notifManager = NotificationManagerStack.getById(closestPlayer.id);
 
                 // notify player
-                sendNotification(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.fireballs");
+                notifManager.send(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.fireballs");
             }
         });
     }
@@ -801,7 +813,8 @@ system.runInterval(() => {
 
     for (var p of world.getAllPlayers()) {
 
-        var playerData = PlayerData.fromId(p.id);
+        const playerData = PlayerData.fromId(p.id);
+        const notifManager = NotificationManagerStack.getById(p.id);
 
         // only run if player is in overworld
         if (p.dimension == world.getDimension("overworld")) {
@@ -856,7 +869,7 @@ system.runInterval(() => {
                             // don't send the notif if a player teleports into a claim, tp disallow notifs are handled later
                             if (!(distanceMoved && (distanceMoved > playerTeleportThreshold))) {
                                 // player did not teleport, send a normal notif
-                                sendNotification(p, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:enter_claim");
+                                notifManager.send(p, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:enter_claim");
                             }
                         }
 
@@ -892,7 +905,7 @@ system.runInterval(() => {
 
                                 // wait a second before sending the notification, so the sound is played after the tp at the right location
                                 system.runTimeout(() => {
-                                    sendNotification(p, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim.permission:teleport_enter_claim");
+                                    notifManager.send(p, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:teleport_enter_claim");
                                 }, 10);
                             }
                         }
@@ -1031,7 +1044,8 @@ system.runInterval(() => {
 system.runInterval(() => {
     for (var p of world.getAllPlayers()) {
 
-        var playerData = PlayerData.fromId(p.id);
+        const playerData = PlayerData.fromId(p.id);
+        const notifManager = NotificationManagerStack.getById(p.id);
 
         // the hourly payment is only included in the default behavior
         if (playerData.claimBlocks.behavior == ClaimBlocksBehavior.DEFAULT) {
@@ -1042,8 +1056,8 @@ system.runInterval(() => {
             // if time is up reward blocks and reset timer
             if (playerData.claimBlocks.paymentTimeRemaining <= 0) {
                 playerData.claimBlocks.incrementAmount(settings.claimBlockHourlyPayment);
-                
-                sendNotification(p, AddonSounds.Global.POSITIVE_EVENT, "chat.blocks:payment", settings.claimBlockHourlyPayment.toString());
+
+                notifManager.send(p, AddonSounds.Global.POSITIVE_EVENT, undefined, "chat.blocks:payment", settings.claimBlockHourlyPayment.toString());
 
                 var inventory = p.getComponent(EntityComponentTypes.Inventory) as EntityInventoryComponent;
                 
@@ -1061,7 +1075,7 @@ system.runInterval(() => {
                     // 2 second delay since last notif
                     system.runTimeout(() => {
                         // notify the player of how they can craft a claim shovel
-                        sendNotification(p, AddonSounds.Global.NEUTRAl_EVENT, "chat.shovel:how_to_craft")
+                        notifManager.send(p, AddonSounds.Global.NEUTRAL_EVENT, undefined, "chat.shovel:how_to_craft")
                     }, 40)
                 }
 

@@ -2,7 +2,7 @@ import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions,
 import { NavigationStack, CallbackActionFormData, CallbackModalFormData, CallbackMessageFormData, ModalDataCorrect, ModalDataError } from './ui_wrapper.js';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
-import { sendNotification } from './notifications.js';
+import { NotificationManager, NotificationManagerStack } from './notifications.js';
 import { updateShovelBehavior } from './utils.js';
 
 export class ShovelUI {
@@ -21,14 +21,18 @@ export class ShovelUI {
 
     private navigationStack: NavigationStack = new NavigationStack();
 
+    private notificationManager: NotificationManager;
+
     /**
      * Creates a new ShovelUI object.
      * 
      * @param player - The player to show the UI to
+     * @param notificationManager - The notification manager for the player
      */
-    constructor(player: Player) {
+    constructor(player: Player, notificationManager: NotificationManager) {
         this.player = player;
         this.opModeActive = false; // set to false by default
+        this.notificationManager = notificationManager;
     }
 
     /**
@@ -456,7 +460,7 @@ export class ShovelUI {
                 claim.setEnd(end);
 
                 // notify player
-                sendNotification(this.player, AddonSounds.Global.POSITIVE_EVENT, "chat.claim:resized")
+                this.notificationManager.send(this.player, AddonSounds.Global.POSITIVE_EVENT, undefined, "chat.claim:resized")
 
                 //add/subtract the blocks from players balance
                 playerData.claimBlocks.incrementAmount(blockDifference);
@@ -637,7 +641,7 @@ export class ShovelUI {
 
                         // if a players permissions have been deleted notify them
                         if (p.id == playerID) {
-                            sendNotification(p, AddonSounds.Claim.SAVE, listParent instanceof Claim ? "chat.claim:player_permissions_reset_notif" : "chat.claim:global_player_permissions_reset_notif", this.player.name, listParent.name);
+                            this.notificationManager.send(p, AddonSounds.Claim.SAVE, undefined, listParent instanceof Claim ? "chat.claim:player_permissions_reset_notif" : "chat.claim:global_player_permissions_reset_notif", this.player.name, listParent.name);
 
                             // get the claim the player is in, this will be undefined if the player is not in a claim
                             const claim = listParent instanceof Claim ? 
@@ -789,12 +793,12 @@ export class ShovelUI {
 
                 // if a players permissions have been updated notify them
                 if (playerID && p.id == playerID) {
-                    sendNotification(p, AddonSounds.Claim.SAVE, listParent instanceof Claim ? "chat.claim:player_permissions_updated_notif" : "chat.claim:global_permissions_updated_notif" , this.player.name, listParent.name)
+                    this.notificationManager.send(p, AddonSounds.Claim.SAVE, undefined, listParent instanceof Claim ? "chat.claim:player_permissions_updated_notif" : "chat.claim:global_permissions_updated_notif" , this.player.name, listParent.name)
                 }
 
                 // if the claims global permissions have been updated notify all players in the claim
                 if (!playerID && listParent instanceof Claim && listParent.isOverlap(p.location, p.location) && (playerData.id != listParent.getOwnerData().id)) {
-                    sendNotification(p, AddonSounds.Claim.SAVE, "chat.claim:public_permissions_updated_notif", this.player.name, listParent.name)
+                    this.notificationManager.send(p, AddonSounds.Claim.SAVE, undefined, "chat.claim:public_permissions_updated_notif", this.player.name, listParent.name)
                 }
 
                 // get the claim the player is in, this will be undefined if the player is not in a claim
@@ -992,7 +996,7 @@ export class ShovelUI {
         }
         // player is not in the right dimension
         else {
-            sendNotification(this.player, AddonSounds.Global.NEGATIVE_EVENT, "chat.claim:view");
+            this.notificationManager.send(this.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:view");
         }
     }
 
@@ -1135,7 +1139,7 @@ export class ShovelUI {
                     playerData.addClaim(claim);
 
                     // notify player
-                    sendNotification(this.player, AddonSounds.Global.POSITIVE_EVENT, "chat.claim:created")
+                    this.notificationManager.send(this.player, AddonSounds.Global.POSITIVE_EVENT, undefined, "chat.claim:created");
 
                     // Reset resizingClaimName to avoid incorrect resizing behavior
                     playerData.setResizingClaimName("");
