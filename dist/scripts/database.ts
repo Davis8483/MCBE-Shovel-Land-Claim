@@ -102,7 +102,7 @@ export class Settings{
      * 
      * @param value - The type of item behavior, lock to inventory; give at spawn; crafting only
      */
-    setclaimShovelItemBehavior(value: ShovelBehavior) {
+    setClaimShovelItemBehavior(value: ShovelBehavior) {
         this._claimShovelItemBehavior = value;
     }
     

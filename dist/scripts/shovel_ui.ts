@@ -214,7 +214,7 @@ export class ShovelUI {
                     updateShovelBehavior(p, value)
                 }
 
-                settings.setclaimShovelItemBehavior(value);
+                settings.setClaimShovelItemBehavior(value);
 
                 return new ModalDataCorrect();
             })
