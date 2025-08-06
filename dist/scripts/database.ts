@@ -16,6 +16,8 @@ export class Settings{
     private _disallowedBlocks: string[];
     private _maxClaimAmount: number;
     private _claimShovelItemBehavior: ShovelBehavior;
+    private _entityProtectionCrammingRadius: number = 5; // radius to check for entity cramming, default is 5 blocks
+    private _entityProtectionCrammingThreshold: number = 100; // max number of entities allowed in the radius before entity cramming is applied
 
     /**
      * Creates a new Settings object with default values
@@ -38,6 +40,8 @@ export class Settings{
         ];
         this._maxClaimAmount = 0;
         this._claimShovelItemBehavior = ShovelBehavior.LOCK_TO_INVENTORY;
+        this._entityProtectionCrammingRadius = 5;
+        this._entityProtectionCrammingThreshold = 10;
     }
 
     get claimBlockHourlyPayment(): number {
@@ -61,6 +65,14 @@ export class Settings{
 
     get claimShovelItemBehavior(): ShovelBehavior {
         return this._claimShovelItemBehavior;
+    }
+
+    get entityProtectionCrammingRadius(): number {
+        return this._entityProtectionCrammingRadius;
+    }
+
+    get entityProtectionCrammingThreshold(): number {
+        return this._entityProtectionCrammingThreshold;
     }
 
     setClaimBlockHourlyPayment(value: number) {
@@ -105,7 +117,25 @@ export class Settings{
     setClaimShovelItemBehavior(value: ShovelBehavior) {
         this._claimShovelItemBehavior = value;
     }
-    
+
+    /**
+     * Sets the radius to check for entity cramming. If entity cramming threshold is met, entity saves will not load.
+     * 
+     * @param value - Radius in blocks
+     */
+    setEntityProtectionCrammingRadius(value: number) {
+        this._entityProtectionCrammingRadius = value;
+    }
+
+    /**
+     * Sets the max number of entities allowed in the radius; if exceeded entity saves will not load.
+     * 
+     * @param value - The max number of entities
+     */
+    setEntityProtectionCrammingThreshold(value: number) {
+        this._entityProtectionCrammingThreshold = value;
+    }
+
     /**
      * Returns a Settings object loaded from JSON, if a key is missing it will be replaced with the default value.
      * 
@@ -122,6 +152,8 @@ export class Settings{
         settings._disallowedBlocks = data._disallowedBlocks || defaultSettings._disallowedBlocks;
         settings._maxClaimAmount = data._maxClaimAmount || defaultSettings._maxClaimAmount;
         settings._claimShovelItemBehavior = data._claimShovelItemBehavior || defaultSettings._claimShovelItemBehavior;
+        settings._entityProtectionCrammingRadius = data._entityProtectionCrammingRadius || defaultSettings._entityProtectionCrammingRadius;
+        settings._entityProtectionCrammingThreshold = data._entityProtectionCrammingThreshold || defaultSettings._entityProtectionCrammingThreshold;
         return settings;
     }
 }

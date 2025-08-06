@@ -726,6 +726,27 @@ world.afterEvents.entityHurt.subscribe((data) => {
 
                     const structureID = data.hurtEntity.getDynamicProperty("structureID") as string;
 
+                    // entity cramming sort of???
+                    var queryOptions: EntityQueryOptions = {};
+                    queryOptions.location = data.hurtEntity.location;
+                    queryOptions.maxDistance = settings.entityProtectionCrammingRadius;
+                    if (dimension.getEntities(queryOptions).length > settings.entityProtectionCrammingThreshold) {
+                        // if there are too many entities in the area, we will not load the entity save
+                        // this is to prevent lag and crashing from loading too many entities
+
+                        // if owner is online, notify them that their mob farm isn't working and that they need to enable the hurt entities public permission
+                        var claimOwner = world.getEntity(claimData.getOwnerData().id) as Player;
+                        if (claimOwner) {
+
+                            const notifManager = NotificationManagerStack.getById(claimOwner.id);
+
+                            // this notif is only allowed to send every 5 minutes
+                            notifManager.send(claimOwner, AddonSounds.Global.NEGATIVE_EVENT, 300000, "chat.claim:entity_cramming", claimData.name);
+                        }
+
+                        return;
+                    }
+
                     // make sure the entity save exists
                     if (structureID) {
                         try {
