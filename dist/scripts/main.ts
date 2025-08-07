@@ -754,7 +754,7 @@ world.afterEvents.entityHurt.subscribe((data) => {
                             const notifManager = NotificationManagerStack.getById(claimOwner.id);
 
                             // this notif is only allowed to send every 5 minutes
-                            notifManager.send(claimOwner, AddonSounds.Global.NEGATIVE_EVENT, 300000, "chat.claim:entity_cramming", claimData.name);
+                            notifManager.send(claimOwner, AddonSounds.Global.WARN_EVENT, 300000, "chat.claim:entity_cramming", claimData.name);
                         }
 
                         return;
