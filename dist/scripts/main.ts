@@ -1,7 +1,7 @@
 import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, EntityRideableComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InputButton, ButtonState } from '@minecraft/server';
 import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
-import { NotificationManager, NotificationManagerStack } from './notifications.js';
+import { NotificationManagerStack } from './notifications.js';
 import { ShovelUI } from './shovel_ui.js';
 import { runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior, createEntitySave, deleteEntitySave } from './utils.js'
 

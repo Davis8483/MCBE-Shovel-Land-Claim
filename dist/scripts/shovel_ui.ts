@@ -2,7 +2,7 @@ import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions,
 import { NavigationStack, CallbackActionFormData, CallbackModalFormData, CallbackMessageFormData, ModalDataCorrect, ModalDataError } from './ui_wrapper.js';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
-import { NotificationManager, NotificationManagerStack } from './notifications.js';
+import { NotificationManager } from './notifications.js';
 import { updateShovelBehavior } from './utils.js';
 
 export class ShovelUI {
