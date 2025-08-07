@@ -12,10 +12,7 @@ export class NavigationStack {
         if (this.stack.length > 0) { 
             this.stack.pop(); // Remove the last screen from the stack
 
-            const previousScreen = this.stack.pop(); // Get the previous screen
-            if (previousScreen) {
-                previousScreen(); // Call the function to show the previous screen
-            }
+            this.showCurrent(); // Now show the previous screen
         }
     }
 
@@ -47,9 +44,9 @@ export class NavigationStack {
      */
     public showCurrent(): void {
         if (this.stack.length > 0) {
-            const currentScreen = this.stack[this.stack.length - 1]; // Get the last screen in the stack
-            if (currentScreen) {
-                currentScreen(); // Call the function to show the current screen
+            const previousScreen = this.stack.pop(); // get the last screen in the stack
+            if (previousScreen) {
+                previousScreen(); // Call the function to show the current screen
             }
         }
     }
