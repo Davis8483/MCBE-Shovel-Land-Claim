@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, EntityRideableComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InputButton, ButtonState } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, EntityRideableComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume } from '@minecraft/server';
 import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { NotificationManagerStack } from './notifications.js';
@@ -103,8 +103,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
 
                 var isResize = false;
 
-                // player is not crouching
-                if (data.player.inputInfo.getButtonState(InputButton.Sneak) == ButtonState.Released) {
+                if (!data.player.isSneaking) {
                     playerData.setResizingClaimName("");
                     playerData.setFirstPoint(data.block.location);
 
@@ -476,7 +475,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
         runInAllClaims((claim) => {
                 
             // door interaction permissions
-            if (claim.isOverlap(data.block.location, data.block.location) && (data.block.typeId.includes("door") || data.block.typeId.includes("fence_gate")) && (data.player.inputInfo.getButtonState(InputButton.Sneak) == ButtonState.Released)) {
+            if (claim.isOverlap(data.block.location, data.block.location) && (data.block.typeId.includes("door") || data.block.typeId.includes("fence_gate")) && !data.player.isSneaking) {
                 if (!claim.hasPermission(PermissionTypes.USE_DOORS, data.player)){
                     // cancel the action
                     data.cancel = true;
@@ -487,7 +486,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                 }
             }
             // lever/button interaction permissions
-            else if (claim.isOverlap(data.block.location, data.block.location) && (data.block.matches("minecraft:lever") || data.block.typeId.includes("button")) && (data.player.inputInfo.getButtonState(InputButton.Sneak) == ButtonState.Released)) {
+            else if (claim.isOverlap(data.block.location, data.block.location) && (data.block.matches("minecraft:lever") || data.block.typeId.includes("button")) && !data.player.isSneaking) {
                 if (!claim.hasPermission(PermissionTypes.USE_SWITCHES, data.player)){
                     // cancel the action
                     data.cancel = true;
@@ -497,7 +496,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                 }
             }
             // bed interaction permissions
-            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.matches("minecraft:bed") && (data.player.inputInfo.getButtonState(InputButton.Sneak) == ButtonState.Released)) {
+            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.matches("minecraft:bed") && !data.player.isSneaking) {
                 if (!claim.hasPermission(PermissionTypes.USE_BEDS, data.player)){
                     // cancel the action
                     data.cancel = true;
@@ -508,7 +507,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                 }
             }
             // opening chests/container permissions
-            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Inventory) && (data.player.inputInfo.getButtonState(InputButton.Sneak) == ButtonState.Released)) {
+            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Inventory) && !data.player.isSneaking) {
                 if (!claim.hasPermission(PermissionTypes.OPEN_CONTAINERS, data.player)){
                     // cancel the action
                     data.cancel = true;
@@ -518,7 +517,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                 }
             }
             // editing signs permissions
-            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Sign) && (data.player.inputInfo.getButtonState(InputButton.Sneak) == ButtonState.Released) && !data.itemStack?.matches("minecraft:honeycomb")) {
+            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Sign) && !data.player.isSneaking && !data.itemStack?.matches("minecraft:honeycomb")) {
                 if (!claim.hasPermission(PermissionTypes.EDIT_SIGNS, data.player)){
                     // cancel the action
                     data.cancel = true;
