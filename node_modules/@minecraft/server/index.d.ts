@@ -15,7 +15,7 @@
  * ```json
  * {
  *   "module_name": "@minecraft/server",
- *   "version": "2.0.0"
+ *   "version": "2.1.0"
  * }
  * ```
  *
@@ -119,6 +119,191 @@ export enum BlockVolumeIntersection {
 export enum ButtonState {
     Pressed = 'Pressed',
     Released = 'Released',
+}
+
+/**
+ * The required permission level to execute the custom command.
+ */
+export enum CommandPermissionLevel {
+    /**
+     * @remarks
+     * Anything can run this level.
+     *
+     */
+    Any = 0,
+    /**
+     * @remarks
+     * Any operator can run this command, including command blocks.
+     *
+     */
+    GameDirectors = 1,
+    /**
+     * @remarks
+     * Any operator can run this command, but NOT command blocks.
+     *
+     */
+    Admin = 2,
+    /**
+     * @remarks
+     * Any server host can run this command.
+     *
+     */
+    Host = 3,
+    /**
+     * @remarks
+     * Only dedicated server can run this command.
+     *
+     */
+    Owner = 4,
+}
+
+/**
+ * Reason why custom command registration failed.
+ */
+export enum CustomCommandErrorReason {
+    /**
+     * @remarks
+     * Command name already registered.
+     *
+     */
+    AlreadyRegistered = 'AlreadyRegistered',
+    /**
+     * @remarks
+     * Custom Command references an enum that has not been
+     * registered.
+     *
+     */
+    EnumDependencyMissing = 'EnumDependencyMissing',
+    /**
+     * @remarks
+     * Supplied Custom Command namespace does not match previous
+     * registrations for this add-on.
+     *
+     */
+    NamespaceMismatch = 'NamespaceMismatch',
+    /**
+     * @remarks
+     * Too many command parameters defined in CustomCommand.
+     *
+     */
+    ParameterLimit = 'ParameterLimit',
+    /**
+     * @remarks
+     * Custom command registry can not be accessed after world
+     * initialized event.
+     *
+     */
+    RegistryInvalid = 'RegistryInvalid',
+    /**
+     * @remarks
+     * Command parameters cannot be redefined during reload. Only
+     * the script closure itself can be changed.
+     *
+     */
+    RegistryReadOnly = 'RegistryReadOnly',
+}
+
+/**
+ * The types of paramaters accepted by a custom command.
+ */
+export enum CustomCommandParamType {
+    /**
+     * @remarks
+     * Block type parameter provides a {@link BlockType}.
+     *
+     */
+    BlockType = 'BlockType',
+    /**
+     * @remarks
+     * Boolean parameter.
+     *
+     */
+    Boolean = 'Boolean',
+    /**
+     * @remarks
+     * Entity selector parameter provides an {@link Entity}.
+     *
+     */
+    EntitySelector = 'EntitySelector',
+    /**
+     * @remarks
+     * Entity type parameter provides an {@link EntityType}.
+     *
+     */
+    EntityType = 'EntityType',
+    /**
+     * @remarks
+     * Command enum parameter.
+     *
+     */
+    Enum = 'Enum',
+    /**
+     * @remarks
+     * Float parameter.
+     *
+     */
+    Float = 'Float',
+    /**
+     * @remarks
+     * Integer parameter.
+     *
+     */
+    Integer = 'Integer',
+    /**
+     * @remarks
+     * Item type parameter provides an {@link ItemType}.
+     *
+     */
+    ItemType = 'ItemType',
+    /**
+     * @remarks
+     * Location parameter provides a {@link
+     * @minecraft/server.Location}.
+     *
+     */
+    Location = 'Location',
+    /**
+     * @remarks
+     * Player selector parameter provides a {@link Player}.
+     *
+     */
+    PlayerSelector = 'PlayerSelector',
+    /**
+     * @remarks
+     * String parameter.
+     *
+     */
+    String = 'String',
+}
+
+/**
+ * Who executed the command.
+ */
+export enum CustomCommandSource {
+    /**
+     * @remarks
+     * Command originated from a command block.
+     *
+     */
+    Block = 'Block',
+    /**
+     * @remarks
+     * Command originated from an entity or player.
+     *
+     */
+    Entity = 'Entity',
+    NPCDialogue = 'NPCDialogue',
+    /**
+     * @remarks
+     * Command originated from the server.
+     *
+     */
+    Server = 'Server',
+}
+
+export enum CustomCommandStatus {
+    Success = 0,
+    Failure = 1,
 }
 
 export enum CustomComponentNameErrorReason {
@@ -735,6 +920,27 @@ export enum EntityComponentTypes {
      *
      */
     OnFire = 'minecraft:onfire',
+    /**
+     * @remarks
+     * Use this component to read the exhaustion of a player. This
+     * is only available on players.
+     *
+     */
+    Exhaustion = 'minecraft:player.exhaustion',
+    /**
+     * @remarks
+     * Use this component to read the hunger of a player. This is
+     * only available on players.
+     *
+     */
+    Hunger = 'minecraft:player.hunger',
+    /**
+     * @remarks
+     * Use this component to read the saturation of a player. This
+     * is only available on players.
+     *
+     */
+    Saturation = 'minecraft:player.saturation',
     /**
      * @remarks
      * The projectile component controls the properties of a
@@ -1712,6 +1918,7 @@ export enum ItemComponentTypes {
      *
      */
     Durability = 'minecraft:durability',
+    Dyeable = 'minecraft:dyeable',
     /**
      * @remarks
      * The minecraft:enchantable component.
@@ -1861,6 +2068,13 @@ export enum MoonPhase {
      *
      */
     WaxingGibbous = 7,
+}
+
+export enum MovementType {
+    Immovable = 'Immovable',
+    Popped = 'Popped',
+    Push = 'Push',
+    PushPull = 'PushPull',
 }
 
 /**
@@ -2031,6 +2245,51 @@ export enum PlatformType {
 }
 
 /**
+ * Specifies the player inventory type.
+ */
+export enum PlayerInventoryType {
+    /**
+     * @remarks
+     * Hotbar inventory.
+     *
+     */
+    Hotbar = 'Hotbar',
+    /**
+     * @remarks
+     * Main inventory.
+     *
+     */
+    Inventory = 'Inventory',
+}
+
+/**
+ * The player permission level.
+ */
+export enum PlayerPermissionLevel {
+    /**
+     * @remarks
+     * Visitors can only observe the world, not interact with it.
+     *
+     */
+    Visitor = 0,
+    /**
+     * @remarks
+     * Members can build and mine, attack players and mobs, and
+     * interact with items and entities.
+     *
+     */
+    Member = 1,
+    /**
+     * @remarks
+     * Operators can teleport and use commands, in addition to
+     * everything Members can do.
+     *
+     */
+    Operator = 2,
+    Custom = 3,
+}
+
+/**
  * Contains objectives and participants for the scoreboard.
  */
 export enum ScoreboardIdentityType {
@@ -2105,6 +2364,11 @@ export enum SignSide {
      *
      */
     Front = 'Front',
+}
+
+export enum StickyType {
+    None = 'None',
+    Same = 'Same',
 }
 
 /**
@@ -2353,9 +2617,11 @@ export type BlockComponentTypeMap = {
     'minecraft:fluid_container': BlockFluidContainerComponent;
     'minecraft:inventory': BlockInventoryComponent;
     'minecraft:map_color': BlockMapColorComponent;
+    'minecraft:movable': BlockMovableComponent;
     'minecraft:piston': BlockPistonComponent;
     'minecraft:record_player': BlockRecordPlayerComponent;
     'minecraft:sign': BlockSignComponent;
+    movable: BlockMovableComponent;
     piston: BlockPistonComponent;
     record_player: BlockRecordPlayerComponent;
     sign: BlockSignComponent;
@@ -2463,6 +2729,9 @@ export type EntityComponentTypeMap = {
     'minecraft:navigation.hover': EntityNavigationHoverComponent;
     'minecraft:navigation.walk': EntityNavigationWalkComponent;
     'minecraft:onfire': EntityOnFireComponent;
+    'minecraft:player.exhaustion': EntityExhaustionComponent;
+    'minecraft:player.hunger': EntityHungerComponent;
+    'minecraft:player.saturation': EntitySaturationComponent;
     'minecraft:projectile': EntityProjectileComponent;
     'minecraft:push_through': EntityPushThroughComponent;
     'minecraft:rideable': EntityRideableComponent;
@@ -2493,6 +2762,9 @@ export type EntityComponentTypeMap = {
     'navigation.hover': EntityNavigationHoverComponent;
     'navigation.walk': EntityNavigationWalkComponent;
     onfire: EntityOnFireComponent;
+    'player.exhaustion': EntityExhaustionComponent;
+    'player.hunger': EntityHungerComponent;
+    'player.saturation': EntitySaturationComponent;
     projectile: EntityProjectileComponent;
     push_through: EntityPushThroughComponent;
     rideable: EntityRideableComponent;
@@ -2516,11 +2788,13 @@ export type ItemComponentTypeMap = {
     compostable: ItemCompostableComponent;
     cooldown: ItemCooldownComponent;
     durability: ItemDurabilityComponent;
+    dyeable: ItemDyeableComponent;
     enchantable: ItemEnchantableComponent;
     food: ItemFoodComponent;
     'minecraft:compostable': ItemCompostableComponent;
     'minecraft:cooldown': ItemCooldownComponent;
     'minecraft:durability': ItemDurabilityComponent;
+    'minecraft:dyeable': ItemDyeableComponent;
     'minecraft:enchantable': ItemEnchantableComponent;
     'minecraft:food': ItemFoodComponent;
 };
@@ -2584,6 +2858,18 @@ export class Block {
      * {@link LocationOutOfWorldBoundariesError}
      */
     readonly isWaterlogged: boolean;
+    /**
+     * @remarks
+     * Key for the localization of this block's name used in .lang
+     * files.
+     *
+     * @throws This property can throw when used.
+     *
+     * {@link LocationInUnloadedChunkError}
+     *
+     * {@link LocationOutOfWorldBoundariesError}
+     */
+    readonly localizationKey: string;
     /**
      * @remarks
      * Coordinates of the specified block.
@@ -3500,6 +3786,28 @@ export class BlockMapColorComponent extends BlockComponent {
     static readonly componentId = 'minecraft:map_color';
 }
 
+// @ts-ignore Class inheritance allowed for native defined classes
+export class BlockMovableComponent extends BlockComponent {
+    private constructor();
+    /**
+     * @throws This property can throw when used.
+     *
+     * {@link LocationInUnloadedChunkError}
+     *
+     * {@link LocationOutOfWorldBoundariesError}
+     */
+    readonly movementType: MovementType;
+    /**
+     * @throws This property can throw when used.
+     *
+     * {@link LocationInUnloadedChunkError}
+     *
+     * {@link LocationOutOfWorldBoundariesError}
+     */
+    readonly stickyType: StickyType;
+    static readonly componentId = 'minecraft:movable';
+}
+
 /**
  * Contains the combination of type {@link BlockType} and
  * properties (also sometimes called block state) which
@@ -4016,9 +4324,7 @@ export class BlockSignComponent extends BlockComponent {
      * @param message
      * The message to set on the sign. If set to a string, then
      * call `getText` to read that string. If set to a RawMessage,
-     * then calling `getRawText` will return a RawText. If set to a
-     * RawText, then calling `getRawText` will return the same
-     * object that was passed in.
+     * then calling `getRawText` will return a RawText.
      * @param side
      * The side of the sign the message will be set on. If not
      * provided, the message will be set on the front side of the
@@ -4028,7 +4334,7 @@ export class BlockSignComponent extends BlockComponent {
      * Throws if the provided message is greater than 512
      * characters in length.
      */
-    setText(message: RawMessage | RawText | string, side?: SignSide): void;
+    setText(message: RawMessage | string, side?: SignSide): void;
     /**
      * @remarks
      * Sets the dye color of the text.
@@ -4663,6 +4969,59 @@ export class Container {
     clearAll(): void;
     /**
      * @remarks
+     * Attempts to find an item inside the container
+     *
+     * @param itemStack
+     * The item to find.
+     * @throws This function can throw errors.
+     *
+     * {@link InvalidContainerError}
+     */
+    contains(itemStack: ItemStack): boolean;
+    /**
+     * @remarks
+     * Find the index of the first instance of an item inside the
+     * container
+     *
+     * @param itemStack
+     * The item to find.
+     * @throws This function can throw errors.
+     *
+     * {@link InvalidContainerError}
+     */
+    find(itemStack: ItemStack): number | undefined;
+    /**
+     * @remarks
+     * Find the index of the last instance of an item inside the
+     * container
+     *
+     * @param itemStack
+     * The item to find.
+     * @throws This function can throw errors.
+     *
+     * {@link InvalidContainerError}
+     */
+    findLast(itemStack: ItemStack): number | undefined;
+    /**
+     * @remarks
+     * Finds the index of the first empty slot inside the container
+     *
+     * @throws This function can throw errors.
+     *
+     * {@link InvalidContainerError}
+     */
+    firstEmptySlot(): number | undefined;
+    /**
+     * @remarks
+     * Finds the index of the first item inside the container
+     *
+     * @throws This function can throw errors.
+     *
+     * {@link InvalidContainerError}
+     */
+    firstItem(): number | undefined;
+    /**
+     * @remarks
      * Gets an {@link ItemStack} of the item at the specified slot.
      * If the slot is empty, returns `undefined`. This method does
      * not change or clear the contents of the specified slot. To
@@ -5174,9 +5533,11 @@ export class ContainerSlot {
      * @throws
      * Throws if the slot's container is invalid.
      *
-     * {@link Error}
+     * {@link minecraftcommon.ArgumentOutOfBoundsError}
      *
      * {@link InvalidContainerSlotError}
+     *
+     * {@link minecraftcommon.UnsupportedFunctionalityError}
      */
     setDynamicProperty(identifier: string, value?: boolean | number | string | Vector3): void;
     /**
@@ -5209,11 +5570,92 @@ export class ContainerSlot {
      * @throws
      * Throws if the slot's container is invalid.
      *
-     * {@link Error}
+     * {@link minecraftcommon.ArgumentOutOfBoundsError}
      *
      * {@link InvalidContainerSlotError}
      */
     setLore(loreList?: string[]): void;
+}
+
+/**
+ * Details about the origins of the command.
+ */
+export class CustomCommandOrigin {
+    private constructor();
+    /**
+     * @remarks
+     * If this command was initiated via an NPC, returns the entity
+     * that initiated the NPC dialogue.
+     *
+     */
+    readonly initiator?: Entity;
+    /**
+     * @remarks
+     * Source block if this command was triggered via a block
+     * (e.g., a commandblock.)
+     *
+     */
+    readonly sourceBlock?: Block;
+    /**
+     * @remarks
+     * Source entity if this command was triggered by an entity
+     * (e.g., a NPC).
+     *
+     */
+    readonly sourceEntity?: Entity;
+    /**
+     * @remarks
+     * Returns the type of source that fired this command.
+     *
+     */
+    readonly sourceType: CustomCommandSource;
+}
+
+/**
+ * Provides the functionality for registering custom commands.
+ */
+export class CustomCommandRegistry {
+    private constructor();
+    /**
+     * @remarks
+     * Registers a custom command that when executed triggers a
+     * script callback.
+     *
+     * This function can't be called in read-only mode.
+     *
+     * This function can be called in early-execution mode.
+     *
+     * @param callback
+     * The callback triggered when the command executes.
+     * @throws This function can throw errors.
+     *
+     * {@link CustomCommandError}
+     *
+     * {@link minecraftcommon.EngineError}
+     *
+     * {@link NamespaceNameError}
+     */
+    registerCommand(
+        customCommand: CustomCommand,
+        callback: (origin: CustomCommandOrigin, ...args: any[]) => CustomCommandResult | undefined,
+    ): void;
+    /**
+     * @remarks
+     * Registers a custom command enum.
+     *
+     * This function can't be called in read-only mode.
+     *
+     * This function can be called in early-execution mode.
+     *
+     * @throws This function can throw errors.
+     *
+     * {@link CustomCommandError}
+     *
+     * {@link minecraftcommon.EngineError}
+     *
+     * {@link NamespaceNameError}
+     */
+    registerEnum(name: string, values: string[]): void;
 }
 
 /**
@@ -5311,6 +5753,13 @@ export class Dimension {
      *
      */
     readonly id: string;
+    /**
+     * @remarks
+     * Key for the localization of a dimension's name used by
+     * language files.
+     *
+     */
+    readonly localizationKey: string;
     /**
      * @remarks
      * Searches the block volume for a block that satisfies the
@@ -5531,6 +5980,10 @@ export class Dimension {
      * @returns
      * An entity array.
      * @throws This function can throw errors.
+     *
+     * {@link CommandError}
+     *
+     * {@link minecraftcommon.InvalidArgumentError}
      * @example bounceSkeletons.ts
      * ```typescript
      * import { EntityQueryOptions, DimensionLocation } from "@minecraft/server";
@@ -5619,6 +6072,14 @@ export class Dimension {
      * @param options
      * Additional options for processing this raycast query.
      * @throws This function can throw errors.
+     *
+     * {@link minecraftcommon.EngineError}
+     *
+     * {@link minecraftcommon.InvalidArgumentError}
+     *
+     * {@link InvalidEntityError}
+     *
+     * {@link minecraftcommon.UnsupportedFunctionalityError}
      */
     getEntitiesFromRay(location: Vector3, direction: Vector3, options?: EntityRaycastOptions): EntityRaycastHit[];
     /**
@@ -5632,6 +6093,10 @@ export class Dimension {
      * @returns
      * A player array.
      * @throws This function can throw errors.
+     *
+     * {@link CommandError}
+     *
+     * {@link minecraftcommon.InvalidArgumentError}
      */
     getPlayers(options?: EntityQueryOptions): Player[];
     /**
@@ -5717,6 +6182,8 @@ export class Dimension {
      * An error will be thrown if fade is less than 0.0.
      * An error will be thrown if pitch is less than 0.01.
      * An error will be thrown if volume is less than 0.0.
+     *
+     * {@link minecraftcommon.PropertyOutOfBoundsError}
      */
     playSound(soundId: string, location: Vector3, soundOptions?: WorldSoundOptions): void;
     /**
@@ -5816,9 +6283,11 @@ export class Dimension {
      * Newly created entity at the specified location.
      * @throws This function can throw errors.
      *
-     * {@link Error}
+     * {@link EntitySpawnError}
      *
      * {@link minecraftcommon.InvalidArgumentError}
+     *
+     * {@link InvalidEntityError}
      *
      * {@link LocationInUnloadedChunkError}
      *
@@ -6279,6 +6748,10 @@ export class Entity {
      * Dimension that the entity is currently within.
      *
      * @throws This property can throw when used.
+     *
+     * {@link minecraftcommon.EngineError}
+     *
+     * {@link InvalidEntityError}
      */
     readonly dimension: Dimension;
     /**
@@ -6299,6 +6772,8 @@ export class Entity {
      * stone wall.
      *
      * @throws This property can throw when used.
+     *
+     * {@link InvalidEntityError}
      */
     readonly isClimbing: boolean;
     /**
@@ -6307,6 +6782,8 @@ export class Entity {
      * greater than 1 while gliding.
      *
      * @throws This property can throw when used.
+     *
+     * {@link InvalidEntityError}
      */
     readonly isFalling: boolean;
     /**
@@ -6314,6 +6791,8 @@ export class Entity {
      * Whether any part of the entity is inside a water block.
      *
      * @throws This property can throw when used.
+     *
+     * {@link InvalidEntityError}
      */
     readonly isInWater: boolean;
     /**
@@ -6324,6 +6803,8 @@ export class Entity {
      * no gravity this property may be incorrect.
      *
      * @throws This property can throw when used.
+     *
+     * {@link InvalidEntityError}
      */
     readonly isOnGround: boolean;
     /**
@@ -6331,6 +6812,8 @@ export class Entity {
      * If true, the entity is currently sleeping.
      *
      * @throws This property can throw when used.
+     *
+     * {@link InvalidEntityError}
      */
     readonly isSleeping: boolean;
     /**
@@ -6349,6 +6832,8 @@ export class Entity {
      * with Carrot on a Stick.
      *
      * @throws This property can throw when used.
+     *
+     * {@link InvalidEntityError}
      */
     readonly isSprinting: boolean;
     /**
@@ -6357,6 +6842,8 @@ export class Entity {
      * player using the swim action or a fish in water.
      *
      * @throws This property can throw when used.
+     *
+     * {@link InvalidEntityError}
      */
     readonly isSwimming: boolean;
     /**
@@ -6369,9 +6856,21 @@ export class Entity {
     readonly isValid: boolean;
     /**
      * @remarks
+     * Key for the localization of this entity's name used in .lang
+     * files.
+     *
+     * @throws This property can throw when used.
+     *
+     * {@link InvalidEntityError}
+     */
+    readonly localizationKey: string;
+    /**
+     * @remarks
      * Current location of the entity.
      *
      * @throws This property can throw when used.
+     *
+     * {@link InvalidEntityError}
      */
     readonly location: Vector3;
     /**
@@ -6418,6 +6917,12 @@ export class Entity {
      * amplifier are outside of the valid ranges, or if the effect
      * does not exist.
      * @throws This function can throw errors.
+     *
+     * {@link minecraftcommon.ArgumentOutOfBoundsError}
+     *
+     * {@link minecraftcommon.InvalidArgumentError}
+     *
+     * {@link InvalidEntityError}
      * @example spawnPoisonedVillager.ts
      * ```typescript
      * import { DimensionLocation } from "@minecraft/server";
@@ -6477,6 +6982,10 @@ export class Entity {
      * Returns true if the tag was added successfully. This can
      * fail if the tag already exists on the entity.
      * @throws This function can throw errors.
+     *
+     * {@link minecraftcommon.ArgumentOutOfBoundsError}
+     *
+     * {@link InvalidEntityError}
      * @example tagsQuery.ts
      * ```typescript
      * import { EntityQueryOptions, DimensionLocation } from "@minecraft/server";
@@ -6519,6 +7028,12 @@ export class Entity {
      * if the entity is invulnerable or if the damage applied is
      * less than or equal to 0.
      * @throws This function can throw errors.
+     *
+     * {@link minecraftcommon.EngineError}
+     *
+     * {@link InvalidEntityError}
+     *
+     * {@link minecraftcommon.UnsupportedFunctionalityError}
      * @example applyDamageThenHeal.ts
      * ```typescript
      * import { system, EntityHealthComponent, EntityComponentTypes, DimensionLocation } from "@minecraft/server";
@@ -6553,6 +7068,12 @@ export class Entity {
      * @param vector
      * Impulse vector.
      * @throws This function can throw errors.
+     *
+     * {@link minecraftcommon.ArgumentOutOfBoundsError}
+     *
+     * {@link InvalidEntityError}
+     *
+     * {@link minecraftcommon.UnsupportedFunctionalityError}
      * @example applyImpulse.ts
      * ```typescript
      * import { DimensionLocation } from "@minecraft/server";
@@ -6579,6 +7100,10 @@ export class Entity {
      * @param verticalStrength
      * Knockback strength for the vertical vector.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
+     *
+     * {@link minecraftcommon.UnsupportedFunctionalityError}
      * @example bounceSkeletons.ts
      * ```typescript
      * import { EntityQueryOptions, DimensionLocation } from "@minecraft/server";
@@ -6608,6 +7133,8 @@ export class Entity {
      * entity.
      *
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      */
     clearDynamicProperties(): void;
     /**
@@ -6619,6 +7146,10 @@ export class Entity {
      * This function can't be called in read-only mode.
      *
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
+     *
+     * {@link minecraftcommon.UnsupportedFunctionalityError}
      * @example applyImpulse.ts
      * ```typescript
      * import { DimensionLocation } from "@minecraft/server";
@@ -6650,6 +7181,8 @@ export class Entity {
      * @returns
      * Returns whether the entity was on fire.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      * @example setOnFire.ts
      * ```typescript
      * import { system, EntityOnFireComponent, EntityComponentTypes, DimensionLocation } from "@minecraft/server";
@@ -6682,6 +7215,8 @@ export class Entity {
      * Returns the first intersecting block from the direction that
      * this entity is looking at.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      */
     getBlockFromViewDirection(options?: BlockRaycastOptions): BlockRaycastHit | undefined;
     /**
@@ -6725,6 +7260,8 @@ export class Entity {
      * Returns the value for the property, or undefined if the
      * property has not been set.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      */
     getDynamicProperty(identifier: string): boolean | number | string | Vector3 | undefined;
     /**
@@ -6735,6 +7272,8 @@ export class Entity {
      * @returns
      * A string array of the dynamic properties set on this entity.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      */
     getDynamicPropertyIds(): string[];
     /**
@@ -6747,6 +7286,8 @@ export class Entity {
      * properties, it may be slow to load on various devices.
      *
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      */
     getDynamicPropertyTotalByteCount(): number;
     /**
@@ -6762,6 +7303,10 @@ export class Entity {
      * effect is not present, or throws an error if the effect does
      * not exist.
      * @throws This function can throw errors.
+     *
+     * {@link minecraftcommon.InvalidArgumentError}
+     *
+     * {@link InvalidEntityError}
      */
     getEffect(effectType: EffectType | string): Effect | undefined;
     /**
@@ -6771,6 +7316,8 @@ export class Entity {
      * @returns
      * List of effects.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      */
     getEffects(): Effect[];
     /**
@@ -6784,6 +7331,14 @@ export class Entity {
      * Returns a set of entities from the direction that this
      * entity is looking at.
      * @throws This function can throw errors.
+     *
+     * {@link minecraftcommon.EngineError}
+     *
+     * {@link minecraftcommon.InvalidArgumentError}
+     *
+     * {@link InvalidEntityError}
+     *
+     * {@link minecraftcommon.UnsupportedFunctionalityError}
      */
     getEntitiesFromViewDirection(options?: EntityRaycastOptions): EntityRaycastHit[];
     /**
@@ -6795,6 +7350,8 @@ export class Entity {
      * Returns the current location of the head component of this
      * entity.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      */
     getHeadLocation(): Vector3;
     /**
@@ -6812,6 +7369,8 @@ export class Entity {
      * returned.
      * @throws
      * Throws if the entity is invalid.
+     *
+     * {@link InvalidEntityError}
      */
     getProperty(identifier: string): boolean | number | string | undefined;
     /**
@@ -6822,6 +7381,8 @@ export class Entity {
      * Returns a Vec2 containing the rotation of this entity (in
      * degrees).
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      */
     getRotation(): Vector2;
     /**
@@ -6831,6 +7392,8 @@ export class Entity {
      * @returns
      * An array containing all tags as strings.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      */
     getTags(): string[];
     /**
@@ -6840,6 +7403,8 @@ export class Entity {
      * @returns
      * Returns the current velocity vector of the entity.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      * @example getFireworkVelocity.ts
      * ```typescript
      * import { system, DimensionLocation } from "@minecraft/server";
@@ -6867,6 +7432,8 @@ export class Entity {
      * @returns
      * Returns the current view direction of the entity.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      */
     getViewDirection(): Vector3;
     /**
@@ -6895,6 +7462,8 @@ export class Entity {
      * @returns
      * Returns whether an entity has a particular tag.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      */
     hasTag(tag: string): boolean;
     /**
@@ -6907,6 +7476,8 @@ export class Entity {
      * Returns true if entity can be killed (even if it is already
      * dead), otherwise it returns false.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      * @example tagsQuery.ts
      * ```typescript
      * import { EntityQueryOptions, DimensionLocation } from "@minecraft/server";
@@ -6945,6 +7516,10 @@ export class Entity {
      * The target location that this entity should face/look
      * towards.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
+     *
+     * {@link minecraftcommon.UnsupportedFunctionalityError}
      */
     lookAt(targetLocation: Vector3): void;
     /**
@@ -6960,6 +7535,12 @@ export class Entity {
      * passed in EntityQueryOptions, otherwise it returns false.
      * @throws
      * Throws if the query options are misconfigured.
+     *
+     * {@link minecraftcommon.InvalidArgumentError}
+     *
+     * {@link InvalidEntityError}
+     *
+     * {@link minecraftcommon.UnsupportedFunctionalityError}
      */
     matches(options: EntityQueryOptions): boolean;
     /**
@@ -6974,6 +7555,8 @@ export class Entity {
      * Additional options to control the playback and transitions
      * of the animation.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      */
     playAnimation(animationName: string, options?: PlayAnimationOptions): void;
     /**
@@ -6985,6 +7568,10 @@ export class Entity {
      * This function can't be called in read-only mode.
      *
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
+     *
+     * {@link minecraftcommon.UnsupportedFunctionalityError}
      */
     remove(): void;
     /**
@@ -7000,6 +7587,10 @@ export class Entity {
      * Returns true if the effect has been removed. Returns false
      * if the effect is not found or does not exist.
      * @throws This function can throw errors.
+     *
+     * {@link minecraftcommon.InvalidArgumentError}
+     *
+     * {@link InvalidEntityError}
      */
     removeEffect(effectType: EffectType | string): boolean;
     /**
@@ -7013,6 +7604,8 @@ export class Entity {
      * @returns
      * Returns whether the tag existed on the entity.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      */
     removeTag(tag: string): boolean;
     /**
@@ -7036,6 +7629,8 @@ export class Entity {
      * {@link minecraftcommon.EngineError}
      *
      * {@link Error}
+     *
+     * {@link InvalidEntityError}
      */
     resetProperty(identifier: string): boolean | number | string;
     /**
@@ -7066,6 +7661,10 @@ export class Entity {
      * @param value
      * Data value of the property to set.
      * @throws This function can throw errors.
+     *
+     * {@link minecraftcommon.ArgumentOutOfBoundsError}
+     *
+     * {@link InvalidEntityError}
      */
     setDynamicProperty(identifier: string, value?: boolean | number | string | Vector3): void;
     /**
@@ -7088,6 +7687,8 @@ export class Entity {
      * is less than or equal to zero, the entity is wet or the
      * entity is immune to fire.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      * @example setOnFire.ts
      * ```typescript
      * import { system, EntityOnFireComponent, EntityComponentTypes, DimensionLocation } from "@minecraft/server";
@@ -7130,6 +7731,12 @@ export class Entity {
      * (int, float properties).
      * Throws if the provided string value does not match the set
      * of accepted enum values (enum properties
+     *
+     * {@link minecraftcommon.ArgumentOutOfBoundsError}
+     *
+     * {@link minecraftcommon.InvalidArgumentError}
+     *
+     * {@link InvalidEntityError}
      */
     setProperty(identifier: string, value: boolean | number | string): void;
     /**
@@ -7143,6 +7750,8 @@ export class Entity {
      * mobs, the x rotation controls the head tilt and the y
      * rotation controls the body rotation.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
      */
     setRotation(rotation: Vector2): void;
     /**
@@ -7156,6 +7765,10 @@ export class Entity {
      * @param teleportOptions
      * Options regarding the teleport operation.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
+     *
+     * {@link minecraftcommon.UnsupportedFunctionalityError}
      * @example teleport.ts
      * ```typescript
      * import { system, DimensionLocation } from "@minecraft/server";
@@ -7215,6 +7828,10 @@ export class Entity {
      * @throws
      * If the event is not defined in the definition of the entity,
      * an error will be thrown.
+     *
+     * {@link minecraftcommon.InvalidArgumentError}
+     *
+     * {@link InvalidEntityError}
      * @example triggerEvent.ts
      * ```typescript
      * // A function that spawns a creeper and triggers it to explode immediately
@@ -7257,6 +7874,10 @@ export class Entity {
      * destination chunk is unloaded or if the teleport would
      * result in intersecting with blocks.
      * @throws This function can throw errors.
+     *
+     * {@link InvalidEntityError}
+     *
+     * {@link minecraftcommon.UnsupportedFunctionalityError}
      */
     tryTeleport(location: Vector3, teleportOptions?: TeleportOptions): boolean;
 }
@@ -7691,7 +8312,7 @@ export class EntityDieAfterEventSignal {
 
 /**
  * Provides access to a mob's equipment slots. This component
- * exists for all mob entities.
+ * exists on player entities.
  * @example givePlayerElytra.ts
  * ```typescript
  * // Gives the player Elytra
@@ -7709,6 +8330,24 @@ export class EntityDieAfterEventSignal {
 // @ts-ignore Class inheritance allowed for native defined classes
 export class EntityEquippableComponent extends EntityComponent {
     private constructor();
+    /**
+     * @remarks
+     * Returns the total Armor level of the owner.
+     *
+     * @throws This property can throw when used.
+     *
+     * {@link InvalidEntityError}
+     */
+    readonly totalArmor: number;
+    /**
+     * @remarks
+     * Returns the total Toughness level of the owner.
+     *
+     * @throws This property can throw when used.
+     *
+     * {@link InvalidEntityError}
+     */
+    readonly totalToughness: number;
     static readonly componentId = 'minecraft:equippable';
     /**
      * @remarks
@@ -7748,6 +8387,16 @@ export class EntityEquippableComponent extends EntityComponent {
      * @throws This function can throw errors.
      */
     setEquipment(equipmentSlot: EquipmentSlot, itemStack?: ItemStack): boolean;
+}
+
+/**
+ * Defines the interactions with this entity for Exhaustion.
+ * Wraps the `minecraft.player.exhaustion` attribute.
+ */
+// @ts-ignore Class inheritance allowed for native defined classes
+export class EntityExhaustionComponent extends EntityAttributeComponent {
+    private constructor();
+    static readonly componentId = 'minecraft:player.exhaustion';
 }
 
 /**
@@ -8035,6 +8684,16 @@ export class EntityHitEntityAfterEventSignal {
      *
      */
     unsubscribe(callback: (arg0: EntityHitEntityAfterEvent) => void): void;
+}
+
+/**
+ * Defines the interactions with this entity for hunger. Wraps
+ * the `minecraft.player.hunger` attribute.
+ */
+// @ts-ignore Class inheritance allowed for native defined classes
+export class EntityHungerComponent extends EntityAttributeComponent {
+    private constructor();
+    static readonly componentId = 'minecraft:player.hunger';
 }
 
 /**
@@ -9356,6 +10015,16 @@ export class EntityRidingComponent extends EntityComponent {
      */
     readonly entityRidingOn: Entity;
     static readonly componentId = 'minecraft:riding';
+}
+
+/**
+ * Defines the interactions with this entity for Saturation.
+ * Wraps the `minecraft.player.saturation` attribute.
+ */
+// @ts-ignore Class inheritance allowed for native defined classes
+export class EntitySaturationComponent extends EntityAttributeComponent {
+    private constructor();
+    static readonly componentId = 'minecraft:player.saturation';
 }
 
 /**
@@ -10718,6 +11387,30 @@ export class ItemDurabilityComponent extends ItemComponent {
 }
 
 /**
+ * When present on an item, this item can be dyed.
+ */
+// @ts-ignore Class inheritance allowed for native defined classes
+export class ItemDyeableComponent extends ItemComponent {
+    private constructor();
+    /**
+     * @remarks
+     * Sets and returns the current color of the item.
+     *
+     * This property can't be edited in read-only mode.
+     *
+     */
+    color?: RGB;
+    /**
+     * @remarks
+     * Returns the default color of the item.
+     *
+     * @throws This property can throw when used.
+     */
+    readonly defaultColor?: RGB;
+    static readonly componentId = 'minecraft:dyeable';
+}
+
+/**
  * When present on an item, this item can have enchantments
  * applied to it.
  */
@@ -11089,6 +11782,16 @@ export class ItemStack {
     keepOnDeath: boolean;
     /**
      * @remarks
+     * Key for the localization of this items's name used in .lang
+     * files.
+     *
+     * @throws This property can throw when used.
+     *
+     * {@link minecraftcommon.EngineError}
+     */
+    readonly localizationKey: string;
+    /**
+     * @remarks
      * Gets or sets the item's lock mode. The default value is
      * `ItemLockMode.none`.
      *
@@ -11413,6 +12116,10 @@ export class ItemStack {
      * Data value of the property to set.
      * @throws
      * Throws if the item stack is stackable.
+     *
+     * {@link minecraftcommon.ArgumentOutOfBoundsError}
+     *
+     * {@link minecraftcommon.UnsupportedFunctionalityError}
      */
     setDynamicProperty(identifier: string, value?: boolean | number | string | Vector3): void;
     /**
@@ -11428,6 +12135,8 @@ export class ItemStack {
      * new line. The maximum lore line count is 20. The maximum
      * lore line length is 50 characters.
      * @throws This function can throw errors.
+     *
+     * {@link minecraftcommon.ArgumentOutOfBoundsError}
      * @example diamondAwesomeSword.ts
      * ```typescript
      * import { EntityComponentTypes, ItemStack, Player } from '@minecraft/server';
@@ -12222,6 +12931,12 @@ export class Player extends Entity {
     readonly clientSystemInfo: ClientSystemInfo;
     /**
      * @remarks
+     * This property can't be edited in read-only mode.
+     *
+     */
+    commandPermissionLevel: CommandPermissionLevel;
+    /**
+     * @remarks
      * Gets the current graphics mode of the player's client. This
      * can be changed in the Video section of the settings menu
      * based on what hardware is available.
@@ -12296,6 +13011,12 @@ export class Player extends Entity {
      * @throws This property can throw when used.
      */
     readonly onScreenDisplay: ScreenDisplay;
+    /**
+     * @throws This property can throw when used.
+     *
+     * {@link InvalidEntityError}
+     */
+    readonly playerPermissionLevel: PlayerPermissionLevel;
     /**
      * @remarks
      * This property can't be edited in read-only mode.
@@ -13140,6 +13861,75 @@ export class PlayerGameModeChangeBeforeEventSignal {
 }
 
 /**
+ * Contains information regarding an event after changing the
+ * selected hotbar slot for a player.
+ */
+export class PlayerHotbarSelectedSlotChangeAfterEvent {
+    private constructor();
+    /**
+     * @remarks
+     * The item stack of the new slot selected.
+     *
+     */
+    readonly itemStack?: ItemStack;
+    /**
+     * @remarks
+     * The new hotbar slot index selected.
+     *
+     */
+    readonly newSlotSelected: number;
+    /**
+     * @remarks
+     * Source Player for this event.
+     *
+     */
+    readonly player: Player;
+    /**
+     * @remarks
+     * The previous hotbar slot index selected.
+     *
+     */
+    readonly previousSlotSelected: number;
+}
+
+/**
+ * Manages callbacks that are connected after a player selected
+ * hotbar slot is changed.
+ */
+export class PlayerHotbarSelectedSlotChangeAfterEventSignal {
+    private constructor();
+    /**
+     * @remarks
+     * Adds a callback that will be called after a player selected
+     * hotbar slot is changed.
+     *
+     * This function can't be called in read-only mode.
+     *
+     * This function can be called in early-execution mode.
+     *
+     * @param callback
+     * Function callback that is called when this event fires.
+     * @param options
+     * Additional filtering options for the event subscription.
+     */
+    subscribe(
+        callback: (arg0: PlayerHotbarSelectedSlotChangeAfterEvent) => void,
+        options?: HotbarEventOptions,
+    ): (arg0: PlayerHotbarSelectedSlotChangeAfterEvent) => void;
+    /**
+     * @remarks
+     * Removes a callback from being called after a player selected
+     * hotbar slot is changed.
+     *
+     * This function can't be called in read-only mode.
+     *
+     * This function can be called in early-execution mode.
+     *
+     */
+    unsubscribe(callback: (arg0: PlayerHotbarSelectedSlotChangeAfterEvent) => void): void;
+}
+
+/**
  * Event data for when a player input mode changes.
  */
 export class PlayerInputModeChangeAfterEvent {
@@ -13581,6 +14371,81 @@ export class PlayerInteractWithEntityBeforeEventSignal {
      *
      */
     unsubscribe(callback: (arg0: PlayerInteractWithEntityBeforeEvent) => void): void;
+}
+
+/**
+ * Contains information regarding an event after a player's
+ * inventory item changes.
+ */
+export class PlayerInventoryItemChangeAfterEvent {
+    private constructor();
+    /**
+     * @remarks
+     * The previous item stack.
+     *
+     */
+    readonly beforeItemStack?: ItemStack;
+    /**
+     * @remarks
+     * Inventory type.
+     *
+     */
+    readonly inventoryType: PlayerInventoryType;
+    /**
+     * @remarks
+     * The new item stack.
+     *
+     */
+    readonly itemStack?: ItemStack;
+    /**
+     * @remarks
+     * Source Player for this event.
+     *
+     */
+    readonly player: Player;
+    /**
+     * @remarks
+     * The slot index with the change.
+     *
+     */
+    readonly slot: number;
+}
+
+/**
+ * Manages callbacks that are connected after a player's
+ * inventory item is changed.
+ */
+export class PlayerInventoryItemChangeAfterEventSignal {
+    private constructor();
+    /**
+     * @remarks
+     * Adds a callback that will be called after a player's
+     * inventory item is changed.
+     *
+     * This function can't be called in read-only mode.
+     *
+     * This function can be called in early-execution mode.
+     *
+     * @param callback
+     * Function callback that is called when this event fires.
+     * @param options
+     * Additional filtering options for the event subscription.
+     */
+    subscribe(
+        callback: (arg0: PlayerInventoryItemChangeAfterEvent) => void,
+        options?: InventoryItemEventOptions,
+    ): (arg0: PlayerInventoryItemChangeAfterEvent) => void;
+    /**
+     * @remarks
+     * Removes a callback from being called after a player's
+     * inventory item is changed.
+     *
+     * This function can't be called in read-only mode.
+     *
+     * This function can be called in early-execution mode.
+     *
+     */
+    unsubscribe(callback: (arg0: PlayerInventoryItemChangeAfterEvent) => void): void;
 }
 
 /**
@@ -14859,6 +15724,12 @@ export class StartupEvent {
      * This property can be read in early-execution mode.
      *
      */
+    readonly customCommandRegistry: CustomCommandRegistry;
+    /**
+     * @remarks
+     * This property can be read in early-execution mode.
+     *
+     */
     readonly itemComponentRegistry: ItemComponentRegistry;
 }
 
@@ -15425,8 +16296,7 @@ export class System {
      * @param message
      * Data component of the message to send. This is custom and
      * dependent on the kinds of behavior packs and content you may
-     * have installed within the world. Message may not exceed 2048
-     * characters in length.
+     * have installed within the world.
      * @throws This function can throw errors.
      *
      * {@link minecraftcommon.EngineError}
@@ -15915,6 +16785,10 @@ export class World {
      * Returns an array of all active players within the world.
      *
      * @throws This function can throw errors.
+     *
+     * {@link CommandError}
+     *
+     * {@link minecraftcommon.InvalidArgumentError}
      */
     getAllPlayers(): Player[];
     /**
@@ -16084,6 +16958,10 @@ export class World {
      * A player array.
      * @throws
      * Throws if the provided EntityQueryOptions are invalid.
+     *
+     * {@link CommandError}
+     *
+     * {@link minecraftcommon.InvalidArgumentError}
      */
     getPlayers(options?: EntityQueryOptions): Player[];
     /**
@@ -16101,6 +16979,8 @@ export class World {
      * This function can't be called in read-only mode.
      *
      * @throws This function can throw errors.
+     *
+     * {@link minecraftcommon.PropertyOutOfBoundsError}
      * @example playMusicAndSound.ts
      * ```typescript
      * import { world, MusicOptions, WorldSoundOptions, PlayerSoundOptions, DimensionLocation } from "@minecraft/server";
@@ -16146,6 +17026,8 @@ export class World {
      * An error will be thrown if volume is less than 0.0.
      * An error will be thrown if fade is less than 0.0.
      *
+     *
+     * {@link minecraftcommon.PropertyOutOfBoundsError}
      */
     queueMusic(trackId: string, musicOptions?: MusicOptions): void;
     /**
@@ -16208,6 +17090,8 @@ export class World {
      * @throws
      * Throws if the given dynamic property identifier is not
      * defined.
+     *
+     * {@link minecraftcommon.ArgumentOutOfBoundsError}
      * @example incrementDynamicProperty.ts
      * ```typescript
      * import { world, DimensionLocation } from "@minecraft/server";
@@ -16545,6 +17429,14 @@ export class WorldAfterEvents {
     readonly playerGameModeChange: PlayerGameModeChangeAfterEventSignal;
     /**
      * @remarks
+     * This event fires when a player's selected slot changes.
+     *
+     * This property can be read in early-execution mode.
+     *
+     */
+    readonly playerHotbarSelectedSlotChange: PlayerHotbarSelectedSlotChangeAfterEventSignal;
+    /**
+     * @remarks
      * This event fires when a player's {@link InputMode} changes.
      *
      * This property can be read in early-execution mode.
@@ -16575,6 +17467,15 @@ export class WorldAfterEvents {
      *
      */
     readonly playerInteractWithEntity: PlayerInteractWithEntityAfterEventSignal;
+    /**
+     * @remarks
+     * This event fires when an item gets added or removed to the
+     * player's inventory.
+     *
+     * This property can be read in early-execution mode.
+     *
+     */
+    readonly playerInventoryItemChange: PlayerInventoryItemChangeAfterEventSignal;
     /**
      * @remarks
      * This event fires when a player joins a world.  See also
@@ -17161,6 +18062,88 @@ export interface CameraTargetOptions {
      *
      */
     targetEntity: Entity;
+}
+
+/**
+ * Define the custom command, including name, permissions, and
+ * parameters.
+ */
+export interface CustomCommand {
+    /**
+     * @remarks
+     * Cheats must be enabled to run this command. Defaults to
+     * true.
+     *
+     */
+    cheatsRequired?: boolean;
+    /**
+     * @remarks
+     * Command description as seen on the command line.
+     *
+     */
+    description: string;
+    /**
+     * @remarks
+     * List of mandatory command parameters.
+     *
+     */
+    mandatoryParameters?: CustomCommandParameter[];
+    /**
+     * @remarks
+     * The name of the command. A namespace is required.
+     *
+     */
+    name: string;
+    /**
+     * @remarks
+     * List of optional command parameters.
+     *
+     */
+    optionalParameters?: CustomCommandParameter[];
+    /**
+     * @remarks
+     * The permission level required to execute the command.
+     *
+     */
+    permissionLevel: CommandPermissionLevel;
+}
+
+/**
+ * Definition for each parameter expected by the custom
+ * command.
+ */
+export interface CustomCommandParameter {
+    /**
+     * @remarks
+     * The name of parameter as it appears on the command line.
+     *
+     */
+    name: string;
+    /**
+     * @remarks
+     * The data type of the parameter.
+     *
+     */
+    type: CustomCommandParamType;
+}
+
+/**
+ * Interface returned from custom command callback function.
+ */
+export interface CustomCommandResult {
+    /**
+     * @remarks
+     * Message displayed to chat after command execution.
+     *
+     */
+    message?: string;
+    /**
+     * @remarks
+     * Command execution Success or Failure. Determines how the
+     * status message is displayed.
+     *
+     */
+    status: CustomCommandStatus;
 }
 
 /**
@@ -17946,6 +18929,19 @@ export interface GreaterThanOrEqualsComparison {
 }
 
 /**
+ * Contains additional filtering options for hotbar events.
+ */
+export interface HotbarEventOptions {
+    /**
+     * @remarks
+     * The slot indexes to consider. Values should be between 0 and
+     * 8, inclusive. If not specified, all slots are considered.
+     *
+     */
+    allowedSlots?: number[];
+}
+
+/**
  * An interface that is passed into {@link
  * @minecraft/Server.PlayerButtonInputAfterEventSignal.subscribe}
  * that filters out which events are passed to the provided
@@ -17966,6 +18962,58 @@ export interface InputEventOptions {
      *
      */
     state?: ButtonState;
+}
+
+/**
+ * Contains additional filtering options for inventory item
+ * events.
+ */
+export interface InventoryItemEventOptions {
+    /**
+     * @remarks
+     * The slot indexes to consider. Values should be positive
+     * numbers. If not specified, all slots are considered.
+     *
+     */
+    allowedSlots?: number[];
+    /**
+     * @remarks
+     * The names for the items to exclude.
+     *
+     */
+    excludeItems?: string[];
+    /**
+     * @remarks
+     * The item tags to exclude.
+     *
+     */
+    excludeTags?: string[];
+    /**
+     * @remarks
+     * Flag to specify to ignore quantity changes only. True to
+     * ignore quantity changes, false to not ignore quantity
+     * changes.
+     *
+     */
+    ignoreQuantityChange?: boolean;
+    /**
+     * @remarks
+     * The item names to consider.
+     *
+     */
+    includeItems?: string[];
+    /**
+     * @remarks
+     * The item tags to consider.
+     *
+     */
+    includeTags?: string[];
+    /**
+     * @remarks
+     * The player inventory type to consider.
+     *
+     */
+    inventoryType?: PlayerInventoryType;
 }
 
 /**
@@ -18805,6 +19853,22 @@ export class ContainerRulesError extends Error {
     private constructor();
 }
 
+/**
+ * Error object thrown when CustomCommandRegistry errors occur.
+ */
+// @ts-ignore Class inheritance allowed for native defined classes
+export class CustomCommandError extends Error {
+    private constructor();
+    /**
+     * @remarks
+     * Reason for the error.
+     *
+     * This property can be read in early-execution mode.
+     *
+     */
+    reason: CustomCommandErrorReason;
+}
+
 // @ts-ignore Class inheritance allowed for native defined classes
 export class CustomComponentInvalidRegistryError extends Error {
     private constructor();
@@ -18833,6 +19897,20 @@ export class EnchantmentTypeNotCompatibleError extends Error {
 
 // @ts-ignore Class inheritance allowed for native defined classes
 export class EnchantmentTypeUnknownIdError extends Error {
+    private constructor();
+}
+
+// @ts-ignore Class inheritance allowed for native defined classes
+export class EntitySpawnError extends Error {
+    private constructor();
+}
+
+/**
+ * The container is invalid. This can occur if the container is
+ * missing or deleted.
+ */
+// @ts-ignore Class inheritance allowed for native defined classes
+export class InvalidContainerError extends Error {
     private constructor();
 }
 
