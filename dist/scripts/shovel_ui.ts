@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility, RawMessage, InputButton, ButtonState } from '@minecraft/server';
+import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility, RawMessage, InputButton, ButtonState, PlayerPermissionLevel } from '@minecraft/server';
 import { NavigationStack, CallbackActionFormData, CallbackModalFormData, CallbackMessageFormData, ModalDataCorrect, ModalDataError } from './ui_wrapper.js';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
@@ -7,7 +7,6 @@ import { updateShovelBehavior } from './utils.js';
 
 export class ShovelUI {
     private player: Player;
-    private opModeActive: boolean = false; // if the player is in op mode or not
 
     // player selected icons for their claims
     private claimIcons = {
@@ -31,7 +30,6 @@ export class ShovelUI {
      */
     constructor(player: Player, notificationManager: NotificationManager) {
         this.player = player;
-        this.opModeActive = false; // set to false by default
         this.notificationManager = notificationManager;
     }
 
@@ -78,7 +76,7 @@ export class ShovelUI {
             form.button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/worldsIcon.png", () => {
                 this.playerPermissionsList(playerData);
             })
-            if (this.player.hasTag("shovel.op")) {
+            if (this.player.playerPermissionLevel == PlayerPermissionLevel.Operator) {
                 form.button({"translate": "ui.main.button:op_panel"}, "textures/ui/permissions_op_crown.png", () => {
                     this.opPanel();
                 })
@@ -97,14 +95,12 @@ export class ShovelUI {
      * Menu for managing players and addon settings.
      */
     private opPanel() {
-        this.opModeActive = true; // set to true when in op mode
-
         const form = new CallbackActionFormData(this.navigationStack, () => this.opPanel())
             .title({"translate": "ui.op_panel:title"})
             .button({"translate": "ui.op_panel.addon_settings:title"}, "textures/ui/icon_setting.png", () => {this.opAddonConfig()})
             .button({"translate": "ui.op_panel.button:manage_players"}, "textures/ui/multiplayer_glyph_color.png", () => {this.opPlayerList()})
             .button({"translate": "ui.op_panel.button:disallowed_blocks"}, "textures/blocks/barrier.png", () => {this.opDisallowedBlocks()})
-            .button({"translate": "ui.global.button:back"}, undefined, () => {this.opModeActive = false; this.navigationStack.back();})
+            .button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();})
             .show(this.player);
     }
 
@@ -230,6 +226,11 @@ export class ShovelUI {
         form.show(this.player);
     }
 
+    /**
+     * Opens a UI to manage a player's claims and other settings. Available to operators only.
+     * 
+     * @param playerId - The entity id of the player to manage
+     */
     private opManagePlayer(playerId: string) {
         var playerData: PlayerData = PlayerData.fromId(playerId || this.player.id);
 
