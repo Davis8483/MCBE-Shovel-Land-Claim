@@ -7,12 +7,16 @@ import { runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior, crea
 
 world.afterEvents.playerJoin.subscribe((data) => {
 
-    const playerData= PlayerData.fromId(data.playerId);
+    var playerData= PlayerData.fromId(data.playerId);
 
     // player is not saved in db
     if (!playerData) {
+        const newPlayer = new PlayerData(data.playerId, data.playerName);
+
         // create new player in db
-        database.push(new PlayerData(data.playerId, data.playerName));
+        database.push(newPlayer);
+
+        playerData = newPlayer;
     }
 
     // update player name in db to current; in case they changed it
