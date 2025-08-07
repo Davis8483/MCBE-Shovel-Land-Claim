@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility, RawMessage, InputButton, ButtonState, PlayerPermissionLevel } from '@minecraft/server';
+import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility, RawMessage, InputButton, ButtonState, PlayerPermissionLevel, PlatformType } from '@minecraft/server';
 import { NavigationStack, CallbackActionFormData, CallbackModalFormData, CallbackMessageFormData, ModalDataCorrect, ModalDataError } from './ui_wrapper.js';
 import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
@@ -987,7 +987,11 @@ export class ShovelUI {
             system.runTimeout(() => {
                 // show title to player
                 this.player.onScreenDisplay.setTitle({ "translate": "ui.manage.view:loading" });
-                this.player.onScreenDisplay.updateSubtitle({ "translate": "ui.manage.view:loading_subtitle" });
+
+                // crouch to cancel hint should not be shown on mobile since the sneak button is hidden
+                if (this.player.clientSystemInfo.platformType != PlatformType.Mobile) {
+                    this.player.onScreenDisplay.updateSubtitle({ "translate": "ui.manage.view:loading_subtitle" });
+                }
 
                 this.player.camera.setCamera("minecraft:free", cornerView);
                 system.runTimeout(() => {
