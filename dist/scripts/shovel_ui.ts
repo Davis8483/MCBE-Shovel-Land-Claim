@@ -1146,8 +1146,9 @@ export class ShovelUI {
                     // notify player
                     this.notificationManager.send(this.player, AddonSounds.Global.POSITIVE_EVENT, undefined, "chat.claim:created");
 
-                    // Reset resizingClaimName to avoid incorrect resizing behavior
+                    // reset claim new/resize vars
                     playerData.setResizingClaimName("");
+                    playerData.setFirstPoint(null);
                 }
                 else {
                     playSound(this.player, AddonSounds.Claim.SAVE);

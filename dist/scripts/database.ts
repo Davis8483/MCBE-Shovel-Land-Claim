@@ -648,7 +648,7 @@ export class PlayerData {
     private _inClaim: boolean;
     private _viewingClaim: boolean;
     private _resizingClaimName: string;
-    private _firstPoint: Vector3;
+    private _firstPoint: Vector3 | null;
     private _oppositeCorner: Vector3;
     private _entranceVelocity: Vector3;
     private _previousLocation: Vector3;
@@ -665,7 +665,7 @@ export class PlayerData {
         this._inClaim = false;
         this._viewingClaim = false;
         this._resizingClaimName = "";
-        this._firstPoint = { x: 0, y: 0, z: 0 };
+        this._firstPoint = null; // null means the player has not set the first point yet
         this._oppositeCorner = { x: 0, y: 0, z: 0 };
         this._entranceVelocity = { x: 0, y: 0, z: 0 };
         this._previousLocation = { x: 0, y: 0, z: 0 };
@@ -765,7 +765,7 @@ export class PlayerData {
         this._resizingClaimName = value;
     }
 
-    setFirstPoint(value: Vector3): void {
+    setFirstPoint(value: Vector3 | null): void {
         this._firstPoint = value;
     }
 

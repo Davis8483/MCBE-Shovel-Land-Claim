@@ -81,6 +81,26 @@ world.afterEvents.itemUse.subscribe((data) => {
     };
 });
 
+// if player switches off of the claim shovel, reset first point and resizing claim name
+world.afterEvents.playerHotbarSelectedSlotChange.subscribe((data) => {
+    const playerData = PlayerData.fromId(data.player.id);
+    const notifManager = NotificationManagerStack.getById(data.player.id);
+
+    const inventory = data.player.getComponent(EntityComponentTypes.Inventory).container;
+
+    // if new item is not a claim shovel and the previous item was a claim shovel, reset first point and resizing claim name
+    if ((!data.itemStack || data.itemStack.typeId != SHOVEL_ID) && (inventory.getSlot(data.previousSlotSelected).typeId == SHOVEL_ID)) {
+        if (playerData.resizingClaimName.length > 0) {
+            notifManager.send(data.player, AddonSounds.Global.WARN_EVENT, undefined, "chat.claim:claim_resize_canceled");
+        }
+        else if (playerData.firstPoint != null) {
+            playerData.setFirstPoint(null);
+
+            notifManager.send(data.player, AddonSounds.Global.WARN_EVENT, undefined, "chat.claim:claim_creation_canceled");
+        }
+    }
+});
+
 // Set/adjust claim points if player is sneaking
 world.beforeEvents.playerBreakBlock.subscribe((data) => {
 
@@ -163,8 +183,13 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                     var claimIntersectingClaim = false;
                     var playerIntersectingClaim = false;
 
+                    // if player has not set the first point yet
+                    if (playerData.firstPoint == null) {
+                        // notify and don't continue with claim creation
+                        notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:point_not_set");
+                    }
                     // if claim is resized
-                    if (playerData.resizingClaimName.length > 0) {
+                    else if (playerData.resizingClaimName.length > 0) {
 
                         // get the claim object that is being resized
                         var resizingClaim = playerData.getClaim(playerData.resizingClaimName);
@@ -214,7 +239,11 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                                 playSound(data.player, AddonSounds.Shovel.SELECT);
                             });
                             system.runTimeout(() => {
+
                                 new ShovelUI(data.player, notifManager).resizeClaim(resizingClaim, playerData.oppositeCorner, secondPoint);
+
+                                playerData.setFirstPoint(null); // make sure selection particles are not shown
+
                             }, 6); // a slight delay is used to ensure that any other server forms are closed; this is important for mobile players
                         }
                     }
@@ -859,11 +888,6 @@ system.runInterval(() => {
             // set flag to false before for loop updates it
             playerData.setInClaim(false);
 
-            // if player is no longer holding the claim shovel, set the resizing claim name to empty
-            if (!p.getComponent(EntityComponentTypes.Inventory).container.getItem(p.selectedSlotIndex)?.matches(SHOVEL_ID)) {
-                playerData.setResizingClaimName("");
-            }
-
             runInAllClaims((claim) => {
 
                 // apply an offset to the player location to be more accurate with claim bounds
@@ -988,6 +1012,15 @@ system.runInterval(() => {
         const playerData = PlayerData.fromId(p.id);
 
         if (p.dimension == dimension) {
+
+            // if player has selected the first point to create a claim, render the particles
+            if ((playerData.firstPoint != null) && (playerData.resizingClaimName.length == 0)) {
+                // render particles at the first point
+                const fP = playerData.firstPoint;
+                dimension.spawnParticle("slc:first_point_dust", { x: fP.x + 0.5, y: fP.y + 0.8, z: fP.z + 0.5 });
+
+            }
+
             runInAllClaims((claim) => {
 
                 // user defined start and end points of the claim
