@@ -234,7 +234,7 @@ export class ShovelUI {
         var playerData: PlayerData = PlayerData.fromId(playerId || this.player.id);
 
         const form = new CallbackActionFormData(this.navigationStack, () => this.opManagePlayer(playerId))
-            .title(this.opModeActive? {"translate": "ui.main.op_mode:title", "with": [playerData.name]} : {"translate": "ui.main:title"})
+            .title({"translate": "ui.main.op_mode:title", "with": [playerData.name]})
 
             form.button({"translate": "ui.op_manage_player.button:player_config"}, "textures/ui/icon_setting.png", () => {this.opPlayerConfig(playerId)})
 
