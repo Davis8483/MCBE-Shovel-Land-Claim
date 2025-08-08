@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, EntityRideableComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, EntityRideableComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError } from '@minecraft/server';
 import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { NotificationManagerStack } from './notifications.js';
@@ -88,15 +88,23 @@ world.afterEvents.playerHotbarSelectedSlotChange.subscribe((data) => {
 
     const inventory = data.player.getComponent(EntityComponentTypes.Inventory).container;
 
-    // if new item is not a claim shovel and the previous item was a claim shovel, reset first point and resizing claim name
-    if ((!data.itemStack || data.itemStack.typeId != SHOVEL_ID) && (inventory.getSlot(data.previousSlotSelected).typeId == SHOVEL_ID)) {
-        if (playerData.resizingClaimName.length > 0) {
-            notifManager.send(data.player, AddonSounds.Global.WARN_EVENT, undefined, "chat.claim:claim_resize_canceled");
-        }
-        else if (playerData.firstPoint != null) {
-            playerData.setFirstPoint(null);
+    try {
+        // if new item is not a claim shovel and the previous item was a claim shovel, reset first point and resizing claim name
+        if ((!data.itemStack || data.itemStack.typeId != SHOVEL_ID) && (inventory.getSlot(data.previousSlotSelected).typeId == SHOVEL_ID)) {
+            if (playerData.resizingClaimName.length > 0) {
+                notifManager.send(data.player, AddonSounds.Global.WARN_EVENT, undefined, "chat.claim:claim_resize_canceled");
+            }
+            else if (playerData.firstPoint != null) {
+                playerData.setFirstPoint(null);
 
-            notifManager.send(data.player, AddonSounds.Global.WARN_EVENT, undefined, "chat.claim:claim_creation_canceled");
+                notifManager.send(data.player, AddonSounds.Global.WARN_EVENT, undefined, "chat.claim:claim_creation_canceled");
+            }
+        }
+    } catch (error) {
+        if (error instanceof InvalidContainerSlotError) {
+            // this error is expected if the player switches from an empty slot
+        } else {
+            throw error;
         }
     }
 });
