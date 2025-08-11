@@ -241,4 +241,11 @@ ui.changelog.label:12=- Fixed disallow messages sometimes being spammed.
 ui.changelog.label:13=- Added in game changelogs... hi there :D
 ui.changelog.button:back=<< Main Menu
 
+ui.addon_setup:title=§5Shovel§r Land Claim - Setup (%s/%s)
+ui.addon_setup.body:page_1=§5SLC§r would like to disable the "showTags" gamerule. This will hide the "This item cannot be dropped..." text thats shown when holding the Claim Shovel.\n §nYour seeing this because your a world operator.
+ui.addon_setup.body:page_2=§5SLC§r would also like to disable "doFireTick" to prevent fire from spreading into claims.\n §nYour seeing this because your a world operator.
+ui.addon_setup.button:disable_showTags=Disable "showTags"
+ui.addon_setup.button:disable_doFireTick=Disable "doFireTick"
+ui.addon_setup.button:skip=§cSkip§r
+
 actionbar.claim:name_color=§5
