@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, EntityRideableComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, EntityRideableComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ } from '@minecraft/server';
 import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { NotificationManagerStack } from './notifications.js';
@@ -941,25 +941,6 @@ system.runInterval(() => {
 
                         const velocity: Vector3 = playerData.entranceVelocity;
 
-                        // if player is riding an entity eject them
-                        if (p.hasComponent(EntityRidingComponent.componentId)) {
-                            const entity = (p.getComponent(EntityRidingComponent.componentId) as EntityRidingComponent).entityRidingOn;
-                            const riddenComponent = entity.getComponent(EntityRideableComponent.componentId) as EntityRideableComponent;
-
-                            riddenComponent.ejectRider(p);
-
-                            // teleport the ridden entity to the player 1 second after they are ejected
-                            system.runTimeout(() => {
-                                entity.teleport(p.location);
-                                
-                                // remount the player after a 0.5 second delay
-                                system.runTimeout(() => {
-                                    // const riddenComponent = entity.getComponent(EntityRideableComponent.componentId) as EntityRideableComponent;
-                                    riddenComponent.addRider(p);
-                                }, 10);
-                            }, 20);
-                        }
-
                         // detect if player teleported into claim
                         if (distanceMoved && (distanceMoved > playerTeleportThreshold)) {
 
@@ -975,10 +956,20 @@ system.runInterval(() => {
                                 }, 10);
                             }
                         }
-                        // player did not teleport, bounce them out of the claim
+                        // player did not teleport, bounce them out of the claim and apply wither
                         else {
-                            // apply knockback to the player and wither them
-                            p.applyKnockback({"x": (-velocity.x + (Math.sign(-velocity.x) * 0.05)) * 10, "z": (-velocity.z + (Math.sign(-velocity.z) * 0.05)) * 10}, 0.5);
+                            const knockback: VectorXZ = {"x": (-velocity.x + (Math.sign(-velocity.x) * 0.05)) * 10, "z": (-velocity.z + (Math.sign(-velocity.z) * 0.05)) * 10}
+                            
+                            // if riding an entity then apply the knockback to that
+                            if (p.hasComponent(EntityRidingComponent.componentId)) {
+                                const entity = (p.getComponent(EntityRidingComponent.componentId) as EntityRidingComponent).entityRidingOn;
+
+                                entity.applyKnockback(knockback, 0.5);
+                            }
+                            // otherwise apply it to the player directly
+                            else {
+                                p.applyKnockback(knockback, 0.5);
+                            }
                             p.addEffect("wither", 40)
                         }
                     }
