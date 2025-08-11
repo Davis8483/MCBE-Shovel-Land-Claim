@@ -643,6 +643,7 @@ export class PlayerClaimBlocks {
 export class PlayerData {
     private _schemaVersion: string;
     private _shownChangeLog: boolean;
+    private _shownSetupScreen: boolean;
     private _id: string;
     private _name: string;
     private _inClaim: boolean;
@@ -660,6 +661,7 @@ export class PlayerData {
     constructor(playerID: string, playerName: string) {
         this._schemaVersion = "v1.0.3";
         this._shownChangeLog = true; // default to true so new players don't see the changelog
+        this._shownSetupScreen = false; // default to false so all admins can go through the setup ui
         this._id = playerID;
         this._name = playerName;
         this._inClaim = false;
@@ -734,6 +736,19 @@ export class PlayerData {
 
     get shownChangeLog(): boolean {
         return this._shownChangeLog;
+    }
+
+    get shownSetupScreen(): boolean {
+        return this._shownSetupScreen;
+    }
+
+    /**
+     *  Setting this to false will show the setup screen to the player if they are an admin when first opening the claim shovel.
+     * 
+     * @param value - Whether the admin has seen the setup screen or not.
+     */
+    setShownSetupScreen(value: boolean) {
+        this._shownSetupScreen = value;
     }
 
     /**
@@ -901,6 +916,7 @@ export class PlayerData {
 
         playerData.setSchemaVersion(latestSchemaVersion);
         playerData.setShownChangeLog(data._shownChangeLog !== undefined ? data._shownChangeLog : defaultPlayerData.shownChangeLog);
+        playerData.setShownSetupScreen(data._shownSetupScreen !== undefined ? data._shownSetupScreen : defaultPlayerData.shownSetupScreen);
         playerData.setInClaim(data._inClaim !== undefined ? data._inClaim : defaultPlayerData.inClaim);
         playerData.setViewingClaim(data._viewingClaim !== undefined ? data._viewingClaim : defaultPlayerData.viewingClaim);
         playerData.setResizingClaimName(data._resizingClaimName || defaultPlayerData._resizingClaimName);
@@ -929,6 +945,8 @@ export class PlayerData {
             
             // fromJSON only loads existing players, set the flag so they see the changelog
             playerData.setShownChangeLog(false);
+
+            playerData.setShownSetupScreen(false); // set to false so all admins can go through the setup ui
         }
 
         return playerData;

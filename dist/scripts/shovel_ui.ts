@@ -1,6 +1,6 @@
 import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility, RawMessage, InputButton, ButtonState, PlayerPermissionLevel, PlatformType } from '@minecraft/server';
 import { NavigationStack, CallbackActionFormData, CallbackModalFormData, CallbackMessageFormData, ModalDataCorrect, ModalDataError } from './ui_wrapper.js';
-import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ClaimBlocksBehavior } from './database.js';
+import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ClaimBlocksBehavior, ShovelBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { NotificationManager } from './notifications.js';
 import { updateShovelBehavior } from './utils.js';
@@ -1161,6 +1161,61 @@ export class ShovelUI {
         form.show(this.player);
     }
 
+    /**
+     * Operator addon setup wizard for changing gamerules.
+     * 
+     * @param pageQueue - An array of page ids to show in order
+     * @param completedPages - The number of pages that have been completed so far
+     */
+    public opAddonSetup(pageQueue: string[] = ["showTagsGamerule", "doFireTickGamerule"], completedPages: number = 0) {
+        const playerData = PlayerData.fromId(this.player.id);
+
+        // set flag to true so it doesn't show again
+        playerData.setShownSetupScreen(true);
+
+        // remove pages that are not needed
+        pageQueue = pageQueue.filter(p => p == "showTagsGamerule" && !world.gameRules.showTags && (settings.claimShovelItemBehavior != ShovelBehavior.LOCK_TO_INVENTORY));
+
+        pageQueue = pageQueue.filter(p => p == "doFireTickGamerule" && world.gameRules.doFireTick);
+
+        // all pages completed, now either go to main menu or changelog
+        if (completedPages >= pageQueue.length) {
+            if (playerData.shownChangeLog) {
+                this.main();
+            }
+            else {
+                this.viewChangeLog();
+            }
+            return;
+        }
+
+        const currentPage: string = pageQueue[completedPages];
+
+        const form = new CallbackActionFormData(this.navigationStack, () => this.opAddonSetup())
+            .title({"translate": "ui.addon_setup:title", "with": [completedPages.toString() + 1, pageQueue.length.toString()]})
+            .button({"translate": "ui.addon_setup.button:skip"}, undefined, () => this.opAddonSetup(pageQueue, completedPages + 1));
+
+        switch (currentPage) {
+            case "showTagsGamerule":
+                form.body({"translate": "ui.addon_setup.body:page_1"})
+                .button({"translate": "ui.addon_setup.button:disable_showTags"}, undefined, () => {
+                    world.gameRules.showTags = false;
+
+                    this.opAddonSetup(pageQueue, completedPages + 1);
+                });
+
+            case "doFireTickGamerule":
+                form.body({"translate": "ui.addon_setup.body:page_2"})
+                .button({"translate": "ui.addon_setup.button:disable_doFireTick"}, undefined, () => {
+                    world.gameRules.doFireTick = false;
+
+                    this.opAddonSetup(pageQueue, completedPages + 1);
+                })
+        }
+
+        form.show(this.player);
+    }
+
     public viewChangeLog() {
         const playerData = PlayerData.fromId(this.player.id);
         const version = playerData.schemaVersion;
@@ -1185,5 +1240,8 @@ export class ShovelUI {
             .button({"translate": "ui.changelog.button:back"}, undefined, () => {this.main();});
 
         form.show(this.player);
+
+        // set shownChangeLog to true so it doesn't show again
+        playerData.setShownChangeLog(true);
     }
 }

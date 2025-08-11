@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, EntityRideableComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel } from '@minecraft/server';
 import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { NotificationManagerStack } from './notifications.js';
@@ -67,12 +67,13 @@ world.afterEvents.itemUse.subscribe((data) => {
     const notifManager = NotificationManagerStack.getById(data.source.id);
 
     if (data.itemStack.typeId == SHOVEL_ID) {
+        // if player is an admin, show the setup ui if not seen yet
+        if ((data.source.playerPermissionLevel == PlayerPermissionLevel.Operator) && !playerData.shownSetupScreen) {
+            new ShovelUI(data.source, notifManager).opAddonSetup();
+        }
         // if the player hasn't seen the changelog yet
-        if (!playerData.shownChangeLog) {
+        else if (!playerData.shownChangeLog) {
             new ShovelUI(data.source, notifManager).viewChangeLog();
-
-            // set shownChangeLog to true so it doesn't show again
-            playerData.setShownChangeLog(true);
         }
         // otherwise just show the main menu
         else {
@@ -589,12 +590,6 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
 });
 
 world.afterEvents.worldLoad.subscribe(() => {
-    // disable showing locked item text; the claim shovel is locked in the inventory
-    world.gameRules.showTags = false;
-
-    // disable fire spreads
-    world.gameRules.doFireTick = false;
-
     // remove claim view ticking area if it exists
     world.getDimension("overworld").runCommand("tickingarea remove claimView")
 });
