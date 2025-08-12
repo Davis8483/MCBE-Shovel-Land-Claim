@@ -76,6 +76,7 @@ ui.op_panel:title=Operator Panel
 ui.op_panel.button:manage_players=Manage Players
 ui.op_panel.button:addon_config=Addon Config
 ui.op_panel.button:disallowed_blocks=Disallowed Blocks/Items
+ui.op_panel.button:finish_setup=§o§l§9Finish Setup§r
 
 ui.op_disallowed_blocks:title=Disallowed Blocks
 ui.op_disallowed_blocks.button:add_block=Add Block
