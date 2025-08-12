@@ -1173,13 +1173,16 @@ export class ShovelUI {
         // set flag to true so it doesn't show again
         playerData.setShownSetupScreen(true);
 
-        // remove pages that are not needed
-        pageQueue = pageQueue.filter(p => p == "showTagsGamerule" && !world.gameRules.showTags && (settings.claimShovelItemBehavior != ShovelBehavior.LOCK_TO_INVENTORY));
+        // remove pages that are not needed (only filter on the first call when completedPages is 0)
+        if (completedPages === 0) {
+            pageQueue = pageQueue.filter(p => !(p == "showTagsGamerule" && !world.gameRules.showTags && (settings.claimShovelItemBehavior == ShovelBehavior.LOCK_TO_INVENTORY)));
 
-        pageQueue = pageQueue.filter(p => p == "doFireTickGamerule" && world.gameRules.doFireTick);
+            pageQueue = pageQueue.filter(p => !(p == "doFireTickGamerule" && !world.gameRules.doFireTick));
+        }
 
         // all pages completed, now either go to main menu or changelog
         if (completedPages >= pageQueue.length) {
+
             if (playerData.shownChangeLog) {
                 this.main();
             }
@@ -1191,30 +1194,32 @@ export class ShovelUI {
 
         const currentPage: string = pageQueue[completedPages];
 
-        const form = new CallbackActionFormData(this.navigationStack, () => this.opAddonSetup())
-            .title({"translate": "ui.addon_setup:title", "with": [completedPages.toString() + 1, pageQueue.length.toString()]})
-            .button({"translate": "ui.addon_setup.button:skip"}, undefined, () => this.opAddonSetup(pageQueue, completedPages + 1));
+        const form = new CallbackMessageFormData(this.navigationStack, () => this.opAddonSetup(pageQueue, completedPages))
+            .title({"translate": "ui.addon_setup:title", "with": [(completedPages + 1).toString(), pageQueue.length.toString()]})
+            .button1({"translate": "ui.addon_setup.button:skip"}, () => this.opAddonSetup(pageQueue, completedPages + 1));
 
         switch (currentPage) {
             case "showTagsGamerule":
-                form.body({"translate": "ui.addon_setup.body:page_1"})
-                .button({"translate": "ui.addon_setup.button:disable_showTags"}, undefined, () => {
+                form.body({"translate": "ui.addon_setup.body:page_1"});
+                form.button2({"translate": "ui.addon_setup.button:disable_showTags"}, () => {
                     world.gameRules.showTags = false;
 
                     this.player.playSound(AddonSounds.Claim.SAVE);
 
                     this.opAddonSetup(pageQueue, completedPages + 1);
                 });
+                break;
 
             case "doFireTickGamerule":
-                form.body({"translate": "ui.addon_setup.body:page_2"})
-                .button({"translate": "ui.addon_setup.button:disable_doFireTick"}, undefined, () => {
+                form.body({"translate": "ui.addon_setup.body:page_2"});
+                form.button2({"translate": "ui.addon_setup.button:disable_doFireTick"}, () => {
                     world.gameRules.doFireTick = false;
 
                     this.player.playSound(AddonSounds.Claim.SAVE);
 
                     this.opAddonSetup(pageQueue, completedPages + 1);
-                })
+                });
+                break;
         }
 
         form.show(this.player);
