@@ -50,6 +50,10 @@ export class NavigationStack {
             }
         }
     }
+
+    public get length(): number {
+        return this.stack.length;
+    }
 }
 
 export class CallbackActionFormData {

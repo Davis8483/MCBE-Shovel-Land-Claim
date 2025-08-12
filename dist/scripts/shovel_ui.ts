@@ -100,7 +100,13 @@ export class ShovelUI {
             .button({"translate": "ui.op_panel.addon_settings:title"}, "textures/ui/icon_setting.png", () => {this.opAddonConfig()})
             .button({"translate": "ui.op_panel.button:manage_players"}, "textures/ui/multiplayer_glyph_color.png", () => {this.opPlayerList()})
             .button({"translate": "ui.op_panel.button:disallowed_blocks"}, "textures/blocks/barrier.png", () => {this.opDisallowedBlocks()})
-            .button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();})
+
+            // conditionally show the finish setup button
+            if ((world.gameRules.showTags && (settings.claimShovelItemBehavior == ShovelBehavior.LOCK_TO_INVENTORY)) || world.gameRules.doFireTick) {
+                form.button({"translate": "ui.op_panel.button:finish_setup"}, "textures/ui/chevron_new_white_right.png", () => {this.opAddonSetup()});
+            }
+
+            form.button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();})
             .show(this.player);
     }
 
@@ -1180,15 +1186,14 @@ export class ShovelUI {
             pageQueue = pageQueue.filter(p => !(p == "doFireTickGamerule" && !world.gameRules.doFireTick));
         }
 
-        // all pages completed, now either go to main menu or changelog
-        if (completedPages >= pageQueue.length) {
+        // if the navigation stack is empty (meaning this was used as an entry point to the UI), push the main menu or changelog onto it
+        if (this.navigationStack.length == 0) {
+            this.navigationStack.push(() => {playerData.shownChangeLog ? this.main() : this.viewChangeLog()});
+        }
 
-            if (playerData.shownChangeLog) {
-                this.main();
-            }
-            else {
-                this.viewChangeLog();
-            }
+        // all pages completed, show current page in nav stack
+        if (completedPages >= pageQueue.length) {
+            this.navigationStack.showCurrent();
             return;
         }
 
@@ -1221,6 +1226,9 @@ export class ShovelUI {
                 });
                 break;
         }
+
+        // make sure this form is removed from the nav stack
+        this.navigationStack.pop();
 
         form.show(this.player);
     }
