@@ -1201,6 +1201,8 @@ export class ShovelUI {
                 .button({"translate": "ui.addon_setup.button:disable_showTags"}, undefined, () => {
                     world.gameRules.showTags = false;
 
+                    this.player.playSound(AddonSounds.Claim.SAVE);
+
                     this.opAddonSetup(pageQueue, completedPages + 1);
                 });
 
@@ -1208,6 +1210,8 @@ export class ShovelUI {
                 form.body({"translate": "ui.addon_setup.body:page_2"})
                 .button({"translate": "ui.addon_setup.button:disable_doFireTick"}, undefined, () => {
                     world.gameRules.doFireTick = false;
+
+                    this.player.playSound(AddonSounds.Claim.SAVE);
 
                     this.opAddonSetup(pageQueue, completedPages + 1);
                 })
