@@ -1193,7 +1193,13 @@ export class ShovelUI {
 
         // all pages completed, show current page in nav stack
         if (completedPages >= pageQueue.length) {
+
+            system.runTimeout(() => {
+                this.player.playSound(AddonSounds.Global.POSITIVE_EVENT);
+            }, 10);
+
             this.navigationStack.showCurrent();
+
             return;
         }
 
