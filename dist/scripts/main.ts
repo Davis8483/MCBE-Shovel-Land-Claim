@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel, InvalidEntityError } from '@minecraft/server';
 import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { NotificationManagerStack } from './notifications.js';
@@ -622,47 +622,56 @@ world.afterEvents.entityRemove.subscribe((data) => {
  * Also removes xp orbs spawned by disallowed killed entities.
  */
 world.afterEvents.entitySpawn.subscribe((data) => {
-    if (data.entity.dimension == world.getDimension("overworld")) {
-        const disallowedEntityDeathLocation = world.getDynamicProperty("disallowedEntityDeathLocation") as Vector3; // the location that the xp orbs should be removed from
-        const xpRemoveRange = 10; // blocks away from the death location in the x and z
+    try {
+        if (data.entity.dimension == world.getDimension("overworld")) {
+            const disallowedEntityDeathLocation = world.getDynamicProperty("disallowedEntityDeathLocation") as Vector3; // the location that the xp orbs should be removed from
+            const xpRemoveRange = 10; // blocks away from the death location in the x and z
 
-        const disallowedEntityDeathId = world.getDynamicProperty("disallowedEntityDeathId") as string;
+            const disallowedEntityDeathId = world.getDynamicProperty("disallowedEntityDeathId") as string;
 
-        // if the entity is an xp orb, remove it if in range of the disallowed entities death location
-        if (data.entity.typeId == "minecraft:xp_orb" && disallowedEntityDeathLocation 
-            && (Math.sqrt((data.entity.location.x - disallowedEntityDeathLocation.x) ** 2 + (data.entity.location.z - disallowedEntityDeathLocation.z) ** 2) < xpRemoveRange)) {
-            data.entity.remove(); // bye bye xp :)
+            // if the entity is an xp orb, remove it if in range of the disallowed entities death location
+            if (data.entity.typeId == "minecraft:xp_orb" && disallowedEntityDeathLocation 
+                && (Math.sqrt((data.entity.location.x - disallowedEntityDeathLocation.x) ** 2 + (data.entity.location.z - disallowedEntityDeathLocation.z) ** 2) < xpRemoveRange)) {
+                data.entity.remove(); // bye bye xp :)
 
-            // unless already changed, remove the property after 2 seconds in case multiple xp orbs are spawned at once
-            const disallowedEntityDeathLocationOld = world.getDynamicProperty("disallowedEntityDeathLocation"); // save old value
-            system.runTimeout(() => {
-                if (disallowedEntityDeathLocationOld == world.getDynamicProperty("disallowedEntityDeathLocation")) {
-                    world.setDynamicProperty("disallowedEntityDeathLocation", undefined);
-                }
-            }, 2000);
+                // unless already changed, remove the property after 2 seconds in case multiple xp orbs are spawned at once
+                const disallowedEntityDeathLocationOld = world.getDynamicProperty("disallowedEntityDeathLocation"); // save old value
+                system.runTimeout(() => {
+                    if (disallowedEntityDeathLocationOld == world.getDynamicProperty("disallowedEntityDeathLocation")) {
+                        world.setDynamicProperty("disallowedEntityDeathLocation", undefined);
+                    }
+                }, 2000);
+            }
+            // disallow the wither from spawning in the overworld, as when damaged it will remove blocks and cause griefing
+            else if (data.entity.typeId == "minecraft:wither") {
+
+                // get the closest player to the wither spawn location, we will assume they spawned it
+                const closestPlayer: Player = getClosestPlayer(data.entity.location);
+                const notifManager = NotificationManagerStack.getById(closestPlayer.id);
+
+                // notify player
+                notifManager.send(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.world:wither");
+
+                // return the items to the player
+                world.getDimension("overworld").spawnItem(new ItemStack("minecraft:wither_skeleton_skull", 3), data.entity.location);
+                world.getDimension("overworld").spawnItem(new ItemStack("minecraft:soul_sand", 4), data.entity.location);
+
+                // remove the wither
+                data.entity.remove();
+            }
+            // if the entity was killed by a disallowed player, we don't want to save it again
+            else if (data.entity.id != disallowedEntityDeathId) {
+
+                // save the entity
+                createEntitySave(data.entity);
+            }
         }
-        // disallow the wither from spawning in the overworld, as when damaged it will remove blocks and cause griefing
-        else if (data.entity.typeId == "minecraft:wither") {
-
-            // get the closest player to the wither spawn location, we will assume they spawned it
-            const closestPlayer: Player = getClosestPlayer(data.entity.location);
-            const notifManager = NotificationManagerStack.getById(closestPlayer.id);
-
-            // notify player
-            notifManager.send(closestPlayer, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.world:wither");
-
-            // return the items to the player
-            world.getDimension("overworld").spawnItem(new ItemStack("minecraft:wither_skeleton_skull", 3), data.entity.location);
-            world.getDimension("overworld").spawnItem(new ItemStack("minecraft:soul_sand", 4), data.entity.location);
-
-            // remove the wither
-            data.entity.remove();
-        }
-        // if the entity was killed by a disallowed player, we don't want to save it again
-        else if (data.entity.id != disallowedEntityDeathId) {
-
-            // save the entity
-            createEntitySave(data.entity);
+    }
+    catch (error) {
+        if (error instanceof InvalidEntityError) {
+            // this error is expected to occour from time to time
+        } else {
+            throw error;
         }
     }
 });
