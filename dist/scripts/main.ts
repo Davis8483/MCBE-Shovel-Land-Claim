@@ -523,7 +523,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
         runInAllClaims((claim) => {
                 
             // door interaction permissions
-            if (claim.isOverlap(data.block.location, data.block.location) && (data.block.typeId.includes("door") || data.block.typeId.includes("fence_gate")) && !data.player.isSneaking) {
+            if (claim.isOverlap(data.block.location, data.block.location) && (data.block.typeId.includes("door") || data.block.typeId.includes("fence_gate")) && !(data.player.isSneaking && data.itemStack)) {
                 if (!claim.hasPermission(PermissionTypes.USE_DOORS, data.player)){
                     // cancel the action
                     data.cancel = true;
@@ -534,7 +534,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                 }
             }
             // lever/button interaction permissions
-            else if (claim.isOverlap(data.block.location, data.block.location) && (data.block.matches("minecraft:lever") || data.block.typeId.includes("button")) && !data.player.isSneaking) {
+            else if (claim.isOverlap(data.block.location, data.block.location) && (data.block.matches("minecraft:lever") || data.block.typeId.includes("button")) && !(data.player.isSneaking && data.itemStack)) {
                 if (!claim.hasPermission(PermissionTypes.USE_SWITCHES, data.player)){
                     // cancel the action
                     data.cancel = true;
@@ -544,7 +544,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                 }
             }
             // bed interaction permissions
-            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.matches("minecraft:bed") && !data.player.isSneaking) {
+            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.matches("minecraft:bed") && !(data.player.isSneaking && data.itemStack)) {
                 if (!claim.hasPermission(PermissionTypes.USE_BEDS, data.player)){
                     // cancel the action
                     data.cancel = true;
@@ -555,7 +555,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                 }
             }
             // opening chests/container permissions
-            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Inventory) && !data.player.isSneaking) {
+            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Inventory) && !(data.player.isSneaking && data.itemStack)) {
                 if (!claim.hasPermission(PermissionTypes.OPEN_CONTAINERS, data.player)){
                     // cancel the action
                     data.cancel = true;
@@ -565,7 +565,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                 }
             }
             // editing signs permissions
-            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Sign) && !data.player.isSneaking && !data.itemStack?.matches("minecraft:honeycomb")) {
+            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Sign) && !(data.player.isSneaking && data.itemStack) && !data.itemStack?.matches("minecraft:honeycomb")) {
                 if (!claim.hasPermission(PermissionTypes.EDIT_SIGNS, data.player)){
                     // cancel the action
                     data.cancel = true;
