@@ -680,21 +680,30 @@ world.afterEvents.entitySpawn.subscribe((data) => {
  * Create an entity save after a player has interacted with it or leashed it to a knot.
  */
 world.afterEvents.playerInteractWithEntity.subscribe((data) => {
-    const dimension: Dimension = world.getDimension("overworld");
+    try {
+        const dimension: Dimension = world.getDimension("overworld");
 
-    if (data.target.dimension == dimension) {
-        // if the target is a leash knot, save all entities that could be leashed to it
-        if (data.target.typeId == "minecraft:leash_knot") {
-            var queryOptions: EntityQueryOptions = {};
-            queryOptions.location = data.target.location;
-            queryOptions.maxDistance = 15;
-            dimension.getEntities(queryOptions).forEach((entity) => {
-                createEntitySave(entity);
-            })
+        if (data.target.dimension == dimension) {
+            // if the target is a leash knot, save all entities that could be leashed to it
+            if (data.target.typeId == "minecraft:leash_knot") {
+                var queryOptions: EntityQueryOptions = {};
+                queryOptions.location = data.target.location;
+                queryOptions.maxDistance = 15;
+                dimension.getEntities(queryOptions).forEach((entity) => {
+                    entityLoaderManager.createSave(entity);
+                })
+            }
+            // othewise just save the entity
+            else {
+                entityLoaderManager.createSave(data.target);
+            }
         }
-        // othewise just save the entity
-        else {
-            createEntitySave(data.target);
+    }
+    catch (error) {
+        if (error instanceof InvalidEntityError) {
+            // this error is expected to occour from time to time
+        } else {
+            throw error;
         }
     }
 });
