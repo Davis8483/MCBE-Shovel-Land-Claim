@@ -1,18 +1,12 @@
 import { Player, world } from "@minecraft/server";
 import { playSound, AddonSounds } from './sounds.js';
-
-interface NotificationTimer {
-    langId: string;
-    sentTimestamp: number;
-    dropTimer: number; // in milliseconds; any notification sent within this time will be dropped
-}
+import { DropTimer, DropTimerManager } from './utils.js';
 
 /**
  * Manages notifications for a specific player, ensuring that duplicate messages are not sent within a specified drop timer.
  */
-export class NotificationManager {
+export class NotificationManager extends DropTimerManager {
     public player: Player;
-    private activeTimers: NotificationTimer[] = [];
 
     /**
      * Creates an instance of the NotificationManager for a specific player.
@@ -20,17 +14,9 @@ export class NotificationManager {
      * @param player - The player to manage notifications for.
      */
     constructor(player: Player) {
-        this.player = player;
-    }
+        super();
 
-    /**
-     * Clears expired timers from the active timers list.
-     */
-    private clearExpiredTimers() {
-        this.activeTimers = this.activeTimers.filter(timer => {
-            // Keep timers that are still within their drop timer
-            return (Date.now() - timer.sentTimestamp) < timer.dropTimer;
-        });
+        this.player = player;
     }
 
     /**
@@ -47,14 +33,14 @@ export class NotificationManager {
         this.clearExpiredTimers();
 
         // if notif drop timer exists, meaning its still active, do not send the message
-        if (!this.activeTimers.find(timer => timer.langId === langId)) {
+        if (!this.activeTimers.find(timer => timer.Id === langId)) {
             player.sendMessage([{ "translate": "chat.prefix" }, { "text": " " }, { "translate": `${langId}` , "with": slots}]);
 
             playSound(player, sound);
 
             // push new timer to active timers
             this.activeTimers.push({
-                langId,
+                Id: langId,
                 sentTimestamp: Date.now(),
                 dropTimer: dropTimer || 200 // default drop timer is 200ms
             });

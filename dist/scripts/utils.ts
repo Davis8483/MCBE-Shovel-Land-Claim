@@ -197,3 +197,33 @@ export function createEntitySave(entity: Entity): void {
         }
     }, 10)
 }
+
+/**
+ * Represents a timer for managing event drops.
+ * 
+ * @property Id - The unique identifier for the event.
+ * @property sentTimestamp - The timestamp when the event was sent.
+ * @property dropTimer - The duration in milliseconds before the event can be sent again.
+ */
+export interface DropTimer {
+    Id: string;
+    sentTimestamp: number;
+    dropTimer: number; // in milliseconds; any event sent within this time will be dropped
+}
+
+/**
+ * Manages a set of drop timers for events to ensure they are not sent too frequently.
+ */
+export class DropTimerManager {
+    public activeTimers: DropTimer[] = [];
+
+    /**
+     * Clears expired timers from the active timers list.
+     */
+    public clearExpiredTimers() {
+        this.activeTimers = this.activeTimers.filter(timer => {
+            // Keep timers that are still within their drop timer
+            return (Date.now() - timer.sentTimestamp) < timer.dropTimer;
+        });
+    }
+}
