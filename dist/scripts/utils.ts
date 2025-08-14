@@ -1,4 +1,4 @@
-import { Entity, EntityComponentTypes, EntityInventoryComponent, EntityLeashableComponent, EntityQueryOptions, ItemLockMode, ItemStack, Player, StructureSaveMode, system, Vector3, world } from "@minecraft/server";
+import { EntityComponentTypes, EntityInventoryComponent, ItemLockMode, ItemStack, Player, system, Vector3, world } from "@minecraft/server";
 import { Claim, database, ShovelBehavior } from "./database";
 
 export const SHOVEL_ID = "slc:claim_shovel"
@@ -144,12 +144,12 @@ export function getClosestPlayer(blockLocation: Vector3): Player {
  * 
  * @property Id - The unique identifier for the event.
  * @property sentTimestamp - The timestamp when the event was sent.
- * @property dropTimer - The duration in milliseconds before the event can be sent again.
+ * @property dropTimer - The duration in ticks before the event can be sent again.
  */
 export interface DropTimer {
     Id: string;
-    sentTimestamp: number;
-    dropTimer: number; // in milliseconds; any event sent within this time will be dropped
+    sentTimestamp: number; // in ticks
+    dropTimer: number; // in ticks; any event sent within this time will be dropped
 }
 
 /**
@@ -164,7 +164,7 @@ export class DropTimerManager {
     public clearExpiredTimers() {
         this.activeTimers = this.activeTimers.filter(timer => {
             // Keep timers that are still within their drop timer
-            return (Date.now() - timer.sentTimestamp) < timer.dropTimer;
+            return (system.currentTick - timer.sentTimestamp) < timer.dropTimer;
         });
     }
 }

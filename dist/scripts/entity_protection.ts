@@ -95,8 +95,8 @@ export class EntityLoaderManager extends DropTimerManager {
             // push new timer to active timers
             this.activeTimers.push({
                 Id: entityID,
-                sentTimestamp: Date.now(),
-                dropTimer: 200 // drop everything within 200ms
+                sentTimestamp: system.currentTick,
+                dropTimer: 2 // drop everything within 2 ticks
             });
         }
     }

@@ -1,6 +1,6 @@
-import { Player, world } from "@minecraft/server";
+import { Player, world, system } from "@minecraft/server";
 import { playSound, AddonSounds } from './sounds.js';
-import { DropTimer, DropTimerManager } from './utils.js';
+import { DropTimerManager } from './utils.js';
 
 /**
  * Manages notifications for a specific player, ensuring that duplicate messages are not sent within a specified drop timer.
@@ -24,7 +24,7 @@ export class NotificationManager extends DropTimerManager {
      * 
      * @param player - The player to send the message to.
      * @param sound - The sound to play when sending the message.
-     * @param dropTimer - The time in milliseconds to wait before allowing the same message to be sent again.
+     * @param dropTimer - The time in ticks to wait before allowing the same message to be sent again.
      * @param langId - The language entry for the message.
      * @param slots - The %s slots to replace in the message.
      */
@@ -41,8 +41,8 @@ export class NotificationManager extends DropTimerManager {
             // push new timer to active timers
             this.activeTimers.push({
                 Id: langId,
-                sentTimestamp: Date.now(),
-                dropTimer: dropTimer || 200 // default drop timer is 200ms
+                sentTimestamp: system.currentTick,
+                dropTimer: dropTimer || 2 // default drop timer is 2 ticks
             });
         }
     }
