@@ -140,65 +140,6 @@ export function getClosestPlayer(blockLocation: Vector3): Player {
 }
 
 /**
- * Deletes the entity save for the specified entity ID from the worlds structure manager.
- * 
- * @param entityID - The ID of the entity to delete the save for
- */
-export function deleteEntitySave(entityID: string): void {
-    const structureID = "slc:" + entityID;
-    const existingStructure = world.structureManager.get(structureID);
-
-    if (existingStructure) {
-        world.structureManager.delete(existingStructure);
-    }
-}
-
-/**
- * Creates a save for an entity using the worlds structure manager.
- * This is done in case the entity is killed by a disallowed player in one hit. (usually the health will be reset tho without a death, this is just a backup)
- * 
- * @param entity - Entity to save
- */
-export function createEntitySave(entity: Entity): void {
-    // an extra delay to ensure all entity components have loaded properly
-    system.runTimeout(() => {
-        // make sure the entity still exists after the timeout
-        if (entity.isValid) {
-
-            var queryOptions: EntityQueryOptions = {};
-            queryOptions.maxDistance = 1.5;
-            queryOptions.location = entity.location;
-
-            // prevent more than one entities from being saved to the structure
-            if (world.getDimension("overworld").getEntities(queryOptions).length == 1) {
-            
-                const structureID = "slc:" + entity.id;
-
-                // try to delete the existing save for the entity if it exists
-                deleteEntitySave(entity.id);
-
-                // filter out item stack entities to prevent performance issues
-                if (entity.typeId != "minecraft:item") {
-                    world.structureManager.createFromWorld(structureID, world.getDimension("overworld"), entity.location, entity.location, {"includeBlocks": false, "includeEntities": true, "saveMode": StructureSaveMode.World});
-                }
-
-                entity.setDynamicProperty("structureID", structureID);
-            }
-
-            const leashComponent: EntityLeashableComponent = entity.getComponent(EntityComponentTypes.Leashable);
-
-            // if the entity is connected to a leash knot save its location
-            if (leashComponent && leashComponent.leashHolder && (leashComponent.leashHolderEntityId == "minecraft:leash_knot")) {
-                entity.setDynamicProperty("leashKnotLocation", leashComponent.leashHolder.location);
-            }
-            else {
-                entity.setDynamicProperty("leashKnotLocation"); // clear the property
-            }
-        }
-    }, 10)
-}
-
-/**
  * Represents a timer for managing event drops.
  * 
  * @property Id - The unique identifier for the event.

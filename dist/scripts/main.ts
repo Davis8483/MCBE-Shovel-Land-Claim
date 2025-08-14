@@ -1,10 +1,11 @@
-import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel, InvalidEntityError } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel, InvalidEntityError, EntityDamageCause } from '@minecraft/server';
 import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { NotificationManagerStack } from './notifications.js';
 import { ShovelUI } from './shovel_ui.js';
-import { runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior, createEntitySave, deleteEntitySave } from './utils.js'
+import { runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior } from './utils.js'
 import { uiManager } from '@minecraft/server-ui';
+import { EntityLoaderManager } from './entity_protection.js';
 
 world.afterEvents.playerJoin.subscribe((data) => {
 
@@ -599,7 +600,7 @@ world.afterEvents.worldLoad.subscribe(() => {
  */
 world.afterEvents.entityLoad.subscribe((data) => {
     if (data.entity.dimension == world.getDimension("overworld")) {
-        createEntitySave(data.entity);
+        entityLoaderManager.createSave(data.entity);
     }
 })
 
@@ -612,7 +613,7 @@ world.afterEvents.entityRemove.subscribe((data) => {
 
     // if the entity the entities death was caused by a disallowed player, prevent the save from being removed
     if (disallowedEntityDeathId != data.removedEntityId) {
-        deleteEntitySave(data.removedEntityId);
+        entityLoaderManager.deleteSave(data.removedEntityId);
     }
 
 });
@@ -663,7 +664,7 @@ world.afterEvents.entitySpawn.subscribe((data) => {
             else if (data.entity.id != disallowedEntityDeathId) {
 
                 // save the entity
-                createEntitySave(data.entity);
+                entityLoaderManager.createSave(data.entity);
             }
         }
     }
@@ -727,11 +728,13 @@ world.afterEvents.playerInteractWithBlock.subscribe((data) => {
             queryOptions.maxDistance = 15;
             queryOptions.type = undefined;
             dimension.getEntities(queryOptions).forEach((entity) => {
-                createEntitySave(entity);
+                entityLoaderManager.createSave(entity);
             })
         }
     }
 });
+
+const entityLoaderManager = new EntityLoaderManager();
 
 /**
  * If an entity is hurt by a disallowed player/mob reset its health, or (if killed) load its last save.
@@ -747,7 +750,7 @@ world.afterEvents.entityHurt.subscribe((data) => {
     }
 
     if (data.hurtEntity.dimension == dimension) {
-        runInAllClaims((claimData: Claim) => {
+        runInAllClaims(async (claimData: Claim) => {
             if (claimData.isOverlap(data.hurtEntity.location, data.hurtEntity.location) && !claimData.hasPermission(PermissionTypes.HURT_ENTITIES, damagePlayerSource)) {
                
                 // if it was a player that hurt the entity
@@ -767,7 +770,7 @@ world.afterEvents.entityHurt.subscribe((data) => {
                         healthComponent.resetToDefaultValue();
                     }
 
-                    createEntitySave(data.hurtEntity); // re-save the entity in case it doesn't have a save on file yet
+                    entityLoaderManager.createSave(data.hurtEntity); // re-save the entity in case it doesn't have a save on file yet
                 }
                 // the engine considers the entity as dead so we'll go ahead and load its last save
                 else {
@@ -787,45 +790,19 @@ world.afterEvents.entityHurt.subscribe((data) => {
                         entity.remove();
                     });
 
-                    const structureID = data.hurtEntity.getDynamicProperty("structureID") as string;
-
-                    // entity cramming sort of???
-                    var queryOptions: EntityQueryOptions = {};
-                    queryOptions.location = data.hurtEntity.location;
-                    queryOptions.maxDistance = settings.entityProtectionCrammingRadius;
-                    if (dimension.getEntities(queryOptions).length > settings.entityProtectionCrammingThreshold) {
-                        // if there are too many entities in the area, we will not load the entity save
-                        // this is to prevent lag and crashing from loading too many entities
-
-                        // if owner is online, notify them that their mob farm isn't working and that they need to enable the hurt entities public permission
-                        var claimOwner = world.getEntity(claimData.getOwnerData().id) as Player;
-                        if (claimOwner) {
-
-                            const notifManager = NotificationManagerStack.getById(claimOwner.id);
-
-                            // this notif is only allowed to send every 5 minutes
-                            notifManager.send(claimOwner, AddonSounds.Global.WARN_EVENT, 300000, "chat.claim:entity_cramming", claimData.name);
-                        }
-
-                        return;
-                    }
-
-                    // make sure the entity save exists
-                    if (structureID) {
-                        try {
-                            world.structureManager.place(structureID, world.getDimension("overworld"), data.hurtEntity.location, {"includeBlocks": false, "includeEntities": true})
-                        }
-                        // if theres an error in the loading process, just spawn a new one
-                        catch (e) {
-                            dimension.spawnEntity(data.hurtEntity.typeId, data.hurtEntity.location);
-                        }
-                    }
-                    // the entity save couldn't be found, just spawn a new one
-                    else {
-                        dimension.spawnEntity(data.hurtEntity.typeId, data.hurtEntity.location);
-                    }
-
+                    // save vars so they can be used even after the entity is fully removed from the world
+                    const entityID = data.hurtEntity.id;
+                    const location: Vector3 = data.hurtEntity.location;
+                    const entityTypeID: string = data.hurtEntity.typeId;
                     const leashKnotLocation = data.hurtEntity.getDynamicProperty("leashKnotLocation") as Vector3;
+
+                    // wait until the dead entity is fully removed
+                    while (data.hurtEntity.isValid) {
+                        await system.waitTicks(20);
+                    }
+
+                    // load the entity save
+                    entityLoaderManager.loadSave(entityID, location, entityTypeID);
 
                     // if the entity was leashed to a knot, reattach it to the knot
                     if (leashKnotLocation) {
@@ -846,8 +823,8 @@ world.afterEvents.entityHurt.subscribe((data) => {
 
                         var queryOptions: EntityQueryOptions = {};
                         queryOptions.maxDistance = 1;
-                        queryOptions.type = data.hurtEntity.typeId;
-                        queryOptions.location = data.hurtEntity.location;
+                        queryOptions.type = entityTypeID;
+                        queryOptions.location = location;
                         dimension.getEntities(queryOptions).forEach((entity) => {
                             const leashComponent: EntityLeashableComponent = entity.getComponent(EntityComponentTypes.Leashable);
 
