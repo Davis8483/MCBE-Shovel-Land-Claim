@@ -762,13 +762,15 @@ world.afterEvents.entityHurt.subscribe((data) => {
                     notifManager.send(damagePlayerSource, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:hurt_entities");
                 }
 
+                // if the hurt entity was a player, exit
+                if (data.hurtEntity.typeId === "minecraft:player") {
+                    return;
+                }
+
                 // check if the game engine will count the entity as dead
                 if (healthComponent.currentValue > 0) {
-                    if (data.hurtEntity.typeId != "minecraft:player") {
-
-                        // if the entity is still considered alive we'll reset its health
-                        healthComponent.resetToDefaultValue();
-                    }
+                    // if the entity is still considered alive we'll reset its health
+                    healthComponent.resetToDefaultValue();
 
                     entityLoaderManager.createSave(data.hurtEntity); // re-save the entity in case it doesn't have a save on file yet
                 }

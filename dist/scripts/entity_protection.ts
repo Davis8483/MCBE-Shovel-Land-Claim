@@ -46,8 +46,8 @@ export class EntityLoaderManager extends DropTimerManager {
                     // try to delete the existing save for the entity if it exists
                     this.deleteSave(entity.id);
 
-                    // filter out item stack entities to prevent performance issues
-                    if (entity.typeId != "minecraft:item") {
+                    // filter out players, xp, and item stack entities to prevent performance issues
+                    if ((entity.typeId != "minecraft:item") && (entity.typeId != "minecraft:player") && (entity.typeId != "minecraft:xp_orb")) {
                         world.structureManager.createFromWorld(structureID, world.getDimension("overworld"), entity.location, entity.location, {"includeBlocks": false, "includeEntities": true, "saveMode": StructureSaveMode.World});
                     }
 
