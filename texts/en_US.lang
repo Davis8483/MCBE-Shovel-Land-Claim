@@ -21,7 +21,6 @@ chat.claim:max_claims=§cThis exceeds your max of %s claims!§r
 chat.claim:point_not_set=§cYou must set the first point of the claim!§r
 chat.claim:claim_creation_canceled=§pClaim creation has been canceled...§r
 chat.claim:claim_resize_canceled=§pClaim resizing has been canceled...§r
-chat.claim:entity_cramming=§pEntity cramming is active in §r%s§p!§r\n§dIf your trying to make a mob farm, please enable the "hurt entities" public permission...§r
 chat.claim:resized=§aClaim has been resized!§r
 chat.claim:player_permissions_updated_notif=%s §ahas updated your permissions for §5%s§r
 chat.claim:public_permissions_updated_notif=%s §ahas updated the public permissions for §5%s§r
