@@ -43,7 +43,7 @@
 			},
 			"minecraft:particle_appearance_lighting": {},
 			"minecraft:particle_appearance_tinting": {
-				"color": ["Math.clamp((variable.particle_random_1 * 0.2 + 0.8) * (variable.particle_random_2 * 0.4 + 0.6), 0, 1)", 1, 1, 1]
+				"color": ["Math.clamp((variable.particle_random_1 * 0.2 + 0.8) * variable.color.r, 0, 1)", "variable.color.g", "variable.color.b", 1]
 			}
 		}
 	}
