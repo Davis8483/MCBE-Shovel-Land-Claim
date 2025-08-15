@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel, InvalidEntityError, EntityDamageCause } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel, InvalidEntityError, EntityDamageCause, RGB } from '@minecraft/server';
 import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { NotificationManagerStack } from './notifications.js';
@@ -1039,8 +1039,10 @@ system.runInterval(() => {
                     claimShovelOut = true;
                 }
 
-                // only render if particles are enabled or owner has claim shovel out
-                if (claim.particlesEnabled || claimShovelOut) {
+                const canEnter = claim.hasPermission(PermissionTypes.ENTER_CLAIM, p);
+
+                // only render if particles are enabled, player is not allowed to enter, or owner has claim shovel out
+                if (claim.particlesEnabled || !canEnter || claimShovelOut) {
                     // loop through all claim points to determine particle type
                     for (var a = 0; a < points.length; a++) {
                         for (var b = 0; b < points[a].length; b++) {
@@ -1058,6 +1060,7 @@ system.runInterval(() => {
 
                                     const xParticleOptions = new MolangVariableMap();
                                     const zParticleOptions = new MolangVariableMap();
+                                    const yParticleOptions = new MolangVariableMap();
 
                                     // set kill distance to half of claim width/length with a little bit of overlap
                                     xParticleOptions.setFloat("kill_distance", claimWidth / 1.75);
@@ -1066,6 +1069,22 @@ system.runInterval(() => {
                                     // set direction of particles
                                     xParticleOptions.setSpeedAndDirection("motion", 1, {"x": points[a][b][0] > points[a ^ 1][b][0] ? -1 : 1, "y": 0, "z": 0});
                                     zParticleOptions.setSpeedAndDirection("motion", 1, {"x": 0, "y": 0, "z": points[a][b][1] > points[a][b ^ 1][1] ? -1 : 1});
+
+                                    const white: RGB = {"red": 1, "green": 1, "blue": 1};
+                                    const red: RGB = {"red": 1, "green": 0.6, "blue": 0.6};
+
+                                    // if player has permission to enter claim, spawn normal particles
+                                    if (canEnter) {
+                                        xParticleOptions.setColorRGB("color", white);
+                                        zParticleOptions.setColorRGB("color", white);
+                                        yParticleOptions.setColorRGB("color", white);
+                                    }
+                                    // otherwise spawn red ones
+                                    else {
+                                        xParticleOptions.setColorRGB("color", red);
+                                        zParticleOptions.setColorRGB("color", red);
+                                        yParticleOptions.setColorRGB("color", red);                 
+                                    }
 
                                     var particlePoint: Vector3 = { "x": points[a][b][0] + 0.5, "y": i + 0.5, "z": points[a][b][1] + 0.5 };
 
@@ -1076,11 +1095,9 @@ system.runInterval(() => {
                                         p.spawnParticle(xzParticleType, particlePoint, xParticleOptions);
                                         p.spawnParticle(xzParticleType, particlePoint, zParticleOptions);
 
-                                        var yParticleOptions = new MolangVariableMap();
                                         yParticleOptions.setSpeedAndDirection("motion", 1, {"x": 0, "y": 1, "z": 0});
                                         p.spawnParticle(yParticleType, particlePoint, yParticleOptions);
 
-                                        yParticleOptions = new MolangVariableMap();
                                         yParticleOptions.setSpeedAndDirection("motion", 1, {"x": 0, "y": -1, "z": 0});
                                         p.spawnParticle(yParticleType, particlePoint, yParticleOptions);
                                     }

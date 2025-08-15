@@ -321,10 +321,16 @@ export class Claim {
         return this._particlesEnabled;
     }
 
+    /**
+     * Returns a list of permissions for individual players.
+     */
     get playerPermissionsList(): PlayerPermissions[] {
         return this._playerPermissionsList;
     }
 
+    /**
+     * Returns the public permissions for the claim.
+     */
     get permissions(): Permissions {
         return this._permissions;
     }
