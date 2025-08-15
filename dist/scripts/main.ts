@@ -966,6 +966,12 @@ system.runInterval(() => {
                         }
                     }
                 }
+
+                // if player is within 5 blocks of a claim they're not allowed to enter
+                if (claim.isOverlap(location, location, 5) && !claim.hasPermission(PermissionTypes.ENTER_CLAIM, p)) {
+                    // notify player, can only be sent every minute/1200 ticks
+                    notifManager.send(p, AddonSounds.Global.WARN_EVENT, 1200, "chat.claim.permission:enter_claim_warning", claim.name, claim.getOwnerData().name);
+                }
             });
 
             // player has entered claim
