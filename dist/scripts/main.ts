@@ -4,7 +4,6 @@ import { playSound, AddonSounds } from './sounds.js';
 import { NotificationManagerStack } from './notifications.js';
 import { ShovelUI } from './shovel_ui.js';
 import { runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior } from './utils.js'
-import { uiManager } from '@minecraft/server-ui';
 import { EntityLoaderManager } from './entity_protection.js';
 
 world.afterEvents.playerJoin.subscribe((data) => {
@@ -121,11 +120,6 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
     if ((data.itemStack != undefined) && (data.itemStack.typeId == SHOVEL_ID)) {
         // stop the shovel from breaking the block
         data.cancel = true
-
-        system.runTimeout(() => {
-            // close any open menus; this is important for mobile players
-            uiManager.closeAllForms(data.player);
-        }, 3); // a slight delay is used to ensure this runs after the itemUse before event
 
         if (data.dimension == world.getDimension("overworld")) {
 
@@ -247,14 +241,8 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         else {
                             system.run(() => {
                                 playSound(data.player, AddonSounds.Shovel.SELECT);
-                            });
-                            system.runTimeout(() => {
-
                                 new ShovelUI(data.player, notifManager).resizeClaim(resizingClaim, playerData.oppositeCorner, secondPoint);
-
-                                playerData.setFirstPoint(null); // make sure selection particles are not shown
-
-                            }, 6); // a slight delay is used to ensure that any other server forms are closed; this is important for mobile players
+                            });
                         }
                     }
                     // not resizing, create a new claim
@@ -302,10 +290,8 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         else {
                             system.run(() => {
                                 playSound(data.player, AddonSounds.Shovel.SELECT);
-                            });
-                            system.runTimeout(() => {
                                 new ShovelUI(data.player, notifManager).newClaim(playerData.firstPoint, secondPoint);
-                            }, 6); // a slight delay is used to ensure that any other server forms are closed; this is important for mobile players
+                            });
                         }
                     }
 
