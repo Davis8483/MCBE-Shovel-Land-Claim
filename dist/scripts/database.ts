@@ -455,21 +455,38 @@ export class Claim {
     /**
      * returns if the specified area overlaps with the claim
      * 
-     * @param start - The block representing the first corner of the area
-     * 
-     * @param end - The block representing the opposite second corner of the area
+     * @param start - The block representing the first corner of the area, or single point
+     * @param end - The block representing the opposite second corner of the area, not required
+     * @param margin - The margin to use when checking for overlap, not required
     */
-    isOverlap(start: Vector3, end: Vector3): boolean {
-        // Get the left, right, bottom, and top coordinates of each rectangle
-        const rect1Left = Math.min(this._start.x, this._end.x);
-        const rect1Right = Math.max(this._start.x, this._end.x);
-        const rect1Top = Math.max(this._start.z, this._end.z);
-        const rect1Bottom = Math.min(this._start.z, this._end.z);
+    isOverlap(start: Vector3, end?: Vector3, margin?: number): boolean {
+        if (!end) {
+            end = start;
+        }
 
-        const rect2Left = Math.min(start.x, end.x);
-        const rect2Right = Math.max(start.x, end.x);
-        const rect2Top = Math.max(start.z, end.z);
-        const rect2Bottom = Math.min(start.z, end.z);
+        // Get the left, right, bottom, and top coordinates of each rectangle
+        var rect1Left = Math.min(this._start.x, this._end.x);
+        var rect1Right = Math.max(this._start.x, this._end.x);
+        var rect1Top = Math.max(this._start.z, this._end.z);
+        var rect1Bottom = Math.min(this._start.z, this._end.z);
+
+        var rect2Left = Math.min(start.x, end.x);
+        var rect2Right = Math.max(start.x, end.x);
+        var rect2Top = Math.max(start.z, end.z);
+        var rect2Bottom = Math.min(start.z, end.z);
+
+        if (margin) {
+            // Expand the rectangles by the margin
+            rect1Left -= margin;
+            rect1Right += margin;
+            rect1Top += margin;
+            rect1Bottom -= margin;
+
+            rect2Left -= margin;
+            rect2Right += margin;
+            rect2Top += margin;
+            rect2Bottom -= margin;
+        }
 
         // Check if there's no overlap on both x and y directions
         return !(rect1Right < rect2Left || rect2Right < rect1Left || rect1Top < rect2Bottom || rect2Top < rect1Bottom);
