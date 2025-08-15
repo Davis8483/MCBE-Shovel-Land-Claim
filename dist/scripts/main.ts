@@ -222,7 +222,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         // make sure another player isn't in the area
                         for (var p of world.getAllPlayers()) {
                             // we are creating a claim object just to use the isOverlap utility, this is not saved to the database
-                            if (new Claim("", playerData.oppositeCorner, secondPoint, "").isOverlap(p.location, p.location) && (p.id != data.player.id)) {
+                            if (new Claim("", playerData.oppositeCorner, secondPoint, "").isOverlap(p.location) && (p.id != data.player.id)) {
                                 playerIntersectingClaim = true;
                             }
                         }
@@ -273,7 +273,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                         // make sure another player isn't in the area
                         for (var p of world.getAllPlayers()) {
                             // we are creating a claim object just to use the isOverlap utility, this is not saved to the database
-                            if (new Claim("", playerData.firstPoint, secondPoint, "").isOverlap(p.location, p.location) && (p.id != data.player.id)) {
+                            if (new Claim("", playerData.firstPoint, secondPoint, "").isOverlap(p.location) && (p.id != data.player.id)) {
                                 playerIntersectingClaim = true;
                             }
                         }
@@ -326,7 +326,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
         else if (data.dimension == world.getDimension("overworld")) {
             runInAllClaims((claim) => {
                 // check if a block is broken by a player without permissions within the claim
-                if (claim.isOverlap(data.block, data.block) && !claim.hasPermission(PermissionTypes.BREAK_BLOCKS, data.player)) {
+                if (claim.isOverlap(data.block) && !claim.hasPermission(PermissionTypes.BREAK_BLOCKS, data.player)) {
                     data.cancel = true;
 
                     notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:break_blocks");
@@ -359,7 +359,7 @@ world.beforeEvents.explosion.subscribe((data) => {
                 for (var i = 0; i < impactedBlocks.length; i++) {
                     var block = impactedBlocks[i]
 
-                    if (claim.isOverlap(block, block)) {
+                    if (claim.isOverlap(block)) {
                         // remove the block
                         impactedBlocks.splice(impactedBlocks.indexOf(block), 1);
 
@@ -418,7 +418,7 @@ world.afterEvents.pistonActivate.subscribe((data) => {
             runInAllClaims((claim) => {
 
                 // if block is in claim but not piston
-                if (claim.isOverlap(b.location, b.location) && !claim.isOverlap(data.piston.block.location, data.piston.block.location)) {
+                if (claim.isOverlap(b.location) && !claim.isOverlap(data.piston.block.location)) {
                     allowed = false;
                 }
             });
@@ -524,7 +524,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
         runInAllClaims((claim) => {
                 
             // door interaction permissions
-            if (claim.isOverlap(data.block.location, data.block.location) && (data.block.typeId.includes("door") || data.block.typeId.includes("fence_gate")) && !(data.player.isSneaking && data.itemStack)) {
+            if (claim.isOverlap(data.block.location) && (data.block.typeId.includes("door") || data.block.typeId.includes("fence_gate")) && !(data.player.isSneaking && data.itemStack)) {
                 if (!claim.hasPermission(PermissionTypes.USE_DOORS, data.player)){
                     // cancel the action
                     data.cancel = true;
@@ -535,7 +535,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                 }
             }
             // lever/button interaction permissions
-            else if (claim.isOverlap(data.block.location, data.block.location) && (data.block.matches("minecraft:lever") || data.block.typeId.includes("button")) && !(data.player.isSneaking && data.itemStack)) {
+            else if (claim.isOverlap(data.block.location) && (data.block.matches("minecraft:lever") || data.block.typeId.includes("button")) && !(data.player.isSneaking && data.itemStack)) {
                 if (!claim.hasPermission(PermissionTypes.USE_SWITCHES, data.player)){
                     // cancel the action
                     data.cancel = true;
@@ -545,7 +545,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                 }
             }
             // bed interaction permissions
-            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.matches("minecraft:bed") && !(data.player.isSneaking && data.itemStack)) {
+            else if (claim.isOverlap(data.block.location) && data.block.matches("minecraft:bed") && !(data.player.isSneaking && data.itemStack)) {
                 if (!claim.hasPermission(PermissionTypes.USE_BEDS, data.player)){
                     // cancel the action
                     data.cancel = true;
@@ -556,7 +556,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                 }
             }
             // opening chests/container permissions
-            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Inventory) && !(data.player.isSneaking && data.itemStack)) {
+            else if (claim.isOverlap(data.block.location) && data.block.getComponent(BlockComponentTypes.Inventory) && !(data.player.isSneaking && data.itemStack)) {
                 if (!claim.hasPermission(PermissionTypes.OPEN_CONTAINERS, data.player)){
                     // cancel the action
                     data.cancel = true;
@@ -566,7 +566,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                 }
             }
             // editing signs permissions
-            else if (claim.isOverlap(data.block.location, data.block.location) && data.block.getComponent(BlockComponentTypes.Sign) && !(data.player.isSneaking && data.itemStack) && !data.itemStack?.matches("minecraft:honeycomb")) {
+            else if (claim.isOverlap(data.block.location) && data.block.getComponent(BlockComponentTypes.Sign) && !(data.player.isSneaking && data.itemStack) && !data.itemStack?.matches("minecraft:honeycomb")) {
                 if (!claim.hasPermission(PermissionTypes.EDIT_SIGNS, data.player)){
                     // cancel the action
                     data.cancel = true;
@@ -576,7 +576,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                 }
             }
             // block placing/using items on blocks permissions
-            else if ((claim.isOverlap(data.block, data.block) || claim.isOverlap(placedBlock, placedBlock)) && data.itemStack && !data.itemStack.matches(SHOVEL_ID)) {
+            else if ((claim.isOverlap(data.block) || claim.isOverlap(placedBlock)) && data.itemStack && !data.itemStack.matches(SHOVEL_ID)) {
                 if (!claim.hasPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data.player)){
                     // cancel the action
                     data.cancel = true;
@@ -751,7 +751,7 @@ world.afterEvents.entityHurt.subscribe((data) => {
 
     if (data.hurtEntity.dimension == dimension) {
         runInAllClaims(async (claimData: Claim) => {
-            if (claimData.isOverlap(data.hurtEntity.location, data.hurtEntity.location) && !claimData.hasPermission(PermissionTypes.HURT_ENTITIES, damagePlayerSource)) {
+            if (claimData.isOverlap(data.hurtEntity.location) && !claimData.hasPermission(PermissionTypes.HURT_ENTITIES, damagePlayerSource)) {
                
                 // if it was a player that hurt the entity
                 if (damagePlayerSource) {
@@ -847,7 +847,7 @@ world.afterEvents.projectileHitBlock.subscribe((data) => {
 
         // check if the fireball hit a claim
         runInAllClaims((claim) => {
-            if (claim.isOverlap(block.location, block.location)) {
+            if (claim.isOverlap(block.location)) {
 
                 // check within a 3 block radius
                 const detectionRadius = 3;
@@ -894,7 +894,7 @@ system.runInterval(() => {
                 const location: Vector3 = { "x": p.location.x - 0.5, "y": p.location.y - 0.5, "z": p.location.z - 0.5 };
 
                 // if player is in the claim
-                if (claim.isOverlap(location, location)) {
+                if (claim.isOverlap(location)) {
 
                     const distanceMoved = playerData.distanceToPrevLocation();
 
@@ -937,7 +937,7 @@ system.runInterval(() => {
                         if (distanceMoved && (distanceMoved > playerTeleportThreshold)) {
 
                             // check to make sure prev location is outside of claim
-                            if (!claim.isOverlap(playerData.previousLocation, playerData.previousLocation)) {
+                            if (!claim.isOverlap(playerData.previousLocation)) {
 
                                 // teleport player back to last known location before teleport
                                 p.teleport(playerData.previousLocation);

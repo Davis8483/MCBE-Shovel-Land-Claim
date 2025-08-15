@@ -652,9 +652,9 @@ export class ShovelUI {
 
                             // get the claim the player is in, this will be undefined if the player is not in a claim
                             const claim = listParent instanceof Claim ? 
-                                listParent.isOverlap(p.location, p.location) ? 
+                                listParent.isOverlap(p.location) ? 
                                     listParent : undefined
-                                : listParent.claims.filter(c => c.isOverlap(p.location, p.location))[0];
+                                : listParent.claims.filter(c => c.isOverlap(p.location))[0];
 
                             // check if the player will lose access to the claim they are in
                             // compares permissions of soon to be deleted player permissions to the claim permissions
@@ -810,15 +810,15 @@ export class ShovelUI {
                 }
 
                 // if the claims global permissions have been updated notify all players in the claim
-                if (!playerID && listParent instanceof Claim && listParent.isOverlap(p.location, p.location) && (playerData.id != listParent.getOwnerData().id)) {
+                if (!playerID && listParent instanceof Claim && listParent.isOverlap(p.location) && (playerData.id != listParent.getOwnerData().id)) {
                     this.notificationManager.send(p, AddonSounds.Claim.SAVE, undefined, "chat.claim:public_permissions_updated_notif", this.player.name, listParent.name)
                 }
 
                 // get the claim the player is in, this will be undefined if the player is not in a claim
                 const claim = listParent instanceof Claim ? 
-                    listParent.isOverlap(p.location, p.location) ? 
+                    listParent.isOverlap(p.location) ? 
                         listParent : undefined
-                    : listParent.claims.filter(c => c.isOverlap(p.location, p.location))[0];
+                    : listParent.claims.filter(c => c.isOverlap(p.location))[0];
 
                 // if a players enter claim permission has been removed while they are in the claim, notify the owner
                 if (claim && !claim.hasPermission(PermissionTypes.ENTER_CLAIM, p) && (playerID ? (playerData.id == playerID) : true)) {
