@@ -218,6 +218,7 @@ ui.claim.config.toggle:border_particles=Border Particles
 ui.claim.config.submit=Save Config
 ui.claim.config.error:no_name=§cYou must provide a name!§r
 ui.claim.config.error:unique_name=§cYou can't use the name of an existing claim!§r
+ui.claim.config.error:particles_required=§cPublic entrance is disallowed, particles must be enabled!§r
 
 ui.claim.icons:land=Land
 ui.claim.icons:bed=Bed
