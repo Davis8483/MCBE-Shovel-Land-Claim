@@ -6,7 +6,7 @@ import { NotificationManager } from './notifications.js';
 import { updateShovelBehavior } from './utils.js';
 
 export class ShovelUI {
-    private player: Player;
+    private player: Player; // the player to show the form to
 
     // player selected icons for their claims
     private claimIcons = {
@@ -60,22 +60,19 @@ export class ShovelUI {
                     ]} : { "rawtext": [] }
                 ]
             })
-
-            // conditionally show the manage claims button if the player has any claims
-            if (playerData.claims.length > 0){
-                form.button({ 
-                    "rawtext": [
-                        {"translate": "ui.main.button:manage"},
-                        { "text": settings.maxClaimAmount > 0 ? (((playerData.claims.length >= settings.maxClaimAmount) ? " §c" : " ") + `(${playerData.claims.length}/${settings.maxClaimAmount})`) : "" }
-                    ]
-                }, "textures/ui/icon_saleribbon.png", () => {
-                    this.claimsList(playerData.id);
-                });
-            }
-
-            form.button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/worldsIcon.png", () => {
+            .button({ 
+                "rawtext": [
+                    {"translate": "ui.main.button:manage"},
+                    { "text": settings.maxClaimAmount > 0 ? (((playerData.claims.length >= settings.maxClaimAmount) ? " §c" : " ") + `(${playerData.claims.length}/${settings.maxClaimAmount})`) : "" }
+                ]
+            }, "textures/ui/icon_saleribbon.png", () => {
+                this.claimsList(playerData.id);
+            })
+            .button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/worldsIcon.png", () => {
                 this.playerPermissionsList(playerData);
             })
+
+            // conditionally show the op panel button
             if (this.player.playerPermissionLevel == PlayerPermissionLevel.Operator) {
                 form.button({"translate": "ui.main.button:op_panel"}, "textures/ui/permissions_op_crown.png", () => {
                     this.opPanel();
@@ -242,25 +239,21 @@ export class ShovelUI {
 
         const form = new CallbackActionFormData(this.navigationStack, () => this.opManagePlayer(playerId))
             .title({"translate": "ui.main.op_mode:title", "with": [playerData.name]})
-
-            form.button({"translate": "ui.op_manage_player.button:player_config"}, "textures/ui/icon_setting.png", () => {this.opPlayerConfig(playerId)})
-
-            // conditionally show the manage claims button if the player has any claims
-            if (playerData.claims.length > 0){
-                form.button({"translate": "ui.main.button:manage"}, "textures/ui/icon_saleribbon.png", () => {
-                    this.claimsList(playerData.id);
-                });
-            }
-
-            form.button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/icon_multiplayer.png", () => {
+            .button({"translate": "ui.op_manage_player.button:player_config"}, "textures/ui/icon_setting.png", () => {this.opPlayerConfig(playerId)})
+            .button({"translate": "ui.main.button:manage"}, "textures/ui/icon_saleribbon.png", () => {
+                this.claimsList(playerData.id);
+            })
+            .button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/icon_multiplayer.png", () => {
                 this.playerPermissionsList(playerData);
             })
+
             // if player is offline
             if (world.getAllPlayers().filter(p => p.id == playerId).length == 0) {
                 form.button({"translate": "ui.op_manage_player.button:delete_player_data"}, "textures/ui/redX1.png", () => {
                     this.opDeletePlayerConfirm(playerId);
                 })
             }
+
             form.button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();});
 
 
@@ -493,6 +486,10 @@ export class ShovelUI {
                     { "text": settings.maxClaimAmount > 0 ? (((playerData.claims.length >= settings.maxClaimAmount) ? " §c" : " ") + `(${playerData.claims.length}/${settings.maxClaimAmount})`) : "" }
                 ]
             });
+
+        if (playerData.claims.length == 0) {
+            form.body({"translate": "ui.manage.body:no_claims"});
+        }
 
         for (const c of playerData.claims) {
 
