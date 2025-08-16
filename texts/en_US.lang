@@ -150,6 +150,7 @@ ui.addon_info:body.paragraph:6=§oShovel Land Claim by nDavis is licensed under 
 ui.addon_info.button:changelog=View Latest Changelog
 
 ui.manage:title=Manage Claim
+ui.manage.body:no_claims=\nNothing to see here... yet :)\n 
 ui.manage.body:claim_start=Claim Start: §cX§r=%s §9Z§r=%s
 ui.manage.body:claim_end=Claim End: §cX§r=%s §9Z§r=%s
 ui.manage.button:config=Config
