@@ -488,7 +488,14 @@ export class ShovelUI {
             });
 
         if (playerData.claims.length == 0) {
-            form.body({"translate": "ui.manage.body:no_claims"});
+            form.body(
+                {"rawtext": [
+                    {"text": "\n" },
+                    {"translate": "ui.manage.body:no_claims"},
+                    {"text": "\n\n" },
+                    {"translate": "ui.main:body.paragraph:2"}, // we're just gonna reuse the instructions from the main menu :)
+                    {"text": "\n " },
+                ]});
         }
 
         for (const c of playerData.claims) {
