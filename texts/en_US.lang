@@ -11,7 +11,6 @@ chat.world:disabled_item=§cThis item/block has been disabled by your admin!§r
 chat.world:wither=§cYou're not allowed to spawn withers in the overworld!§r
 
 chat.claim:created=§aClaim created!§r
-chat.claim:removed=§cClaim removed.§r
 chat.claim:claim_intersecting=§cA claim is already here!§r
 chat.claim:player_intersecting=§cA player is in the way!§r
 chat.claim:width=§cYou're claim must be at least %s blocks wide!§r
