@@ -631,12 +631,21 @@ export class PlayerClaimBlocks {
     }
 }
 
+/**
+ *  only used for mobile players, used to switch between opening the menu and creating/resizing claims
+ */
+export enum ShovelMobileMode {
+    MENU = "menu",
+    CLAIM = "claim"
+}
+
 export class PlayerData {
     private _schemaVersion: string;
     private _shownChangeLog: boolean;
     private _shownSetupScreen: boolean;
     private _id: string;
     private _name: string;
+    private _mobileMode: ShovelMobileMode | null;
     private _inClaim: boolean;
     private _viewingClaim: boolean;
     private _resizingClaimName: string;
@@ -655,6 +664,7 @@ export class PlayerData {
         this._shownSetupScreen = false; // default to false so all admins can go through the setup ui
         this._id = playerID;
         this._name = playerName;
+        this._mobileMode = null;
         this._inClaim = false;
         this._viewingClaim = false;
         this._resizingClaimName = "";
@@ -675,6 +685,15 @@ export class PlayerData {
 
     get name(): string {
         return this._name;
+    }
+
+    /**
+     * Only used for mobile players, used to switch between opening the menu and creating/resizing claims.
+     * 
+     * Should be set back to null when no longer on mobile platform.
+     */
+    get mobileMode(): ShovelMobileMode | null {
+        return this._mobileMode;
     }
 
     get inClaim(): boolean {
@@ -757,6 +776,15 @@ export class PlayerData {
 
     setName(newName: string): void {
         this._name = newName;
+    }
+
+    /**
+     * Switch between opening the menu and creating/resizing claims when using the claim shovel on mobile.
+     * 
+     * @param value - Should be set back to null when no longer on mobile platform.
+     */
+    setMobileMode(value: ShovelMobileMode | null): void {
+        this._mobileMode = value;
     }
 
     setInClaim(value: boolean): void {
@@ -909,6 +937,7 @@ export class PlayerData {
         playerData.setShownChangeLog(data._shownChangeLog !== undefined ? data._shownChangeLog : defaultPlayerData.shownChangeLog);
         playerData.setShownSetupScreen(data._shownSetupScreen !== undefined ? data._shownSetupScreen : defaultPlayerData.shownSetupScreen);
         playerData.setInClaim(data._inClaim !== undefined ? data._inClaim : defaultPlayerData.inClaim);
+        playerData.setMobileMode(data._mobileMode || defaultPlayerData.mobileMode);
         playerData.setViewingClaim(data._viewingClaim !== undefined ? data._viewingClaim : defaultPlayerData.viewingClaim);
         playerData.setResizingClaimName(data._resizingClaimName || defaultPlayerData._resizingClaimName);
         playerData.setFirstPoint(data._firstPoint || defaultPlayerData.firstPoint);

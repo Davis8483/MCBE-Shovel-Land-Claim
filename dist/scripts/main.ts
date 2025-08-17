@@ -1,5 +1,5 @@
-import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel, InvalidEntityError, EntityDamageCause, RGB } from '@minecraft/server';
-import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior } from './database.js';
+import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel, InvalidEntityError, EntityDamageCause, RGB, PlatformType } from '@minecraft/server';
+import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior, ShovelMobileMode } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { NotificationManagerStack } from './notifications.js';
 import { ShovelUI } from './shovel_ui.js';
@@ -38,6 +38,15 @@ world.afterEvents.playerJoin.subscribe((data) => {
 
             // updates how the shovel is stored/given to the player; ex: locking to inventory
             updateShovelBehavior(player, settings.claimShovelItemBehavior)
+
+            // if player is not on mobile, indicate this by setting mobile mode to null
+            if (player.clientSystemInfo.platformType != PlatformType.Mobile) {
+                playerData.setMobileMode(null);
+            }
+            // otherwise default it back to opening the menu
+            else {
+                playerData.setMobileMode(ShovelMobileMode.MENU);
+            }
         }
     }, 10);
 });
@@ -66,7 +75,9 @@ world.afterEvents.itemUse.subscribe((data) => {
     const playerData = PlayerData.fromId(data.source.id)
     const notifManager = NotificationManagerStack.getById(data.source.id);
 
-    if (data.itemStack.typeId == SHOVEL_ID) {
+    // if player is on mobile make sure that the shovel is in menu opening mode
+    if ((data.itemStack.typeId == SHOVEL_ID) && ((playerData.mobileMode == null) || (playerData.mobileMode == ShovelMobileMode.MENU))) {
+
         // if player is an admin, show the setup ui if not seen yet
         if ((data.source.playerPermissionLevel == PlayerPermissionLevel.Operator) && !playerData.shownSetupScreen) {
             new ShovelUI(data.source, notifManager).opAddonSetup();
@@ -93,12 +104,19 @@ world.afterEvents.playerHotbarSelectedSlotChange.subscribe((data) => {
         // if new item is not a claim shovel and the previous item was a claim shovel, reset first point and resizing claim name
         if ((!data.itemStack || data.itemStack.typeId != SHOVEL_ID) && (inventory.getSlot(data.previousSlotSelected).typeId == SHOVEL_ID)) {
             if (playerData.resizingClaimName.length > 0) {
+                // send notif that claim creation has been canceled
                 notifManager.send(data.player, AddonSounds.Global.WARN_EVENT, undefined, "chat.claim:claim_resize_canceled");
             }
             else if (playerData.firstPoint != null) {
                 playerData.setFirstPoint(null);
 
+                // send notif that resizing has been canceled
                 notifManager.send(data.player, AddonSounds.Global.WARN_EVENT, undefined, "chat.claim:claim_creation_canceled");
+            }
+
+            // if player is on mobile, switch back to menu opening mode
+            if (data.player.clientSystemInfo.platformType == PlatformType.Mobile) {
+                playerData.setMobileMode(ShovelMobileMode.MENU);
             }
         }
     } catch (error) {
@@ -116,8 +134,8 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
     const playerData = PlayerData.fromId(data.player.id);
     const notifManager = NotificationManagerStack.getById(data.player.id);
 
-    // handle creating claims by setting first and second point
-    if ((data.itemStack != undefined) && (data.itemStack.typeId == SHOVEL_ID)) {
+    // if player is on mobile, make sure the shovel is in claim creation mode
+    if ((data.itemStack?.typeId == SHOVEL_ID) && ((playerData.mobileMode == null) || (playerData.mobileMode == ShovelMobileMode.CLAIM))) {
         // stop the shovel from breaking the block
         data.cancel = true
 

@@ -1,6 +1,6 @@
 import { world, system, Player, Vector3, CameraFadeOptions, CameraSetPosOptions, EasingType, InputPermissionCategory, HudVisibility, RawMessage, InputButton, ButtonState, PlayerPermissionLevel, PlatformType } from '@minecraft/server';
 import { NavigationStack, CallbackActionFormData, CallbackModalFormData, CallbackMessageFormData, ModalDataCorrect, ModalDataError } from './ui_wrapper.js';
-import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ClaimBlocksBehavior, ShovelBehavior } from './database.js';
+import { database, PlayerData, Claim, PlayerPermissions, PermissionTypes, settings, ClaimBlocksBehavior, ShovelBehavior, ShovelMobileMode } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { NotificationManager } from './notifications.js';
 import { updateShovelBehavior } from './utils.js';
@@ -499,6 +499,19 @@ export class ShovelUI {
                         { "text": `${c.name}§r\n§c${c.getSize().width}§8x§9${c.getSize().length} ` }
                     ]
                 }, c.icon, () => {this.manageClaim(c)});
+        }
+
+        // conditionaly show the new claim button for mobile players only
+        if (this.player.clientSystemInfo.platformType == PlatformType.Mobile) {
+            form.button({"translate": "ui.manage.button:new_claim"}, undefined, () => {
+                // set flag to no longer open the menu and only allow claim creation
+                playerData.setMobileMode(ShovelMobileMode.CLAIM);
+
+                // notify player that claim creation is enabled
+                this.notificationManager.send(this.player, AddonSounds.Global.POSITIVE_EVENT, undefined, "chat.claim:enabled_mobile");
+
+                // this menu should now close
+            });
         }
 
         form.button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();});
