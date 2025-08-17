@@ -18,6 +18,7 @@ chat.claim:blocks_new=§cYou need %s more block(s) to create this claim!§r
 chat.claim:blocks_resize=§cYou need %s more block(s) to resize this claim!§r
 chat.claim:max_claims=§cThis exceeds your max of %s claims!§r
 chat.claim:point_not_set=§cYou must set the first point of the claim!§r
+chat.claim:enabled_mobile=§aClaim creation/resizing has been enabled!§r
 chat.claim:claim_creation_canceled=§pClaim creation has been canceled...§r
 chat.claim:claim_resize_canceled=§pClaim resizing has been canceled...§r
 chat.claim:resized=§aClaim has been resized!§r
@@ -150,6 +151,8 @@ ui.addon_info.button:changelog=View Latest Changelog
 
 ui.manage:title=Manage Claim
 ui.manage.body:no_claims=\nNothing to see here... yet :)\n 
+ui.manage.button:new_claim=§q§lNew Claim +§r
+
 ui.manage.body:claim_start=Claim Start: §cX§r=%s §9Z§r=%s
 ui.manage.body:claim_end=Claim End: §cX§r=%s §9Z§r=%s
 ui.manage.button:config=Config
