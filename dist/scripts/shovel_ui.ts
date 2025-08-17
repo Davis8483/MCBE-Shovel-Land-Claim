@@ -746,8 +746,8 @@ export class ShovelUI {
                     ]
                 }
             )
-            .toggle({"translate": "ui.manage.permissions:enter_claim"}, {"defaultValue": defaults.getPermission(PermissionTypes.ENTER_CLAIM)}, (value)=> {
-                
+            .toggle({"translate": "ui.manage.permissions:enter_claim"}, {"defaultValue": defaults.getPermission(PermissionTypes.ENTER_CLAIM), "tooltip": {"translate": "ui.manage.permissions.tooltip:enter_claim"}}, (value)=> {
+
                 // if public entrance is not allowed, force claim particles to be enabled
                 if ((listParent instanceof Claim) && !listParent.particlesEnabled && !value) {
                     listParent.setParticlesEnabled(true);
@@ -1154,7 +1154,7 @@ export class ShovelUI {
                 return new ModalDataCorrect();
             })
             .dropdown({"translate": "ui.claim.config.dropdown:icon"}, Object.keys(this.claimIcons).map((i)=>({"translate": i} as RawMessage)), {"defaultValueIndex": Object.values(this.claimIcons).indexOf(claim.icon)})
-            .toggle({"translate": "ui.claim.config.toggle:border_particles"}, {"defaultValue": claim.particlesEnabled}, (value) => {
+            .toggle({"translate": "ui.claim.config.toggle:border_particles"}, {"defaultValue": claim.particlesEnabled, "tooltip": {"translate": "ui.claim.config.tooltip:border_particles"}}, (value) => {
                 if (!claim.permissions.getPermission(PermissionTypes.ENTER_CLAIM) && !value) {
                     return new ModalDataError("ui.claim.config.error:particles_required");
                 }
