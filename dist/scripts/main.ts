@@ -580,7 +580,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
                 }
             }
             // block placing/using items on blocks permissions
-            else if ((claim.isOverlap(data.block) || claim.isOverlap(placedBlock)) && data.itemStack && !data.itemStack.matches(SHOVEL_ID)) {
+            else if ((claim.isOverlap(data.block) || claim.isOverlap(placedBlock)) && data.itemStack && (data.itemStack.typeId !== SHOVEL_ID)) {
                 if (!claim.hasPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data.player)){
                     // cancel the action
                     data.cancel = true;
@@ -1044,7 +1044,7 @@ system.runInterval(() => {
 
                 var claimShovelOut = false;
 
-                if ((p.id == claim.getOwnerData().id) && p.getComponent(EntityComponentTypes.Inventory).container.getItem(p.selectedSlotIndex)?.matches(SHOVEL_ID)) {
+                if ((p.id == claim.getOwnerData().id) && (p.getComponent(EntityComponentTypes.Inventory).container.getItem(p.selectedSlotIndex)?.typeId === SHOVEL_ID)) {
                     // set flag
                     claimShovelOut = true;
                 }
@@ -1150,7 +1150,7 @@ system.runInterval(() => {
                 for (var i = 0; i < inventory.inventorySize; i++) {
                     var item = inventory.container.getItem(i);
 
-                    if (item && item.matches(SHOVEL_ID)) {
+                    if (item && (item.typeId === SHOVEL_ID)) {
                         hasShovel = true;
                     }
                 }
