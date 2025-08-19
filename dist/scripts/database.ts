@@ -23,7 +23,7 @@ export class Settings{
     constructor(){
         this._claimBlockHourlyPayment = 100;
         this._startingClaimBlocks = 200;
-        this._claimMinimumWidth = 10;
+        this._claimMinimumWidth = 8;
         this._disallowedBlocks = [
             // "minecraft:bedrock",
             // "minecraft:barrier",
