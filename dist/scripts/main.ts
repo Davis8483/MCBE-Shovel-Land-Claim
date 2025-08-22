@@ -773,8 +773,8 @@ world.afterEvents.entityHurt.subscribe((data) => {
 
                 // check if the game engine will count the entity as dead
                 if (healthComponent.currentValue > 0) {
-                    // if the entity is still considered alive we'll reset its health
-                    healthComponent.resetToDefaultValue();
+                    // if the entity is still considered alive we'll adjust its health to its previous value
+                    healthComponent.setCurrentValue(healthComponent.currentValue + data.damage);
 
                     entityLoaderManager.createSave(data.hurtEntity); // re-save the entity in case it doesn't have a save on file yet
                 }
