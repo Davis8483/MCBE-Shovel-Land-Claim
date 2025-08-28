@@ -755,8 +755,23 @@ world.afterEvents.entityHurt.subscribe((data) => {
 
     if (data.hurtEntity.dimension == dimension) {
         runInAllClaims(async (claimData: Claim) => {
-            if (claimData.isOverlap(data.hurtEntity.location) && !claimData.hasPermission(PermissionTypes.HURT_ENTITIES, damagePlayerSource)) {
-               
+            if (claimData.isOverlap(data.hurtEntity.location)) {
+
+                // Check if the action is allowed based on entity type and permissions
+                const isMonster = data.hurtEntity.getComponent(EntityComponentTypes.TypeFamily).hasTypeFamily("monster");
+                const isPlayer = data.hurtEntity.typeId === "minecraft:player";
+                
+                const hasMonsterPermission = claimData.hasPermission(PermissionTypes.HURT_MONSTERS, damagePlayerSource);
+                const hasPlayerPermission = claimData.hasPermission(PermissionTypes.HURT_PLAYERS, damagePlayerSource);
+                const hasMobPermission = claimData.hasPermission(PermissionTypes.HURT_MOBS, damagePlayerSource);
+
+                // If permission exists for the specific entity type, allow the action
+                if ((isMonster && hasMonsterPermission) || 
+                    (isPlayer && (hasPlayerPermission || !damagePlayerSource)) || // mobs can always hurt players, but players need permission
+                    (!isMonster && !isPlayer && hasMobPermission)) {
+                    return; // player/mob is allowed to hurt this entity
+                }
+
                 // if it was a player that hurt the entity
                 if (damagePlayerSource) {
 
@@ -764,11 +779,6 @@ world.afterEvents.entityHurt.subscribe((data) => {
 
                     // send the player a notification
                     notifManager.send(damagePlayerSource, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:hurt_entities");
-                }
-
-                // if the hurt entity was a player, exit
-                if (data.hurtEntity.typeId === "minecraft:player") {
-                    return;
                 }
 
                 // check if the game engine will count the entity as dead
@@ -780,6 +790,11 @@ world.afterEvents.entityHurt.subscribe((data) => {
                 }
                 // the engine considers the entity as dead so we'll go ahead and load its last save
                 else {
+
+                    // skip player entities as they cannot be loaded
+                    if (data.hurtEntity.typeId === "minecraft:player") {
+                        return;
+                    }
 
                     // save the entity location so afterEvents.entitySpawn can clean up the xp
                     world.setDynamicProperty("disallowedEntityDeathLocation", data.hurtEntity.location);

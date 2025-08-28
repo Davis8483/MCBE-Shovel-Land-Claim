@@ -746,6 +746,8 @@ export class ShovelUI {
                     ]
                 }
             )
+            .header({"translate": "ui.manage.permissions.header:general"})
+            .divider()
             .toggle({"translate": "ui.manage.permissions:enter_claim"}, {"defaultValue": defaults.getPermission(PermissionTypes.ENTER_CLAIM), "tooltip": {"translate": "ui.manage.permissions.tooltip:enter_claim"}}, (value)=> {
 
                 // if public entrance is not allowed, force claim particles to be enabled
@@ -764,16 +766,6 @@ export class ShovelUI {
             })
             .toggle({"translate": "ui.manage.permissions:use_items_on_blocks"}, {"defaultValue": defaults.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS)}, (value)=> {
                 target.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, value);
-
-                return new ModalDataCorrect();
-            })
-            .toggle({"translate": "ui.manage.permissions:hurt_entities"}, {"defaultValue":defaults.getPermission(PermissionTypes.HURT_ENTITIES)}, (value)=> {
-                target.setPermission(PermissionTypes.HURT_ENTITIES, value);
-
-                return new ModalDataCorrect();
-            })
-            .toggle({"translate": "ui.manage.permissions:interact_with_entities"}, {"defaultValue": defaults.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES)}, (value)=> {
-                target.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, value);
 
                 return new ModalDataCorrect();
             })
@@ -801,8 +793,9 @@ export class ShovelUI {
                 target.setPermission(PermissionTypes.EDIT_SIGNS, value);
 
                 return new ModalDataCorrect();
-            })
-
+            });
+        
+        // if we are editing the claims public permissions, show the tnt toggle
         if (!playerID) {
             form.toggle({"translate": "ui.manage.permissions:use_tnt"}, {"defaultValue": defaults.getPermission(PermissionTypes.USE_TNT)}, (value)=> {
                 target.setPermission(PermissionTypes.USE_TNT, value);
@@ -810,6 +803,31 @@ export class ShovelUI {
                 return new ModalDataCorrect();
             });
         }
+
+        form.label({"text": ""})
+            .header({"translate": "ui.manage.permissions.header:entities"})
+            .divider()
+            .toggle({"translate": "ui.manage.permissions:hurt_mobs"}, {"defaultValue":defaults.getPermission(PermissionTypes.HURT_MOBS)}, (value)=> {
+                target.setPermission(PermissionTypes.HURT_MOBS, value);
+
+                return new ModalDataCorrect();
+            })
+            .toggle({"translate": "ui.manage.permissions:hurt_monsters"}, {"defaultValue":defaults.getPermission(PermissionTypes.HURT_MONSTERS), "tooltip": {"translate": "ui.manage.permissions.tooltip:hurt_monsters"}}, (value)=> {
+                target.setPermission(PermissionTypes.HURT_MONSTERS, value);
+
+                return new ModalDataCorrect();
+            })
+            .toggle({"translate": "ui.manage.permissions:hurt_players"}, {"defaultValue":defaults.getPermission(PermissionTypes.HURT_PLAYERS)}, (value)=> {
+                target.setPermission(PermissionTypes.HURT_PLAYERS, value);
+
+                return new ModalDataCorrect();
+            })
+            .toggle({"translate": "ui.manage.permissions:interact_with_entities"}, {"defaultValue": defaults.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES)}, (value)=> {
+                target.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, value);
+
+                return new ModalDataCorrect();
+            })
+            .label({"text": ""});
 
         form.submitButton({"translate": "ui.global.button:save"}, ()=> {
             playSound(this.player, AddonSounds.Claim.SAVE);

@@ -130,7 +130,9 @@ export enum PermissionTypes {
     ENTER_CLAIM = "enterClaim",
     BREAK_BLOCKS = "breakBlocks",
     USE_ITEMS_ON_BLOCKS = "useItemsOnBlocks",
-    HURT_ENTITIES = "hurtEntities",
+    HURT_MOBS = "hurtMobs",
+    HURT_MONSTERS = "hurtMonsters",
+    HURT_PLAYERS = "hurtPlayers",
     USE_TNT = "useTNT",
     INTERACT_WITH_ENTITIES = "interactWithEntities",
     USE_DOORS = "useDoors",
@@ -163,7 +165,9 @@ export class Permissions {
             [PermissionTypes.ENTER_CLAIM]: true,
             [PermissionTypes.BREAK_BLOCKS]: false,
             [PermissionTypes.USE_ITEMS_ON_BLOCKS]: false,
-            [PermissionTypes.HURT_ENTITIES]: false,
+            [PermissionTypes.HURT_MOBS]: false,
+            [PermissionTypes.HURT_MONSTERS]: true,
+            [PermissionTypes.HURT_PLAYERS]: false,
             [PermissionTypes.USE_TNT]: false,
             [PermissionTypes.INTERACT_WITH_ENTITIES]: false,
             [PermissionTypes.USE_DOORS]: true,
@@ -209,7 +213,9 @@ export class Permissions {
         permissions.setPermission(PermissionTypes.ENTER_CLAIM, data._permissions?.enterClaim !== undefined ? data._permissions.enterClaim : defaultPermissions.getPermission(PermissionTypes.ENTER_CLAIM));
         permissions.setPermission(PermissionTypes.BREAK_BLOCKS, data._permissions?.breakBlocks !== undefined ? data._permissions.breakBlocks : defaultPermissions.getPermission(PermissionTypes.BREAK_BLOCKS));
         permissions.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data._permissions?.useItemsOnBlocks !== undefined ? data._permissions.useItemsOnBlocks : defaultPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS));
-        permissions.setPermission(PermissionTypes.HURT_ENTITIES, data._permissions?.hurtEntities !== undefined ? data._permissions.hurtEntities : defaultPermissions.getPermission(PermissionTypes.HURT_ENTITIES));
+        permissions.setPermission(PermissionTypes.HURT_MOBS, data._permissions?.hurtMobs !== undefined ? data._permissions.hurtMobs : defaultPermissions.getPermission(PermissionTypes.HURT_MOBS));
+        permissions.setPermission(PermissionTypes.HURT_MONSTERS, data._permissions?.hurtMonsters !== undefined ? data._permissions.hurtMonsters : defaultPermissions.getPermission(PermissionTypes.HURT_MONSTERS));
+        permissions.setPermission(PermissionTypes.HURT_PLAYERS, data._permissions?.hurtPlayers !== undefined ? data._permissions.hurtPlayers : defaultPermissions.getPermission(PermissionTypes.HURT_PLAYERS));
         permissions.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data._permissions?.interactWithEntities !== undefined ? data._permissions.interactWithEntities : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES));
         permissions.setPermission(PermissionTypes.USE_DOORS, data._permissions?.useDoors !== undefined ? data._permissions.useDoors : defaultPermissions.getPermission(PermissionTypes.USE_DOORS));
         permissions.setPermission(PermissionTypes.USE_SWITCHES, data._permissions?.useSwitches !== undefined ? data._permissions.useSwitches : defaultPermissions.getPermission(PermissionTypes.USE_SWITCHES));
@@ -267,7 +273,9 @@ export class PlayerPermissions extends Permissions {
         permissions.setPermission(PermissionTypes.ENTER_CLAIM, data._permissions?.enterClaim !== undefined ? data._permissions.enterClaim : defaultPermissions.getPermission(PermissionTypes.ENTER_CLAIM));
         permissions.setPermission(PermissionTypes.BREAK_BLOCKS, data._permissions?.breakBlocks !== undefined ? data._permissions.breakBlocks : defaultPermissions.getPermission(PermissionTypes.BREAK_BLOCKS));
         permissions.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data._permissions?.useItemsOnBlocks !== undefined ? data._permissions.useItemsOnBlocks : defaultPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS));
-        permissions.setPermission(PermissionTypes.HURT_ENTITIES, data._permissions?.hurtEntities !== undefined ? data._permissions.hurtEntities : defaultPermissions.getPermission(PermissionTypes.HURT_ENTITIES));
+        permissions.setPermission(PermissionTypes.HURT_MOBS, data._permissions?.hurtMobs !== undefined ? data._permissions.hurtMobs : defaultPermissions.getPermission(PermissionTypes.HURT_MOBS));
+        permissions.setPermission(PermissionTypes.HURT_MONSTERS, data._permissions?.hurtMonsters !== undefined ? data._permissions.hurtMonsters : defaultPermissions.getPermission(PermissionTypes.HURT_MONSTERS));
+        permissions.setPermission(PermissionTypes.HURT_PLAYERS, data._permissions?.hurtPlayers !== undefined ? data._permissions.hurtPlayers : defaultPermissions.getPermission(PermissionTypes.HURT_PLAYERS));
         permissions.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data._permissions?.interactWithEntities !== undefined ? data._permissions.interactWithEntities : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES));
         permissions.setPermission(PermissionTypes.USE_DOORS, data._permissions?.useDoors !== undefined ? data._permissions.useDoors : defaultPermissions.getPermission(PermissionTypes.USE_DOORS));
         permissions.setPermission(PermissionTypes.USE_SWITCHES, data._permissions?.useSwitches !== undefined ? data._permissions.useSwitches : defaultPermissions.getPermission(PermissionTypes.USE_SWITCHES));
@@ -972,7 +980,6 @@ export class PlayerData {
         const currentSchemaVersion = data._schemaVersion;
         const latestSchemaVersion = defaultPlayerData.schemaVersion;
 
-        playerData.setSchemaVersion(latestSchemaVersion);
         playerData.setShownChangeLog(data._shownChangeLog !== undefined ? data._shownChangeLog : defaultPlayerData.shownChangeLog);
         playerData.setShownSetupScreen(data._shownSetupScreen !== undefined ? data._shownSetupScreen : defaultPlayerData.shownSetupScreen);
         playerData.setInClaim(data._inClaim !== undefined ? data._inClaim : defaultPlayerData.inClaim);
@@ -1006,6 +1013,49 @@ export class PlayerData {
             playerData.setShownChangeLog(false);
 
             playerData.setShownSetupScreen(false); // set to false so all admins can go through the setup ui
+
+            playerData.setSchemaVersion("v1.0.3");
+            
+        }
+        // upgrading from v1.0.3 to future versions, go through each upgrade until target schema version is reached
+        else if (this.isVersionNewerThan(latestSchemaVersion, currentSchemaVersion)) {
+         
+            // v1.0.3 -> v1.0.4 migration logic
+            if (currentSchemaVersion === "v1.0.3" && this.isVersionNewerThan(latestSchemaVersion, "v1.0.3")) {
+
+                /**
+                 * migrates hurtEntities preferences to the 3 new permission types
+                 * 
+                 * @param perms - The permissions object to upgrade
+                 * @param hurtEntities - The old hurtEntities preference
+                 */
+                const upgradePerms = (perms: PlayerPermissions | Permissions, hurtEntities: boolean) => {
+                    perms.setPermission(PermissionTypes.HURT_MOBS, hurtEntities); // use preference
+                    perms.setPermission(PermissionTypes.HURT_MONSTERS, true); // default to true
+                    perms.setPermission(PermissionTypes.HURT_PLAYERS, hurtEntities); // use preference
+                };
+
+                // upgrade global player perms
+                data.playerPermissionsList.forEach((playerPerms) => {
+                    const playerPermsCurrent = playerData.playerPermissionsList.find(p => p.id === playerPerms.id);
+                    upgradePerms(playerPermsCurrent, playerPerms._permissions.hurtEntities);
+                });
+
+                data.claims.forEach((claim) => {
+                    const claimCurrent = playerData.claims.find(c => c.name === claim._name);
+
+                    // update claim specific player perms
+                    claim.playerPermissionsList.forEach((playerPerms) => {
+                        const playerPermsCurrent = claimCurrent.playerPermissionsList.find(p => p.id === playerPerms.id);
+                        upgradePerms(playerPermsCurrent, playerPerms._permissions.hurtEntities);
+                    });
+
+                    // update claim public perms
+                    upgradePerms(claimCurrent.permissions, claim._permissions.hurtEntities);
+                });
+
+                playerData.setSchemaVersion("v1.0.4");
+            }
         }
 
         return playerData;
