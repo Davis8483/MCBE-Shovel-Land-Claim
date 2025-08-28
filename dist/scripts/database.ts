@@ -924,6 +924,45 @@ export class PlayerData {
         }
     }
 
+    /**
+     * Compares two semantic version strings. Used for database upgrades.
+     * 
+     * @param version1 - First version string (e.g., "v1.0.3" or "1.0.3")
+     * @param version2 - Second version string (e.g., "v1.0.4" or "1.0.4")
+     * @returns 0 if equal, 1 if version1 > version2, -1 if version1 < version2
+     */
+    private static compareVersions(version1: string, version2: string): number {
+        // Remove 'v' prefix if present
+        const v1 = version1.replace(/^v/, '');
+        const v2 = version2.replace(/^v/, '');
+        
+        // Split versions into parts and convert to numbers
+        const parts1 = v1.split('.').map(part => parseInt(part, 10));
+        const parts2 = v2.split('.').map(part => parseInt(part, 10));
+        
+        // Compare each part (major, minor, patch)
+        for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+            const part1 = parts1[i] || 0;
+            const part2 = parts2[i] || 0;
+            
+            if (part1 > part2) return 1;
+            if (part1 < part2) return -1;
+        }
+        
+        return 0;
+    }
+
+    /**
+     * Check if a version is newer than another version. Used for database upgrades.
+     * 
+     * @param current - Current version string
+     * @param target - Target version string to compare against
+     * @returns true if current version is newer than target
+     */
+    private static isVersionNewerThan(current: string, target: string): boolean {
+        return this.compareVersions(current, target) > 0;
+    }
+
     static fromJSON(data: any): PlayerData {
 
         const defaultPlayerData = new PlayerData(data._id, data._name);
