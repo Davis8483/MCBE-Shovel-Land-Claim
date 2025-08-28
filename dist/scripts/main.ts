@@ -904,11 +904,6 @@ system.runInterval(() => {
 
                     playerData.setInClaim(true);
 
-                    // add an aditional layer of protection to make sure player can't punch entities if they don't have permission
-                    if (!claim.hasPermission(PermissionTypes.HURT_ENTITIES, p)) {
-                        p.addEffect("weakness", 40, { "amplifier": 255, "showParticles": false });
-                    }
-
                     if (!playerData.viewingClaim) {
                         // show claim name and owner onscreen
                         p.onScreenDisplay.setActionBar(
