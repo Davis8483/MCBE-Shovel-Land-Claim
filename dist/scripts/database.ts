@@ -770,7 +770,7 @@ export class PlayerData {
         this._shownChangeLog = value;
     }
 
-    setSchemaVersion(version: string): void {
+    private setSchemaVersion(version: string): void {
         this._schemaVersion = version;
     }
 
