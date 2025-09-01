@@ -116,7 +116,7 @@ export function runInAllClaims(callback: (claimData: Claim) => void) {
  * @param timeout - The maximum time to wait in ticks
  * @returns A boolean promise that resolves when the entity is valid (true), or rejects if it times out (false)
  */
-export function waitForEntityLoad(entity: Entity, timeout=10): Promise<boolean> {
+export function waitForEntityLoad(entity: Entity, timeout: number): Promise<boolean> {
     const startTime = system.currentTick;
 
     return new Promise((resolve) => {
