@@ -99,4 +99,19 @@ export class EntityLoaderManager extends DropTimerManager {
             });
         }
     }
+
+    /**
+     * Copies an entity save to a new entity id.
+     * 
+     * @param entityID - The ID of the entity to copy
+     * @param newEntityID - The ID of the new entity
+     */
+    public transferSave(entityID: string, newEntityID: string): void {
+        const existingSave = world.structureManager.get("slc:" + entityID);
+        if (existingSave) {
+            existingSave.saveAs("slc:" + newEntityID, StructureSaveMode.World);
+
+            world.structureManager.delete(existingSave); // delete the old save
+        }
+    }
 }
