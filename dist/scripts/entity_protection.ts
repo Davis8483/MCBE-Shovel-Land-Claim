@@ -1,5 +1,5 @@
 import { Dimension, Entity, EntityComponentTypes, EntityLeashableComponent, EntityQueryOptions, StructureSaveMode, system, Vector3, world } from '@minecraft/server';
-import { DropTimerManager } from './utils.js';
+import { DropTimerManager, waitForEntityLoad } from './utils.js';
 
 /**
  * Manages the loading and saving of entity data. Utilizing a drop timer to prevent unnecessary loading.
@@ -28,43 +28,42 @@ export class EntityLoaderManager extends DropTimerManager {
      * 
      * @param entity - Entity to save
      */
-    public createSave(entity: Entity): void {
-        // an extra delay to ensure all entity components have loaded properly
-        system.runTimeout(() => {
-            // make sure the entity still exists after the timeout
-            if (entity.isValid) {
+    public async createSave(entity: Entity): Promise<void> {
 
-                var queryOptions: EntityQueryOptions = {};
-                queryOptions.maxDistance = 1.5;
-                queryOptions.location = entity.location;
+        const entityLoaded = await waitForEntityLoad(entity, 40); // wait 2 seconds for entity components to fully load
 
-                // prevent more than one entities from being saved to the structure
-                if (world.getDimension("overworld").getEntities(queryOptions).length == 1) {
-                
-                    const structureID = "slc:" + entity.id;
+        if (entityLoaded) {
 
-                    // try to delete the existing save for the entity if it exists
-                    this.deleteSave(entity.id);
+            var queryOptions: EntityQueryOptions = {};
+            queryOptions.maxDistance = 1.5;
+            queryOptions.location = entity.location;
 
-                    // filter out players, xp, and item stack entities to prevent performance issues
-                    if ((entity.typeId != "minecraft:item") && (entity.typeId != "minecraft:player") && (entity.typeId != "minecraft:xp_orb")) {
-                        world.structureManager.createFromWorld(structureID, world.getDimension("overworld"), entity.location, entity.location, {"includeBlocks": false, "includeEntities": true, "saveMode": StructureSaveMode.World});
-                    }
+            // prevent more than one entities from being saved to the structure
+            if (world.getDimension("overworld").getEntities(queryOptions).length == 1) {
+            
+                const structureID = "slc:" + entity.id;
 
-                    entity.setDynamicProperty("structureID", structureID);
+                // try to delete the existing save for the entity if it exists
+                this.deleteSave(entity.id);
+
+                // filter out players, xp, and item stack entities to prevent performance issues
+                if ((entity.typeId != "minecraft:item") && (entity.typeId != "minecraft:player") && (entity.typeId != "minecraft:xp_orb")) {
+                    world.structureManager.createFromWorld(structureID, world.getDimension("overworld"), entity.location, entity.location, {"includeBlocks": false, "includeEntities": true, "saveMode": StructureSaveMode.World});
                 }
 
-                const leashComponent: EntityLeashableComponent = entity.getComponent(EntityComponentTypes.Leashable);
-
-                // if the entity is connected to a leash knot save its location
-                if (leashComponent && leashComponent.leashHolder && (leashComponent.leashHolderEntityId == "minecraft:leash_knot")) {
-                    entity.setDynamicProperty("leashKnotLocation", leashComponent.leashHolder.location);
-                }
-                else {
-                    entity.setDynamicProperty("leashKnotLocation"); // clear the property
-                }
+                entity.setDynamicProperty("structureID", structureID);
             }
-        }, 10)
+
+            const leashComponent: EntityLeashableComponent = entity.getComponent(EntityComponentTypes.Leashable);
+
+            // if the entity is connected to a leash knot save its location
+            if (leashComponent && leashComponent.leashHolder && (leashComponent.leashHolderEntityId == "minecraft:leash_knot")) {
+                entity.setDynamicProperty("leashKnotLocation", leashComponent.leashHolder.location);
+            }
+            else {
+                entity.setDynamicProperty("leashKnotLocation"); // clear the property
+            }
+        }
     }
 
     /**
