@@ -1,4 +1,4 @@
-import { EntityComponentTypes, EntityInventoryComponent, ItemLockMode, ItemStack, Player, system, Vector3, world } from "@minecraft/server";
+import { Entity, EntityComponentTypes, EntityInventoryComponent, ItemLockMode, ItemStack, Player, system, Vector3, world } from "@minecraft/server";
 import { Claim, database, ShovelBehavior } from "./database";
 
 export const SHOVEL_ID = "slc:claim_shovel"
@@ -107,6 +107,31 @@ export function runInAllClaims(callback: (claimData: Claim) => void) {
             callback(claim);
         }
     }
+}
+
+/**
+ * Waits for the entity to be fully loaded and valid in the world
+ * 
+ * @param entity - The entity to wait for
+ * @param timeout - The maximum time to wait in ticks
+ * @returns A boolean promise that resolves when the entity is valid (true), or rejects if it times out (false)
+ */
+export function waitForEntityLoad(entity: Entity, timeout=10): Promise<boolean> {
+    const startTime = system.currentTick;
+
+    return new Promise((resolve) => {
+        const intervalId = system.runInterval(() => {
+            if (entity.isValid) {
+                system.clearRun(intervalId);
+
+                resolve(true);
+            } else if (system.currentTick - startTime >= timeout) {
+                system.clearRun(intervalId);
+
+                resolve(false);
+            }
+        }, 10); // every 10 ticks
+    });
 }
 
 /**
