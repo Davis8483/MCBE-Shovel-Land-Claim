@@ -1,9 +1,9 @@
-import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel, InvalidEntityError, EntityDamageCause, RGB, PlatformType } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel, InvalidEntityError, EntityDamageCause, RGB, PlatformType, Entity } from '@minecraft/server';
 import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior, ShovelMobileMode } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { NotificationManagerStack } from './notifications.js';
 import { ShovelUI } from './shovel_ui.js';
-import { runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior } from './utils.js'
+import { runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior, getDistance, waitForEntityLoad } from './utils.js'
 import { EntityLoaderManager } from './entity_protection.js';
 
 world.afterEvents.playerJoin.subscribe((data) => {
@@ -602,36 +602,53 @@ world.afterEvents.worldLoad.subscribe(() => {
 /**
  * Create an entity save after its loaded into the world, in case the entity is killed by a disallowed player.
  */
-world.afterEvents.entityLoad.subscribe((data) => {
-    if (data.entity.dimension == world.getDimension("overworld")) {
+world.afterEvents.entityLoad.subscribe(async (data) => {
+    const entityLoaded = await waitForEntityLoad(data.entity, 40); // wait up to 2 seconds for entity to be fully initialized
+    const disallowedEntityDeathLocation = world.getDynamicProperty("disallowedEntityDeathLocation") as Vector3; // the location of the last killed entity
+    const killedByDisallowedPlayer = disallowedEntityDeathLocation && (getDistance(data.entity.location, disallowedEntityDeathLocation) < 1.5); // if entity was killed by a disallowed player; we don't want to save it again
+
+    /**
+     * Note:
+     * We don't want to re-save a loaded/revived entity due to the following edge case;
+     * 
+     * If the entity is in a crowded mob farm, it may be killed and reloaded frequently,
+     * leading to possibly accidentally saving two entities within the same structure.
+     * 
+     * Saving two in the same structure should be handled by the entityLoaderManager,
+     * although some can still slip through. So its better to be safe than sorry.
+     */
+    
+    // only save the entity if in the overworld, wasn't killed by a disallowed player, and is fully initialized
+    if ((data.entity.dimension == world.getDimension("overworld")) && !killedByDisallowedPlayer && entityLoaded) {
+
         entityLoaderManager.createSave(data.entity);
+
+        world.sendMessage("entitySaved: entityLoad Event");
     }
+
+    /**
+     * Note:
+     * We're not worried about removing the disallowedEntityDeathLocation property here
+     * because the xp cleanup should handle it anyways.
+    */
 });
 
 /**
  * Create an entity save after its spawned, in case the entity is killed by a disallowed player.
  * Also removes xp orbs spawned by disallowed killed entities.
+ * Also also (lol) prevents wither spawning in the overworld.
  */
-world.afterEvents.entitySpawn.subscribe((data) => {
+world.afterEvents.entitySpawn.subscribe(async (data) => {
     try {
         if (data.entity.dimension == world.getDimension("overworld")) {
-            const disallowedEntityDeathLocation = world.getDynamicProperty("disallowedEntityDeathLocation") as Vector3; // the location that the xp orbs should be removed from
-            const xpRemoveRange = 10; // blocks away from the death location in the x and z
-
-            const disallowedEntityDeathId = world.getDynamicProperty("disallowedEntityDeathId") as string;
+            const disallowedEntityDeathLocation = world.getDynamicProperty("disallowedEntityDeathLocation") as Vector3; // the location of the last killed entity
+            const killedByDisallowedPlayer = disallowedEntityDeathLocation && (getDistance(data.entity.location, disallowedEntityDeathLocation) < 1.5);
+            const xpRemoveRange = 10; // blocks away from the death location
+            const shouldRemoveXP = (data.entity.typeId == "minecraft:xp_orb") && disallowedEntityDeathLocation && (getDistance(data.entity.location, disallowedEntityDeathLocation) < xpRemoveRange);
 
             // if the entity is an xp orb, remove it if in range of the disallowed entities death location
-            if (data.entity.typeId == "minecraft:xp_orb" && disallowedEntityDeathLocation 
-                && (Math.sqrt((data.entity.location.x - disallowedEntityDeathLocation.x) ** 2 + (data.entity.location.z - disallowedEntityDeathLocation.z) ** 2) < xpRemoveRange)) {
+            if (shouldRemoveXP) {
                 data.entity.remove(); // bye bye xp :)
-
-                // unless already changed, remove the property after 2 seconds in case multiple xp orbs are spawned at once
-                const disallowedEntityDeathLocationOld = world.getDynamicProperty("disallowedEntityDeathLocation"); // save old value
-                system.runTimeout(() => {
-                    if (disallowedEntityDeathLocationOld == world.getDynamicProperty("disallowedEntityDeathLocation")) {
-                        world.setDynamicProperty("disallowedEntityDeathLocation", undefined);
-                    }
-                }, 2000);
             }
             // disallow the wither from spawning in the overworld, as when damaged it will remove blocks and cause griefing
             else if (data.entity.typeId == "minecraft:wither") {
@@ -650,11 +667,26 @@ world.afterEvents.entitySpawn.subscribe((data) => {
                 // remove the wither
                 data.entity.remove();
             }
-            // if the entity was killed by a disallowed player, we don't want to save it again
-            else if (data.entity.id != disallowedEntityDeathId) {
+            // if entity was killed by a disallowed player; we don't want to save it again
+            else if (!killedByDisallowedPlayer) {
 
-                // save the entity
-                entityLoaderManager.createSave(data.entity);
+                const entityLoaded = await waitForEntityLoad(data.entity, 40); // wait up to 2 seconds for entity to be fully initialized
+
+                if (entityLoaded) {
+                    entityLoaderManager.createSave(data.entity); // save the entity
+                }
+            }
+
+            // remove the disallowedEntityDeathLocation property if necessary
+            if (killedByDisallowedPlayer || shouldRemoveXP) {
+                // unless already changed, remove the property after 2 seconds
+                // the delay is to ensure all calls of this (entitySpawn) event are processed before the property removal
+                const disallowedEntityDeathLocationOld = world.getDynamicProperty("disallowedEntityDeathLocation"); // save old value
+                    system.runTimeout(() => {
+                        if (disallowedEntityDeathLocationOld === world.getDynamicProperty("disallowedEntityDeathLocation")) {
+                        world.setDynamicProperty("disallowedEntityDeathLocation", undefined);
+                    }
+                }, 2000);
             }
         }
     }
@@ -786,11 +818,8 @@ world.afterEvents.entityHurt.subscribe((data) => {
                         return;
                     }
 
-                    // save the entity location so afterEvents.entitySpawn can clean up the xp
+                    // save the entity location so we can clean up xp and prevent the loaded entity from being re-saved
                     world.setDynamicProperty("disallowedEntityDeathLocation", data.hurtEntity.location);
-
-                    // save the id of the entity that was killed by a disallowed player so we don't accidentaly make a new save of it
-                    world.setDynamicProperty("disallowedEntityDeathId", data.hurtEntity.id);
 
                     // remove any dropped items
                     var queryOptions: EntityQueryOptions = {};
@@ -815,6 +844,23 @@ world.afterEvents.entityHurt.subscribe((data) => {
                     // load the entity save
                     entityLoaderManager.loadSave(entityID, location, entityTypeID);
 
+                    // get the new loaded entity
+                    var newEntity: Entity = null;
+                    var queryOptions: EntityQueryOptions = {};
+                    queryOptions.maxDistance = 1;
+                    queryOptions.type = entityTypeID;
+                    queryOptions.location = location;
+                    dimension.getEntities(queryOptions).forEach((e) => {
+                        newEntity = e;
+                    });
+
+                    const isEntityLoaded = await waitForEntityLoad(newEntity, 20); // wait 1 second for the entity to fully load
+
+                    // if loaded entity was not retrieve successfully do not continue
+                    if (!newEntity || !isEntityLoaded) {
+                        return;
+                    }
+
                     // if the entity was leashed to a knot, reattach it to the knot
                     if (leashKnotLocation) {
                         var queryOptions: EntityQueryOptions = {};
@@ -832,24 +878,19 @@ world.afterEvents.entityHurt.subscribe((data) => {
                             leashKnot = dimension.getEntities(queryOptions)[0];
                         }
 
-                        var queryOptions: EntityQueryOptions = {};
-                        queryOptions.maxDistance = 1;
-                        queryOptions.type = entityTypeID;
-                        queryOptions.location = location;
-                        dimension.getEntities(queryOptions).forEach((entity) => {
-                            const leashComponent: EntityLeashableComponent = entity.getComponent(EntityComponentTypes.Leashable);
-
-                            leashComponent.leashTo(leashKnot);
-                        });
+                        // reattach the leash
+                        const leashComponent: EntityLeashableComponent = newEntity.getComponent(EntityComponentTypes.Leashable);
+                        leashComponent.leashTo(leashKnot);
                     }
+
+                    // transfer the entity save to the new id
+                    entityLoaderManager.transferSave(data.hurtEntity.id, newEntity.id);
                 }
             }
         });
 
         // if the allowed damage killed the entity, remove its save; memory cleanup :thumbs_up:
         if (damageAllowed && (healthComponent.currentValue <= 0)) {
-            world.sendMessage("Entity " + data.hurtEntity.id + " has been removed.");
-
             entityLoaderManager.deleteSave(data.hurtEntity.id);
         }
     }
