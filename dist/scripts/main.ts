@@ -620,10 +620,7 @@ world.afterEvents.entityLoad.subscribe(async (data) => {
     
     // only save the entity if in the overworld, wasn't killed by a disallowed player, and is fully initialized
     if ((data.entity.dimension == world.getDimension("overworld")) && !killedByDisallowedPlayer && entityLoaded) {
-
         entityLoaderManager.createSave(data.entity);
-
-        world.sendMessage("entitySaved: entityLoad Event");
     }
 
     /**
