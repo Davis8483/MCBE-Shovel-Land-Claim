@@ -123,20 +123,29 @@ export function getClosestPlayer(blockLocation: Vector3): Player {
     // find player closest to the specified block
     for (var p of world.getAllPlayers()) {
         if (p.dimension == world.getDimension("overworld")) {
-            var distance = Math.sqrt(
-                Math.pow(p.location.x - blockLocation.x, 2) +
-                Math.pow(p.location.y - blockLocation.y, 2) +
-                Math.pow(p.location.z - blockLocation.z, 2)
-            );
-
-            if (distance < closestDistance) {
-                closestDistance = distance;
+            if (getDistance(p.location, blockLocation) < closestDistance) {
+                closestDistance = getDistance(p.location, blockLocation);
                 closestPlayer = p;
             }
         }
     }
 
     return closestPlayer;
+}
+
+/**
+ * Calculates the distance between two points in 3D space using pythagorean theorem or some shit idk copilot wrote it.
+ *
+ * @param pointA - The first point.
+ * @param pointB - The second point.
+ * @returns The distance between the two points.
+ */
+export function getDistance(pointA: Vector3, pointB: Vector3): number {
+    return Math.sqrt(
+        Math.pow(pointA.x - pointB.x, 2) +
+        Math.pow(pointA.y - pointB.y, 2) +
+        Math.pow(pointA.z - pointB.z, 2)
+    );
 }
 
 /**
