@@ -667,7 +667,7 @@ export class PlayerData {
     private _playerPermissionsList: PlayerPermissions[];
 
     constructor(playerID: string, playerName: string) {
-        this._schemaVersion = "v1.0.3";
+        this._schemaVersion = "v1.0.4";
         this._shownChangeLog = true; // default to true so new players don't see the changelog
         this._shownSetupScreen = false; // default to false so all admins can go through the setup ui
         this._id = playerID;
