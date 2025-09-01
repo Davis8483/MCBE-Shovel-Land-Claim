@@ -1,4 +1,4 @@
-import { Dimension, Entity, EntityComponentTypes, EntityLeashableComponent, EntityQueryOptions, StructureSaveMode, system, Vector3, world } from '@minecraft/server';
+import { Dimension, Entity, EntityComponentTypes, EntityLeashableComponent, EntityQueryOptions, StructureManager, StructureSaveMode, system, Vector3, world } from '@minecraft/server';
 import { DropTimerManager, waitForEntityLoad } from './utils.js';
 
 /**
@@ -33,6 +33,13 @@ export class EntityLoaderManager extends DropTimerManager {
         const entityLoaded = await waitForEntityLoad(entity, 40); // wait 2 seconds for entity components to fully load
 
         if (entityLoaded) {
+
+            // check if entity is healthy before saving to prevent saving dying entities
+            const healthComponent = entity.getComponent(EntityComponentTypes.Health);
+            if (healthComponent && healthComponent.currentValue <= 0) {
+                // entity is dead or dying, don't save it
+                return;
+            }
 
             var queryOptions: EntityQueryOptions = {};
             queryOptions.maxDistance = 1.5;
