@@ -606,20 +606,6 @@ world.afterEvents.entityLoad.subscribe((data) => {
     if (data.entity.dimension == world.getDimension("overworld")) {
         entityLoaderManager.createSave(data.entity);
     }
-})
-
-/**
- * Delete entity save after its removed from the world, this is done to prevent memory leaks.
- */
-world.afterEvents.entityRemove.subscribe((data) => {
-
-    const disallowedEntityDeathId = world.getDynamicProperty("disallowedEntityDeathId") as string;
-
-    // if the entity the entities death was caused by a disallowed player, prevent the save from being removed
-    if (disallowedEntityDeathId != data.removedEntityId) {
-        entityLoaderManager.deleteSave(data.removedEntityId);
-    }
-
 });
 
 /**
@@ -748,6 +734,8 @@ world.afterEvents.entityHurt.subscribe((data) => {
     const healthComponent: EntityHealthComponent = data.hurtEntity.getComponent(EntityComponentTypes.Health);
     var damagePlayerSource: Player; // leaving as undefined will force hasPermission() to check the claims public permissions
 
+    var damageAllowed = true; // flag to indicate if the damage is allowed; used for entity save cleanup upon death
+
     // if the damaging entity is a player check their permissions to hurt it, otherwise if its a mob or unkown damage source use the claims public permissions
     if (data.damageSource.damagingEntity && (data.damageSource.damagingEntity instanceof Player)) {
         damagePlayerSource = data.damageSource.damagingEntity as Player;
@@ -771,6 +759,8 @@ world.afterEvents.entityHurt.subscribe((data) => {
                     (!isMonster && !isPlayer && hasMobPermission)) {
                     return; // player/mob is allowed to hurt this entity
                 }
+
+                damageAllowed = false; // checks have been passed, set flag
 
                 // if it was a player that hurt the entity
                 if (damagePlayerSource) {
@@ -855,6 +845,13 @@ world.afterEvents.entityHurt.subscribe((data) => {
                 }
             }
         });
+
+        // if the allowed damage killed the entity, remove its save; memory cleanup :thumbs_up:
+        if (damageAllowed && (healthComponent.currentValue <= 0)) {
+            world.sendMessage("Entity " + data.hurtEntity.id + " has been removed.");
+
+            entityLoaderManager.deleteSave(data.hurtEntity.id);
+        }
     }
 });
 
