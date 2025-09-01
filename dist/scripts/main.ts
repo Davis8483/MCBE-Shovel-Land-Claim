@@ -1,4 +1,4 @@
-import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel, InvalidEntityError, EntityDamageCause, RGB, PlatformType, Entity } from '@minecraft/server';
+import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel, InvalidEntityError, EntityDamageCause, RGB, PlatformType, Entity, WorldLoadAfterEvent } from '@minecraft/server';
 import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior, ShovelMobileMode } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { NotificationManagerStack } from './notifications.js';
@@ -635,20 +635,26 @@ world.afterEvents.entityLoad.subscribe(async (data) => {
 
 /**
  * Create an entity save after its spawned, in case the entity is killed by a disallowed player.
- * Also removes xp orbs spawned by disallowed killed entities.
+ * Also removes xp orbs and items spawned by disallowed killed entities.
  * Also also (lol) prevents wither spawning in the overworld.
  */
 world.afterEvents.entitySpawn.subscribe(async (data) => {
     try {
         if (data.entity.dimension == world.getDimension("overworld")) {
+            
+            // items spawn before the hurtEntity event is fired,
+            // so we need to wait a couple ticks to ensure the disallowedEntityDeathLocation is set
+            if (data.entity.typeId == "minecraft:item") {
+                await system.waitTicks(2);
+            }
+
             const disallowedEntityDeathLocation = world.getDynamicProperty("disallowedEntityDeathLocation") as Vector3; // the location of the last killed entity
             const killedByDisallowedPlayer = disallowedEntityDeathLocation && (getDistance(data.entity.location, disallowedEntityDeathLocation) < 1.5);
-            const xpRemoveRange = 10; // blocks away from the death location
-            const shouldRemoveXP = (data.entity.typeId == "minecraft:xp_orb") && disallowedEntityDeathLocation && (getDistance(data.entity.location, disallowedEntityDeathLocation) < xpRemoveRange);
+            const shouldRemoveXP = (data.entity.typeId == "minecraft:xp_orb") && disallowedEntityDeathLocation && (getDistance(data.entity.location, disallowedEntityDeathLocation) < 10);
+            const shouldRemoveItem = (data.entity.typeId == "minecraft:item") && disallowedEntityDeathLocation && (getDistance(data.entity.location, disallowedEntityDeathLocation) < 5);
 
-            // if the entity is an xp orb, remove it if in range of the disallowed entities death location
-            if (shouldRemoveXP) {
-                data.entity.remove(); // bye bye xp :)
+            if (shouldRemoveXP || shouldRemoveItem) {
+                data.entity.remove(); // bye bye... xp and or item? :)
             }
             // disallow the wither from spawning in the overworld, as when damaged it will remove blocks and cause griefing
             else if (data.entity.typeId == "minecraft:wither") {
@@ -818,17 +824,8 @@ world.afterEvents.entityHurt.subscribe((data) => {
                         return;
                     }
 
-                    // save the entity location so we can clean up xp and prevent the loaded entity from being re-saved
+                    // save the entity location so we can clean up xp, items, and prevent the loaded entity from being re-saved
                     world.setDynamicProperty("disallowedEntityDeathLocation", data.hurtEntity.location);
-
-                    // remove any dropped items
-                    var queryOptions: EntityQueryOptions = {};
-                    queryOptions.location = data.hurtEntity.location;
-                    queryOptions.maxDistance = 1;
-                    queryOptions.type = "minecraft:item";
-                    dimension.getEntities(queryOptions).forEach((entity) => {
-                        entity.remove();
-                    });
 
                     // save vars so they can be used even after the entity is fully removed from the world
                     const entityID = data.hurtEntity.id;
