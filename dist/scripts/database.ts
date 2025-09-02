@@ -1012,13 +1012,20 @@ export class PlayerData {
             // fromJSON only loads existing players, set the flag so they see the changelog
             playerData.setShownChangeLog(false);
 
-            playerData.setShownSetupScreen(false); // set to false so all admins can go through the setup ui
+            // set to false so all admins can go through the setup ui
+            playerData.setShownSetupScreen(false);
 
             playerData.setSchemaVersion("v1.0.3");
             
         }
         // upgrading from v1.0.3 to future versions, go through each upgrade until target schema version is reached
         else if (this.isVersionNewerThan(latestSchemaVersion, currentSchemaVersion)) {
+
+            // fromJSON only loads existing players, set the flag so they see the changelog
+            playerData.setShownChangeLog(false);
+
+            // set to false so all admins can go through the setup ui; should be done every update as a reminder
+            playerData.setShownSetupScreen(false);
          
             // v1.0.3 -> v1.0.4 migration logic
             if (currentSchemaVersion === "v1.0.3" && this.isVersionNewerThan(latestSchemaVersion, "v1.0.3")) {
@@ -1036,22 +1043,22 @@ export class PlayerData {
                 };
 
                 // upgrade global player perms
-                data.playerPermissionsList.forEach((playerPerms) => {
-                    const playerPermsCurrent = playerData.playerPermissionsList.find(p => p.id === playerPerms.id);
+                data._playerPermissionsList.forEach((playerPerms) => {
+                    const playerPermsCurrent = playerData.playerPermissionsList.find(p => p.id === playerPerms._id);
                     upgradePerms(playerPermsCurrent, playerPerms._permissions.hurtEntities);
                 });
 
-                data.claims.forEach((claim) => {
+                data._claims.forEach((claim) => {
                     const claimCurrent = playerData.claims.find(c => c.name === claim._name);
 
                     // update claim specific player perms
-                    claim.playerPermissionsList.forEach((playerPerms) => {
-                        const playerPermsCurrent = claimCurrent.playerPermissionsList.find(p => p.id === playerPerms.id);
+                    claim._playerPermissionsList.forEach((playerPerms) => {
+                        const playerPermsCurrent = claimCurrent.playerPermissionsList.find(p => p.id === playerPerms._id);
                         upgradePerms(playerPermsCurrent, playerPerms._permissions.hurtEntities);
                     });
 
                     // update claim public perms
-                    upgradePerms(claimCurrent.permissions, claim._permissions.hurtEntities);
+                    upgradePerms(claimCurrent.permissions, claim._permissions._permissions.hurtEntities);
                 });
 
                 playerData.setSchemaVersion("v1.0.4");
