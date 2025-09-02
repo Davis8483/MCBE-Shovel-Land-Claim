@@ -191,8 +191,8 @@ ui.manage.permissions:edit_signs=Edit Signs
 ui.manage.permissions:use_tnt=Use Tnt
 
 ui.manage.permissions.player.selection:title=Player Permissions
-ui.manage.gloabl_permissions.player.selection:title=Global Player Permissions
-ui.manage.gloabl_permissions.player.selection:body=The following permissions apply to all of your claims...
+ui.manage.global_permissions.player.selection:title=Global Player Permissions
+ui.manage.global_permissions.player.selection:body=The following permissions apply to all of your claims...
 ui.manage.permissions.player.selection:body=The following overides public permissions...
 ui.manage.permissions.player.selection:add_player=§2Add Player§r
 ui.manage.permissions.player.selection:remove_player=§cRemove Player§r
