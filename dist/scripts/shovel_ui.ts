@@ -764,7 +764,7 @@ export class ShovelUI {
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:use_items_on_blocks"}, {"defaultValue": defaults.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS)}, (value)=> {
+            .toggle({"translate": "ui.manage.permissions:use_items_on_blocks"}, {"defaultValue": defaults.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS), "tooltip": {"translate": "ui.manage.permissions.tooltip:use_items_on_blocks"}}, (value)=> {
                 target.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, value);
 
                 return new ModalDataCorrect();
@@ -774,7 +774,7 @@ export class ShovelUI {
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:use_switches"}, {"defaultValue": defaults.getPermission(PermissionTypes.USE_SWITCHES)}, (value)=> {
+            .toggle({"translate": "ui.manage.permissions:use_switches"}, {"defaultValue": defaults.getPermission(PermissionTypes.USE_SWITCHES), "tooltip": {"translate": "ui.manage.permissions.tooltip:use_switches"}}, (value)=> {
                 target.setPermission(PermissionTypes.USE_SWITCHES, value);
 
                 return new ModalDataCorrect();
@@ -784,7 +784,7 @@ export class ShovelUI {
 
                 return new ModalDataCorrect();
             })
-            .toggle({"translate": "ui.manage.permissions:open_containers"}, {"defaultValue": defaults.getPermission(PermissionTypes.OPEN_CONTAINERS)}, (value)=> {
+            .toggle({"translate": "ui.manage.permissions:open_containers"}, {"defaultValue": defaults.getPermission(PermissionTypes.OPEN_CONTAINERS), "tooltip": {"translate": "ui.manage.permissions.tooltip:open_containers"}}, (value)=> {
                 target.setPermission(PermissionTypes.OPEN_CONTAINERS, value);
 
                 return new ModalDataCorrect();
