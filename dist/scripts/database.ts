@@ -995,7 +995,6 @@ export class PlayerData {
         playerData._claims = data._claims 
             ? data._claims.map(Claim.fromJSON).filter(claim => claim._name != "Undefined") 
             : defaultPlayerData.claims;
-        playerData._playerPermissionsList = data._playerPermissionsList != undefined ? data._playerPermissionsList.forEach((pP) => {PlayerPermissions.fromJSON(pP)}) : defaultPlayerData.playerPermissionsList;
 
         playerData._playerPermissionsList = data._playerPermissionsList 
         ? data._playerPermissionsList
