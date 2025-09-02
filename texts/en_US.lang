@@ -241,7 +241,7 @@ ui.claim.icons:weapons=Weapons
 ui.claim.icons:flowers=Flowers
 
 ui.changelog:title=%s Changelog
-ui.changelog.label:1=§9Welcome to %s! This update brings even more stability improvements and adds a few new features that you all asked for in the discord!
+ui.changelog.label:1=§9Welcome to v1.0.4! This update brings even more stability improvements and adds a few new features that you all asked for in the discord!
 ui.changelog.header:changes=§eFeatures/Changes§r
 ui.changelog.label:2=- Gamerule changes are now optional; a setup ui will ask.
 ui.changelog.label:3=- The "shovel.op" tag is no longer needed, all world operators have access to the op panel now.
