@@ -1293,7 +1293,7 @@ export class ShovelUI {
         const form = new CallbackActionFormData(this.navigationStack, () => this.viewChangeLog())
             .title({"translate": "ui.changelog:title", "with": [version]})
             .body({"translate": "ui.addon_info:body.paragraph:1"})
-            .label({"translate": "ui.changelog.label:1", "with": [version]})
+            .label({"translate": "ui.changelog.label:1"})
             .header({"translate": "ui.changelog.header:changes"})
             .divider()
             .label({"translate": "ui.changelog.label:2"})
