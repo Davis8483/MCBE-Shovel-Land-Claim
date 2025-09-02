@@ -585,12 +585,12 @@ export class ShovelUI {
         const form = new CallbackActionFormData(this.navigationStack, () => this.playerPermissionsList(listParent))
             .title({
                 "rawtext": [
-                    { "translate": listParent instanceof Claim ? "ui.manage.permissions.player.selection:title": "ui.manage.gloabl_permissions.player.selection:title" },
+                    { "translate": listParent instanceof Claim ? "ui.manage.permissions.player.selection:title": "ui.manage.global_permissions.player.selection:title" },
                     listParent instanceof Claim ? { "text": `: ${listParent.name}` } : {}
                 ]
             })
-            .body({"translate": listParent instanceof Claim ? "ui.manage.permissions.player.selection:body" : "ui.manage.gloabl_permissions.player.selection:body"});
-        
+            .body({"translate": listParent instanceof Claim ? "ui.manage.permissions.player.selection:body" : "ui.manage.global_permissions.player.selection:body"});
+
         // show all global player permissions; include an extra Global badge next to the player name
         if (listParent instanceof Claim) {
             // make sure to filter out global player permissions that are overiden in the claim
