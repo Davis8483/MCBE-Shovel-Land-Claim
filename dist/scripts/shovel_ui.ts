@@ -1294,6 +1294,7 @@ export class ShovelUI {
             .title({"translate": "ui.changelog:title", "with": [version]})
             .body({"translate": "ui.addon_info:body.paragraph:1"})
             .label({"translate": "ui.changelog.label:1", "with": [version]})
+            .header({"translate": "ui.changelog.header:changes"})
             .divider()
             .label({"translate": "ui.changelog.label:2"})
             .label({"translate": "ui.changelog.label:3"})
@@ -1301,12 +1302,18 @@ export class ShovelUI {
             .label({"translate": "ui.changelog.label:5"})
             .label({"translate": "ui.changelog.label:6"})
             .label({"translate": "ui.changelog.label:7"})
+            .header({"translate": "ui.changelog.header:bug_fixes"})
+            .divider()
             .label({"translate": "ui.changelog.label:8"})
             .label({"translate": "ui.changelog.label:9"})
             .label({"translate": "ui.changelog.label:10"})
             .label({"translate": "ui.changelog.label:11"})
             .label({"translate": "ui.changelog.label:12"})
             .label({"translate": "ui.changelog.label:13"})
+            .label({"translate": "ui.changelog.label:14"})
+            .label({"translate": "ui.changelog.label:15"})
+            .label({"translate": "ui.changelog.label:16"})
+            .label({"translate": "ui.changelog.label:17"})
             .button({"translate": "ui.changelog.button:back"}, undefined, () => {this.main();});
 
         form.show(this.player);
