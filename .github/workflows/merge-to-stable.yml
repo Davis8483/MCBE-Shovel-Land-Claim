@@ -1,4 +1,7 @@
 name: Merge BP and RP to Stable (via PR)
+permissions:
+  contents: write
+  pull-requests: write
 
 on:
   workflow_dispatch:
