@@ -1,4 +1,4 @@
-name: Merge BP and RP to Stable
+name: Merge BP and RP to Stable (via PR)
 
 on:
   workflow_dispatch:
@@ -29,26 +29,26 @@ on:
         type: string
 
 jobs:
-  merge-to-stable:
+  merge-to-pr:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # Fetch full history for all branches
+        fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
-    
+
     - name: Configure Git
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-    
+
     - name: Checkout stable branch
       run: |
         git checkout stable
         git pull origin stable
-    
+
     - name: Remove existing BP and RP directories
       run: |
         if [ -d "BP" ]; then
@@ -58,7 +58,7 @@ jobs:
           git rm -rf RP
         fi
         git commit -m "Remove old BP and RP directories before merge" || echo "No changes to commit"
-    
+
     - name: Add BP content as subtree
       run: |
         if [ "${{ github.event.inputs.include_history }}" = "true" ]; then
@@ -66,7 +66,7 @@ jobs:
         else
           git subtree add --prefix=BP origin/${{ github.event.inputs.bp_branch }} --squash -m "Merge ${{ github.event.inputs.bp_branch }} as BP subtree (squashed)"
         fi
-    
+
     - name: Add RP content as subtree
       run: |
         if [ "${{ github.event.inputs.include_history }}" = "true" ]; then
@@ -74,33 +74,13 @@ jobs:
         else
           git subtree add --prefix=RP origin/${{ github.event.inputs.rp_branch }} --squash -m "Merge ${{ github.event.inputs.rp_branch }} as RP subtree (squashed)"
         fi
-    
-    - name: Create release commit
-      run: |
-        COMMIT_MSG="Release: Merge BP and RP branches to stable"
-        if [ -n "${{ github.event.inputs.release_notes }}" ]; then
-          COMMIT_MSG="${COMMIT_MSG}
 
-        ${{ github.event.inputs.release_notes }}"
-        fi
-        git commit --amend -m "${COMMIT_MSG}" || echo "No changes to amend"
-    
-    - name: Push changes to stable
-      run: |
-        git push origin stable
-    
-    - name: Create release tag
-      run: |
-        TAG="${{ github.event.inputs.release_tag }}"
-        
-        RELEASE_BODY="Release $TAG - Automated merge from BP and RP branches"
-        if [ -n "${{ github.event.inputs.release_notes }}" ]; then
-          RELEASE_BODY="${RELEASE_BODY}
-
-        ${{ github.event.inputs.release_notes }}"
-        fi
-        
-        git tag -a "${TAG}" -m "${RELEASE_BODY}"
-        git push origin "${TAG}"
-        
-        echo "Created release tag: ${TAG}"
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        base: stable
+        branch: "merge-release"
+        branch-suffix: random
+        title: "Release: ${{ github.event.inputs.release_tag }}"
+        body: "${{ github.event.inputs.release_notes }}"
