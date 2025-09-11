@@ -10,6 +10,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -23,13 +28,7 @@ jobs:
       - name: Run auto_translate.py
         run: python .github/workflows/scripts/auto_translate.py
 
-      
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
       - name: Commit and push changes
         run: |
-          git commit -m 'Auto-translated texts' || echo "No changes to commit"
+          git commit -a -m 'Auto-translated texts' || echo "No changes to commit"
           git push
