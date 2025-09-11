@@ -117,6 +117,7 @@ async def main():
 
     # if a cached lang files does not exist, copy it over
     if not os.path.exists(CACHED_FILE):
+        os.makedirs(os.path.dirname(CACHED_FILE), exist_ok=True)
         write_lang_file(CACHED_FILE, parse_lang_file(SOURCE_FILE))
 
     # MARK: Manual Translate
