@@ -21,4 +21,4 @@ jobs:
           pip install -r requirements.txt || true
 
       - name: Run auto_translate.py
-        run: python scripts/auto_translate.py
+        run: python .github/workflows/scripts/auto_translate.py
