@@ -87,3 +87,19 @@ jobs:
         branch-suffix: random
         title: "Release: ${{ github.event.inputs.release_tag }}"
         body: "${{ github.event.inputs.release_notes }}"
+
+    - name: Create release tag
+      run: |
+        TAG="${{ github.event.inputs.release_tag }}"
+        
+        RELEASE_BODY="Release $TAG - Automated merge from BP and RP branches"
+        if [ -n "${{ github.event.inputs.release_notes }}" ]; then
+          RELEASE_BODY="${RELEASE_BODY}
+
+        ${{ github.event.inputs.release_notes }}"
+        fi
+        
+        git tag -a "${TAG}" -m "${RELEASE_BODY}"
+        git push origin "${TAG}"
+        
+        echo "Created release tag: ${TAG}"
