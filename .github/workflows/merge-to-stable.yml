@@ -78,16 +78,6 @@ jobs:
           git subtree add --prefix=RP origin/${{ github.event.inputs.rp_branch }} --squash -m "Merge ${{ github.event.inputs.rp_branch }} as RP subtree (squashed)"
         fi
 
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v5
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        base: stable
-        branch: "merge-release"
-        branch-suffix: random
-        title: "Release: ${{ github.event.inputs.release_tag }}"
-        body: "${{ github.event.inputs.release_notes }}"
-
     - name: Create release tag
       run: |
         TAG="${{ github.event.inputs.release_tag }}"
@@ -103,3 +93,16 @@ jobs:
         git push origin "${TAG}"
         
         echo "Created release tag: ${TAG}"
+        
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        base: stable
+        branch: "merge-release"
+        branch-suffix: random
+        title: "Release: ${{ github.event.inputs.release_tag }}"
+        body: |
+          Release Notes: ${{ github.event.inputs.release_notes }}
+
+          `${{ github.event.inputs.release_tag }}` tag automatically created...
