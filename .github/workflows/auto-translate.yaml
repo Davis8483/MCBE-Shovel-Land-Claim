@@ -30,5 +30,6 @@ jobs:
 
       - name: Commit and push changes
         run: |
-          git commit -a -m 'Auto-translated texts' || echo "No changes to commit"
+          git add .
+          git commit -m "Add new translated files"
           git push
