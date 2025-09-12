@@ -1,6 +1,7 @@
 name: Auto Translate Texts
 permissions:
   contents: write
+  workflows: write
 
 on:
   push:
@@ -11,6 +12,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure Git
         run: |
