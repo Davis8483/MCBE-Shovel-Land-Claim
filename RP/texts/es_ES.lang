@@ -1,0 +1,272 @@
+pack.name=RECLAMACIÓN DE TIERRA DE PULSA V1.0.4
+pack.description=¡Bienvenido a Shovel Land Reclamo! Este complemento le permite proteger sus construcciones del duelo y el saqueo. Funciona de manera similar al Mod Java Golden Shovel.
+
+item.slc:claim_shovel=Reclamar pala
+
+chat.prefix=[§5SLC§r]
+
+chat.shovel:dimension_warning=§cSolo puedes crear reclamos en el mundo§r
+
+chat.world:disabled_item=§c¡Este artículo/bloque ha sido deshabilitado por su administrador!§r
+chat.world:wither=§c¡No puedes desovar entrar las entradas en el Overworld!§r
+
+chat.claim:created=§aReclamación creada!§r
+chat.claim:claim_intersecting=§c¡Un reclamo ya está aquí!§r
+chat.claim:player_intersecting=§c¡Un jugador está en el camino!§r
+chat.claim:width=§cTu afirmación debe ser al menos%sBloques de ancho!§r
+chat.claim:blocks_new=§cNecesitas%s¡Más bloques para crear esta afirmación!§r
+chat.claim:blocks_resize=§cNecesitas%s¡Más bloques para cambiar el tamaño de esta afirmación!§r
+chat.claim:max_claims=§cEsto excede su máximo de%s¡reclamos!§r
+chat.claim:point_not_set=§c¡Debes establecer el primer punto del reclamo!§r
+chat.claim:enabled_mobile=§a¡Se ha habilitado la creación/cambio de tamaño de reclamos!§r
+chat.claim:claim_creation_canceled=§pLa creación de reclamos ha sido cancelada ...§r
+chat.claim:claim_resize_canceled=§pEl cambio de tamaño de reclamo ha sido cancelado ...§r
+chat.claim:resized=§a¡El reclamo ha sido redimensionado!§r
+chat.claim:player_permissions_updated_notif=%s§aha actualizado sus permisos para§5%s§r
+chat.claim:public_permissions_updated_notif=%s§aha actualizado los permisos públicos para§5%s§r
+chat.claim:global_permissions_updated_notif=%s§a¡Ha actualizado sus permisos globales!§r
+chat.claim:player_permissions_reset_notif=%s§bha restablecido sus permisos para§r§5%s§r
+chat.claim:global_player_permissions_reset_notif=%s§bha restablecido sus permisos globales
+
+chat.point.new:selected=Primer bloque seleccionado: [§c%s§r,§a%s§r,§9%s§r]\n§b¡Cruce, haga clic para establecer la esquina opuesta del reclamo!§r
+chat.point.resize:selected=Corner de reclamación seleccionada: [§c%s§r,§a%s§r,§9%s§r]\n§d¡Crouch, haga clic en otro bloque para cambiar el tamaño del reclamo!§r
+chat.point.resize:disallowed=§c¡Debe ser el propietario para cambiar el tamaño de un reclamo!§r
+
+chat.claim.permission:break_blocks=§c¡No puedes romper los bloques!§r
+chat.claim.permission:use_item_on_block=§c¡No se le permite usar elementos en bloques!§r
+chat.claim.permission:use_tnt=§c¡No puedes usar TNT!§r
+chat.claim.permission:hurt_entities=§c¡No se le permite lastimar a las entidades!§r
+chat.claim.permission:enter_claim=§c¡No se le permite ingresar este reclamo!§r
+chat.claim.permission:enter_claim_warning=§pEstás cerca de un reclamo de que no tienes acceso para ingresar, ¡ten cuidado!§r\nNombre de la reclamación:§5%s§r\nPropietario de la reclamación:§9%s§r
+chat.claim.permission:teleport_enter_claim=§cNo se le permite ingresar este reclamo, ¡TelePort ha sido cancelado!§r
+chat.claim.permission:interact_with_entities=§c¡No puedes interactuar con entidades!§r
+chat.claim.permission:use_doors=§c¡No puedes usar puertas!§r
+chat.claim.permission:use_switches=§c¡No puedes usar interruptores!§r
+chat.claim.permission:use_beds=§c¡No puedes usar camas!§r
+chat.claim.permission:open_containers=§c¡No se le permite abrir contenedores!§r
+chat.claim.permission:edit_signs=§c¡No se le permite editar señales!§r
+chat.claim.fireballs=§c¡No puedes usar bolas de fuego en esta afirmación!§r
+chat.claim:view=§c¡Solo puede ver un reclamo del mundo de Overworld!§r
+chat.claim:piston=§c¡No puedes usar un pistón desde fuera de este reclamo!§r
+
+chat.blocks:payment=§aHa recibido su pago por hora de%s¡Bloques!§r
+chat.shovel:how_to_craft=Elaborar un§5Reclamar pala§rAl rodear cualquier pala de vainilla con fragmentos de amatista ...
+
+ui.global.button:back=<<
+ui.global.button:save=Ahorrar
+
+ui.main:title=§5Pala§rReclamación de tierras%s
+ui.main.op_mode:title=Manegar el jugador:%s
+ui.main:body.paragraph:1=¡Bienvenido a la reclamación de la tierra!
+ui.main:body.paragraph:2=§bCrear un reclamo§rrompiendo dos esquinas opuestas.
+ui.main:body.paragraph:3=§dCambiar el tamaño de un reclamo§rrompiendo cualquier esquina y especificando una nueva.
+ui.main:body.paragraph:4=§l§6Saldo de bloque de reclamación§r:
+ui.main:body.paragraph:5=§oRecibirás§a%s§rmás§9%s§rminutos.
+ui.main.button:manage=Gestionar reclamos
+ui.main.button:op_panel=Panel operador
+ui.main.button:global_player_permissions=§l§9Global§rPermisos de jugadores
+ui.main.button:addon_info=Información de complemento
+ui.main.button:close=Cerca
+
+ui.pending_entrance_disallow:title=Entrada pendiente de no permiso
+ui.pending_entrance_disallow:body=§cLos siguientes jugadores están en§l§5%s§r§c, el permiso de reclamo de entrada no se les aplicará hasta que se vayan.§r
+ui.pending_entrance_disallow.button:ok=De acuerdo
+
+ui.op_panel:title=Panel operador
+ui.op_panel.button:manage_players=Administrar jugadores
+ui.op_panel.button:addon_config=Configuración de complementos
+ui.op_panel.button:disallowed_blocks=Bloques/elementos no permitidos
+ui.op_panel.button:finish_setup=§o§l§9Configuración de acabado§r
+
+ui.op_disallowed_blocks:title=Bloques no permitidos
+ui.op_disallowed_blocks.button:add_block=Listón
+ui.op_disallowed_blocks.button:remove_block=Eliminar el bloque
+
+ui.op_edit_disallowed_blocks:title=Editar bloques/elementos no permitidos
+ui.op_edit_disallowed_blocks.textbox:block_id=ID de tipo
+ui.op_edit_disallowed_blocks.textbox:block_id_placeholder=Ej: Minecraft: piedra
+ui.op_edit_disallowed_blocks.dropdown:block_id=ID de tipo
+ui.op_edit_disallowed_blocks.error:must_not_be_empty=§c¡Debe proporcionar una identificación de tipo!§r
+ui.op_edit_disallowed_blocks.error:block_already_disallowed=§c¡Este bloque/elemento ya está rechazado!§r
+
+ui.op_panel.player_list:title=Lista de jugadores
+ui.op_panel.player_list.online=§aEn línea§r
+ui.op_panel.player_list.offline=§cDesconectado§r
+
+ui.op_manage_player.button:player_config=Configuración del jugador
+ui.op_manage_player.button:edit_claim_blocks=Editar bloques de reclamación:§l%s§r
+ui.op_manage_player.button:delete_player_data=§cEliminar datos de jugadores§r
+
+ui.op_player_config:title=Configuración del jugador:%s
+ui.op_player_config.dropdown:claim_blocks_behavior=Comportamiento de bloques de reclamo
+ui.op_player_config.dropdown_option:default=Por defecto
+ui.op_player_config.dropdown_option:disable_payment=Desactivar el pago por hora
+ui.op_player_config.dropdown_option:unlimited=Ilimitado
+ui.op_player_config.textbox:claim_blocks=Editar saldo de bloque de reclamación
+ui.op_player_config.textbox:claim_blocks_placeholder=Ej: 500
+ui.op_player_config.error:must_be_positive_number=§c¡Debe proporcionar un número positivo!§r
+
+ui.op_delete_player:title=Eliminar datos de jugadores
+ui.op_delete_player:body=¿Estás seguro de que quieres eliminar los datos de este jugador? Esto eliminará todas las reclamaciones y permisos.
+ui.op_delete_player.button:cancel=Cancelar
+ui.op_delete_player.button:confirm=§cEliminar datos de jugadores§r
+
+ui.op_panel.addon_settings:title=Configuración de complementos
+ui.op_panel.addon_settings.header:claim_blocks_section=§6Bloques de reclamos
+ui.op_panel.addon_settings.textbox:claim_block_payment=Pago por hora
+ui.op_panel.addon_settings.textbox:claim_block_payment_placeholder=Ej: 100
+ui.op_panel.addon_settings.textbox:starting_claim_blocks=Balance inicial
+ui.op_panel.addon_settings.textbox:starting_claim_blocks_placeholder=Ej: 200
+ui.op_panel.addon_settings.toggle:update_existing_balances=Actualizar los saldos existentes
+ui.op_panel.addon_settings.tooltip:update_existing_balances=Si está habilitado, esto se sumará/restará de todos los jugadores existentes, los saldos de bloque para reflejar sus cambios en "Balance de inicio".
+ui.op_panel.addon_settings.header:claim_section=§eReclamos
+ui.op_panel.addon_settings.textbox:claim_min_width=Reclamación de ancho mínimo
+ui.op_panel.addon_settings.textbox:claim_min_width_placeholder=Ej: 10
+ui.op_panel.addon_settings.textbox:max_claim_amount=Por jugador max Cantidad de reclamo\n0 = ilimitado
+ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder=Ej: 10
+ui.op_panel.addon_settings.header:claim_shovel_section=§dReclamar pala
+ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior=Refirmar el comportamiento del elemento de la pala
+ui.op_panel.addon_settings.dropdown_option:lock_to_inventory=Bloquear al inventario
+ui.op_panel.addon_settings.dropdown_option:give_at_spawn=Dar en el engendro
+ui.op_panel.addon_settings.dropdown_option:must_be_crafted=Debe ser elaborado
+ui.op_panel.addon_settings.error:must_be_positive_number=§c¡Debe proporcionar un número positivo!§r
+ui.op_panel.addon_settings.error:must_change_starting_claim_blocks=§c¡Debe cambiar el valor de "Balance de inicio" para habilitar esta alternancia!§r
+ui.op_panel.addon_settings.button:save=Guardar config
+
+ui.edit_global_permissions_intent.title=Sobrescribir los permisos globales?
+ui.edit_global_permissions_intent.body=Este jugador tiene permisos globales establecidos, ¿le gustaría sobrescribirlos para esta afirmación?
+ui.edit_global_permissions_intent.button:overwrite=Exagerar
+ui.edit_global_permissions_intent.button:edit=Editar§l§9Global§rPermisos
+
+ui.addon_info:title=Información de complemento
+ui.addon_info:body.paragraph:1=§l§5Pala§7Reclamación de tierras§r\n§oCreado por NDAVIS§r
+## if your translating this file, this is where you can credit yourself. Ex: \n§oTranslated to Spanish by John Doe§r
+ui.addon_info:translator_credit=\n§oTraducido automáticamente al español utilizando los servicios de Google§r
+ui.addon_info:body.paragraph:2=Este complemento fue creado como un proyecto de pasión en mi tiempo libre, ¡realmente espero que lo disfrutes! ^_^
+ui.addon_info:body.paragraph:3=Si tiene alguna pregunta, sugerencia o problemas, no dude en comunicarse con GitHub o Discord.
+ui.addon_info:body.paragraph:4=§l§9Girub§r: https://github.com/Davis8483/MCBE-Shovel-Land-Claim
+ui.addon_info:body.paragraph:5=§l§9Discordia§r: https://discord.gg/JGsXDubjek
+ui.addon_info:body.paragraph:6=§oLa reclamación de la tierra de la pala de NDAVIS tiene licencia bajo CC BY-NC-SA 4.0§r
+ui.addon_info.button:changelog=Ver el último ChangeLog
+
+ui.manage:title=Gestionar reclamación
+ui.manage.body:no_claims=§oNo tienes ninguna afirmación ...
+ui.manage.button:new_claim=§q§lNuevo reclamo +§r
+
+ui.manage.body:claim_start=Reclamación de reclamo:§cincógnita§r=%s§9CON§r=%s
+ui.manage.body:claim_end=Fin de reclamo:§cincógnita§r=%s§9CON§r=%s
+ui.manage.button:config=Configuración
+ui.manage.button:public_permissions=Permisos públicos
+ui.manage.button:player_permissions=Permisos de jugadores
+ui.manage.button:view=Ver reclamo
+ui.manage.button:remove=§cEliminar reclamo§r
+
+ui.manage.remove:title=Eliminar reclamo
+ui.manage.remove:body_1=¿Estás seguro de que quieres eliminar este reclamo?
+ui.manage.remove:body_2=Los bloques serán devueltos a su saldo.
+ui.manage.remove:label:claim_blocks=§6Bloques de reclamos§r
+ui.manage.remove.button:confirm=§cEliminar reclamo§r
+ui.manage.remove.button:cancel=Cancelar
+
+ui.manage.permissions.public:title=Permisos públicos:%s
+ui.manage.permissions.player:title=%sPermisos:%s
+ui.manage.global_permissions.player:title=%sLos permisos globales
+ui.manage.permissions.header:entities=§bEntidades
+ui.manage.permissions.header:general=§eGeneral
+ui.manage.permissions:enter_claim=Ingresar reclamación
+ui.manage.permissions.tooltip:enter_claim=Muestra partículas de borde rojo y aplica retroceso para eliminar al jugador.
+ui.manage.permissions:break_blocks=Bloques de ruptura
+ui.manage.permissions:use_items_on_blocks=Use elementos en bloques
+ui.manage.permissions.tooltip:use_items_on_blocks=Ejemplo: colocar bloques, intentar usar una pala para hacer rutas, etc.
+ui.manage.permissions:hurt_mobs=Las turbias heridas
+ui.manage.permissions:hurt_monsters=Monstruos heridos
+ui.manage.permissions.tooltip:hurt_monsters=No se recomienda deshabilitar esto. ¡Se evitarán todas las fuentes de daño, incluso ardiendo a la luz del sol!§o¡Las granjas de la mafia no funcionarán!§r
+ui.manage.permissions:hurt_players=Herir a los jugadores
+ui.manage.permissions:interact_with_blocks=Interactuar con bloques
+ui.manage.permissions:interact_with_entities=Interactuar con entidades
+ui.manage.permissions:use_doors=Usar puertas
+ui.manage.permissions:use_switches=Usar interruptores
+ui.manage.permissions.tooltip:use_switches=Ejemplo: palancas, botones, etc. Las placas de presión no están incluidas.
+ui.manage.permissions:use_beds=Usar camas
+ui.manage.permissions:open_containers=Contenedores abiertos
+ui.manage.permissions.tooltip:open_containers=Ejemplo: cofres, hornos, etc.
+ui.manage.permissions:edit_signs=Editar señales
+ui.manage.permissions:use_tnt=Usar TNT
+
+ui.manage.permissions.player.selection:title=Permisos de jugadores
+ui.manage.global_permissions.player.selection:title=Permisos de jugadores globales
+ui.manage.global_permissions.player.selection:body=Los siguientes permisos se aplican a todos sus reclamos ...
+ui.manage.permissions.player.selection:body=Los siguientes permisos públicos Overides ...
+ui.manage.permissions.player.selection:add_player=§2Agregar jugador§r
+ui.manage.permissions.player.selection:remove_player=§cEliminar el jugador§r
+ui.manage.permissions.player.selection.online=§2En línea§r
+ui.manage.permissions.player.selection.offline=§cDesconectado§r
+ui.manage.permissions.player.selection:global_online=§l§9Global§r-§2En línea§r
+ui.manage.permissions.player.selection:global_offline=§l§9Global§r-§cDesconectado§r
+
+ui.manage.permissions.player.selection.modify.add:title=Agregar jugador
+ui.manage.permissions.player.selection.modify.remove:title=Eliminar el jugador
+ui.manage.permissions.player.selection.modify:player_dropdown=Jugador
+ui.manage.permissions.player.selection.modify.add:submit=Agregar jugador
+ui.manage.permissions.player.selection.modify.remove:submit=Eliminar el jugador
+
+ui.manage.view:loading=Cargando...
+ui.manage.view:loading_subtitle=§dCrouch para cancelar
+
+ui.claim.new:title=Nuevo reclamo
+ui.claim.new:submit=Crear reclamo
+
+ui.claim.resize:title=Cambiar de tamaño
+ui.claim.resize:body_1=¿Estás seguro de que quieres cambiar el tamaño de este reclamo?
+ui.claim.resize:body_2=Los bloques se agregarán/restarán de su balance.
+ui.manage.resize:label:claim_blocks=§6Bloques de reclamos§r
+ui.claim.resize.button:cancel=Cancelar
+ui.claim.resize.button:resize=§dCambiar de tamaño§r
+
+ui.claim.config:title=Configuración de reclamación
+ui.claim.config.textbox:name=Nombre
+ui.claim.config:name_placeholder=Ej: Inicio
+ui.claim.config.dropdown:icon=Icono
+ui.claim.config.toggle:border_particles=Partículas de borde
+ui.claim.config.tooltip:border_particles=Las partículas aún se mostrarán al sostener la pala de reclamación.
+ui.claim.config.submit=Guardar config
+ui.claim.config.error:no_name=§c¡Debes proporcionar un nombre!§r
+ui.claim.config.error:unique_name=§c¡No puede usar el nombre de un reclamo existente!§r
+ui.claim.config.error:particles_required=§cLa entrada pública está rechazada, ¡las partículas deben estar habilitadas!§r
+
+ui.claim.icons:land=Tierra
+ui.claim.icons:bed=Cama
+ui.claim.icons:farmland=Tierras de cultivo
+ui.claim.icons:weapons=Arma
+ui.claim.icons:flowers=Flores
+
+ui.changelog:title=%sColegio de cambios
+ui.changelog.label:1=§9¡Bienvenido a V1.0.4! ¡Esta actualización trae aún más mejoras de estabilidad y agrega algunas características nuevas que todos solicitaron en Discord!
+ui.changelog.header:changes=§eCaracterísticas/cambios§r
+ui.changelog.label:2=- Los cambios en el juego ahora son opcionales; Una UI de configuración preguntará.
+ui.changelog.label:3=- La etiqueta "shovel.op" ya no es necesaria, todos los operadores mundiales tienen acceso al panel OP ahora.
+ui.changelog.label:4=- Se agregaron partículas de selección de primer punto.
+ui.changelog.label:5=- Las afirmaciones de que no puede ingresar ahora renderizarán con§cpartículas rojas§r.
+ui.changelog.label:6=- Controles móviles mejorados.
+ui.changelog.label:7=- dividir las "dolores de las entidades" permiso en "las turbas heridas", "los monstruos heridos" y los "dolores de los jugadores"
+ui.changelog.header:bug_fixes=§bCorrecciones de errores§r
+ui.changelog.label:8=- Agacharse sin tener un artículo ya no pasa por alto los permisos de reclamo.
+ui.changelog.label:9=- Las granjas de pollo de lava ya no hacen que el servidor cuelgue. :)
+ui.changelog.label:10=- Manejo de mensajes de error de formulario mejorado.
+ui.changelog.label:11=- Manejo de navegación UI fijo.
+ui.changelog.label:12=- La entidad montada ya no se desmonta al ingresar un reclamo no permitido.
+ui.changelog.label:13=- Resolvió varios errores de consola.
+ui.changelog.label:14=- La salud de la entidad ya no se restablece cuando recibe daño no permitido.
+ui.changelog.label:15=- Monstruos fijos que no se queman a la luz solar dentro de las reclamaciones.
+ui.changelog.label:16=- Se corrigió el menú no reaparecer después de ver un reclamo.
+ui.changelog.label:17=- Se corrigieron varios otros problemas con la protección de la entidad.
+ui.changelog.button:back=<< Menú principal
+
+ui.addon_setup:title=§5Pala§rReclamación de tierras - Configuración (%s/%s)
+ui.addon_setup.body:page_1=\n§5SLC§rquisiera deshabilitar el juego "showtags". Esto ocultará el texto de "no se puede soltar" que se muestra al sostener la pala de reclamación.\n\n§o§6Estás viendo esto porque eres un operador mundial.§r\n
+ui.addon_setup.body:page_2=\n§5SLC§rMe gustaría deshabilitar el juego "dofiretick" para evitar que el fuego se propague en reclamos.\n\n§o§6Estás viendo esto porque eres un operador mundial.§r\n
+ui.addon_setup.button:disable_showTags=Deshabilitar "showtags"
+ui.addon_setup.button:disable_doFireTick=Deshabilitar "dofiretick"
+ui.addon_setup.button:skip=§cSaltar§r
+
+actionbar.claim:name_color=§5
