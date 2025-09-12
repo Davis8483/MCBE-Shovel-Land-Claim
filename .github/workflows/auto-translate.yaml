@@ -1,4 +1,6 @@
 name: Auto Translate Texts
+permissions:
+  contents: write
 
 on:
   push:
