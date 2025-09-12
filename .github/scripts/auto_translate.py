@@ -5,13 +5,13 @@ from googletrans import Translator, LANGUAGES
 import yaml
 
 # Determine project folder (two levels up from this script)
-PROJECT_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
+PROJECT_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 # load settings from yaml file
 with open(os.path.join(os.path.dirname(__file__), 'auto_translate_config.yaml'), 'r', encoding='utf-8') as f:
     settings = yaml.safe_load(f)
 
 SOURCE_FILE = os.path.join(PROJECT_FOLDER, settings['source'])
-CACHED_FILE = os.path.join(PROJECT_FOLDER, f'.github/workflows/scripts/cache/{settings['source'].split("/")[-1]}')
+CACHED_FILE = os.path.join(PROJECT_FOLDER, f'.github/scripts/cache/{settings['source'].split("/")[-1]}')
 DESTINATION_FOLDER = os.path.join(PROJECT_FOLDER, settings['destination'])
 if not DESTINATION_FOLDER.endswith('/'):
     DESTINATION_FOLDER += '/'
