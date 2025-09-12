@@ -1,0 +1,2 @@
+googletrans
+PyYAML

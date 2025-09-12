@@ -140,7 +140,7 @@ ui.edit_global_permissions_intent.button:edit=Modifier les §l§9Permissions glo
 
 ui.addon_info:title=Infos de l’addon
 ui.addon_info:body.paragraph:1=§l§5Shovel§7 Land Claim§r\n§oCréé par nDavis§r
-## si vous traduisez ce fichier, c’est ici que vous pouvez vous créditer. Ex : \n§oTraduit en français par yo4l
+## if your translating this file, this is where you can credit yourself. Ex: \n§oTranslated to Spanish by John Doe§r
 ui.addon_info:translator_credit=§oTraduit en français par yo4l
 ui.addon_info:body.paragraph:2=Cet addon a été créé comme projet passion durant mon temps libre, j’espère vraiment que vous l’apprécierez ! ^_^
 ui.addon_info:body.paragraph:3=Si vous avez des questions, suggestions ou problèmes, n’hésitez pas à me contacter sur GitHub ou Discord.
