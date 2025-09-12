@@ -1,0 +1,8 @@
+source: texts/en_US.lang # the source language file to translate
+destination: texts/ # the destination folder for translated files
+target_langs_auto: ['es', 'de'] # languages to auto-translate
+target_langs_manual: ['fr'] # languages to manually translate; changed/added lines will be left blank with a comment
+
+# disabled for the behavior pack
+# translator_credit_key: 'ui.addon_info:translator_credit' # key to append translator credit to
+# translator_credit_value: '\n§oAuto Translated to {lang} using Google Services§r' # value format for credits
