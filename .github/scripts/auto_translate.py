@@ -107,9 +107,9 @@ def insert_translator_credit(lines, lang_name):
     lines.append({
         'type': 'entry',
         'key': key,
-        'value': credit_value,
+        'value': credit_value + "   ", # spacing is added to make the comment valid
         'comment': 'Auto-generated translator credit',
-        'original': f"{key}={credit_value} # Auto-generated translator credit"
+        'original': f"{key}={credit_value} ## Auto-generated translator credit"
     })
     return lines
 
