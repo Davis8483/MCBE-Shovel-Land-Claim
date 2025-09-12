@@ -1,0 +1,272 @@
+pack.name=Schaufel Landansprüche v1.0.4
+pack.description=Willkommen bei Shovel Land Claim! Mit diesem Addon können Sie Ihre Builds vor Trauer und Plünderung schützen. Es funktioniert ähnlich wie der Java Golden Shovel Mod.
+
+item.slc:claim_shovel=Schaufel beanspruchen
+
+chat.prefix=[§5SLC§r]
+
+chat.shovel:dimension_warning=§cSie können nur Ansprüche in der Überwelt erstellen§r
+
+chat.world:disabled_item=§cDieser Artikel/Block wurde von Ihrem Administrator deaktiviert!§r
+chat.world:wither=§cSie dürfen nicht in der Überweltvermutung laichen!§r
+
+chat.claim:created=§aAnspruch geschaffen!§r
+chat.claim:claim_intersecting=§cEine Behauptung ist schon da!§r
+chat.claim:player_intersecting=§cEin Spieler ist im Weg!§r
+chat.claim:width=§cIhr Anspruch muss mindestens sein%sBlocks breit!§r
+chat.claim:blocks_new=§cDu brauchst%sWeitere Blocks, um diese Behauptung zu erstellen!§r
+chat.claim:blocks_resize=§cDu brauchst%sWeitere Blocks, um diese Behauptung zu ändern!§r
+chat.claim:max_claims=§cDies übersteigt Ihr maximales von%sAnsprüche!§r
+chat.claim:point_not_set=§cSie müssen den ersten Punkt der Forderung festlegen!§r
+chat.claim:enabled_mobile=§aDie Erstellung/Änderung der Anspruchsberechtigung wurde aktiviert!§r
+chat.claim:claim_creation_canceled=§pDie Schaffung von Behauptungen wurde storniert ...§r
+chat.claim:claim_resize_canceled=§pAnspruchsgrößenänderung wurde storniert ...§r
+chat.claim:resized=§aAnspruch wurde geändert!§r
+chat.claim:player_permissions_updated_notif=%s§ahat Ihre Berechtigungen für aktualisiert§5%s§r
+chat.claim:public_permissions_updated_notif=%s§ahat die öffentlichen Berechtigungen für aktualisiert§5%s§r
+chat.claim:global_permissions_updated_notif=%s§aHat Ihre globalen Berechtigungen aktualisiert!§r
+chat.claim:player_permissions_reset_notif=%s§bhat Ihre Berechtigungen für zurückgesetzt§r§5%s§r
+chat.claim:global_player_permissions_reset_notif=%s§bHat Ihre globalen Berechtigungen zurückgesetzt
+
+chat.point.new:selected=Erster Block ausgewählt: [§c%s§r,§a%s§r,§9%s§r]\n§bCrouch Klicken Sie, um die gegenüberliegende Ecke des Anspruchs festzulegen!§r
+chat.point.resize:selected=Ausgewählte Ecke: [§c%s§r,§a%s§r,§9%s§r]\n§dCrouch Klicken Sie auf einen anderen Block, um die Größe des Anspruchs zu ändern!§r
+chat.point.resize:disallowed=§cSie müssen der Eigentümer sein, um einen Anspruch zu ändern!§r
+
+chat.claim.permission:break_blocks=§cSie dürfen keine Blöcke brechen!§r
+chat.claim.permission:use_item_on_block=§cSie dürfen keine Elemente auf Blöcken verwenden!§r
+chat.claim.permission:use_tnt=§cDu darfst TNT nicht benutzen!§r
+chat.claim.permission:hurt_entities=§cSie dürfen keine Wesenheiten verletzen!§r
+chat.claim.permission:enter_claim=§cSie dürfen diese Behauptung nicht eingeben!§r
+chat.claim.permission:enter_claim_warning=§pSie sind in der Nähe einer Behauptung, dass Sie keinen Zugang haben, seien Sie vorsichtig!§r\nAnspruchsname:§5%s§r\nAnspruchsbesitzer:§9%s§r
+chat.claim.permission:teleport_enter_claim=§cSie dürfen diese Behauptung nicht eingeben, Teleport wurde storniert!§r
+chat.claim.permission:interact_with_entities=§cSie dürfen nicht mit Entitäten interagieren!§r
+chat.claim.permission:use_doors=§cSie dürfen keine Türen benutzen!§r
+chat.claim.permission:use_switches=§cSie dürfen keine Switches verwenden!§r
+chat.claim.permission:use_beds=§cSie dürfen keine Betten benutzen!§r
+chat.claim.permission:open_containers=§cSie dürfen keine Behälter öffnen!§r
+chat.claim.permission:edit_signs=§cSie dürfen keine Zeichen bearbeiten!§r
+chat.claim.fireballs=§cSie können in dieser Behauptung keine Feuerbälle verwenden!§r
+chat.claim:view=§cSie können nur einen Anspruch von der Überwelt anzeigen!§r
+chat.claim:piston=§cSie können keinen Kolben von außerhalb dieser Behauptung verwenden!§r
+
+chat.blocks:payment=§aSie haben Ihre stündliche Zahlung von erhalten%sBlöcke!§r
+chat.shovel:how_to_craft=Craft a§5Schaufel beanspruchen§rDurch die Umgebung jeder Vanilleschaufel mit Amethyst -Scherben ...
+
+ui.global.button:back=<< zurück
+ui.global.button:save=Speichern
+
+ui.main:title=§5Schaufel§rLandanspruch%s
+ui.main.op_mode:title=Spieler verwalten:%s
+ui.main:body.paragraph:1=Willkommen bei Land Claim!
+ui.main:body.paragraph:2=§bEinen Anspruch erstellen§rdurch Brechen von zwei gegenüberliegenden Ecken.
+ui.main:body.paragraph:3=§dGrößen Sie die Größe eines Anspruchs§rIndem Sie jede Ecke brechen und eine neue angeben.
+ui.main:body.paragraph:4=§l§6Blockguthaben beanspruchen§r:
+ui.main:body.paragraph:5=§oSie erhalten§a%s§rmehr in§9%s§rMinuten.
+ui.main.button:manage=Ansprüche verwalten
+ui.main.button:op_panel=Bedienfeld
+ui.main.button:global_player_permissions=§l§9Global§rSpielerberechtigungen
+ui.main.button:addon_info=Addon Info
+ui.main.button:close=Schließen
+
+ui.pending_entrance_disallow:title=Anhängigem Eintritt unzulässig
+ui.pending_entrance_disallow:body=§cDie folgenden Spieler sind in§l§5%s§r§cDie Erlaubnis zur Eingabetaste wird erst an sie angewendet, wenn sie gehen.§r
+ui.pending_entrance_disallow.button:ok=OK
+
+ui.op_panel:title=Bedienfeld
+ui.op_panel.button:manage_players=Spieler verwalten
+ui.op_panel.button:addon_config=Addon config
+ui.op_panel.button:disallowed_blocks=Nicht zugelassene Blöcke/Gegenstände
+ui.op_panel.button:finish_setup=§o§l§9Setup beenden§r
+
+ui.op_disallowed_blocks:title=Blöcke nicht zugelassen
+ui.op_disallowed_blocks.button:add_block=Adblock
+ui.op_disallowed_blocks.button:remove_block=Block entfernen
+
+ui.op_edit_disallowed_blocks:title=Bearbeiten Sie nicht zugelassene Blöcke/Elemente
+ui.op_edit_disallowed_blocks.textbox:block_id=Typ ID
+ui.op_edit_disallowed_blocks.textbox:block_id_placeholder=Beispiel: Minecraft: Stein
+ui.op_edit_disallowed_blocks.dropdown:block_id=Typ ID
+ui.op_edit_disallowed_blocks.error:must_not_be_empty=§cSie müssen eine Typ -ID angeben!§r
+ui.op_edit_disallowed_blocks.error:block_already_disallowed=§cDieser Block/Artikel ist bereits nicht zugelassen!§r
+
+ui.op_panel.player_list:title=Spielerliste
+ui.op_panel.player_list.online=§aOnline§r
+ui.op_panel.player_list.offline=§cOffline§r
+
+ui.op_manage_player.button:player_config=Player -Konfiguration
+ui.op_manage_player.button:edit_claim_blocks=Schadenblöcke bearbeiten:§l%s§r
+ui.op_manage_player.button:delete_player_data=§cSpielerdaten löschen§r
+
+ui.op_player_config:title=Player -Konfiguration:%s
+ui.op_player_config.dropdown:claim_blocks_behavior=Behauptung blockiert das Verhalten
+ui.op_player_config.dropdown_option:default=Standard
+ui.op_player_config.dropdown_option:disable_payment=Stundenzahlung deaktivieren
+ui.op_player_config.dropdown_option:unlimited=Unbegrenzt
+ui.op_player_config.textbox:claim_blocks=Schadenblockblockguthaben bearbeiten
+ui.op_player_config.textbox:claim_blocks_placeholder=Bsp. 500
+ui.op_player_config.error:must_be_positive_number=§cSie müssen eine positive Zahl angeben!§r
+
+ui.op_delete_player:title=Spielerdaten löschen
+ui.op_delete_player:body=Sind Sie sicher, dass Sie die Daten dieses Spielers löschen möchten? Dadurch werden alle Ansprüche und Berechtigungen beseitigt.
+ui.op_delete_player.button:cancel=Stornieren
+ui.op_delete_player.button:confirm=§cSpielerdaten löschen§r
+
+ui.op_panel.addon_settings:title=Addon config
+ui.op_panel.addon_settings.header:claim_blocks_section=§6Anspruchsblöcke
+ui.op_panel.addon_settings.textbox:claim_block_payment=Stündliche Zahlung
+ui.op_panel.addon_settings.textbox:claim_block_payment_placeholder=Ex: 100
+ui.op_panel.addon_settings.textbox:starting_claim_blocks=Startbetrag
+ui.op_panel.addon_settings.textbox:starting_claim_blocks_placeholder=Beispiel: 200
+ui.op_panel.addon_settings.toggle:update_existing_balances=Aktualisieren Sie vorhandene Guthaben
+ui.op_panel.addon_settings.tooltip:update_existing_balances=Wenn dies aktiviert ist, werden alle vorhandenen Player -Blockblockbalben hinzugefügt/subtrahieren, um Ihre Änderungen in "Startgleichgewicht" widerzuspiegeln.
+ui.op_panel.addon_settings.header:claim_section=§eAnsprüche
+ui.op_panel.addon_settings.textbox:claim_min_width=Mindestbreite beanspruchen
+ui.op_panel.addon_settings.textbox:claim_min_width_placeholder=Ex: 10
+ui.op_panel.addon_settings.textbox:max_claim_amount=Pro Spieler maximaler Anspruchsbetrag\n0 = unbegrenzt
+ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder=Ex: 10
+ui.op_panel.addon_settings.header:claim_shovel_section=§dSchaufel beanspruchen
+ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior=Anspruch auf Schaufel -Artikelverhalten
+ui.op_panel.addon_settings.dropdown_option:lock_to_inventory=Sperren Sie in das Bestand
+ui.op_panel.addon_settings.dropdown_option:give_at_spawn=Spawn geben
+ui.op_panel.addon_settings.dropdown_option:must_be_crafted=Muss gefertigt werden
+ui.op_panel.addon_settings.error:must_be_positive_number=§cSie müssen eine positive Zahl angeben!§r
+ui.op_panel.addon_settings.error:must_change_starting_claim_blocks=§cSie müssen den Wert von "Startbilanz" ändern, um diesen Umschalten zu aktivieren!§r
+ui.op_panel.addon_settings.button:save=Konfiguration speichern
+
+ui.edit_global_permissions_intent.title=Globale Berechtigungen überschreiben?
+ui.edit_global_permissions_intent.body=Dieser Spieler hat globale Berechtigungen festgelegt. Möchten Sie sie für diese Behauptung überschreiben?
+ui.edit_global_permissions_intent.button:overwrite=Überschreiben
+ui.edit_global_permissions_intent.button:edit=Bearbeiten§l§9Global§rBerechtigungen
+
+ui.addon_info:title=Addon Info
+ui.addon_info:body.paragraph:1=§l§5Schaufel§7Landanspruch§r\n§oErstellt von Ndavis§r
+## if your translating this file, this is where you can credit yourself. Ex: \n§oTranslated to Spanish by John Doe§r
+ui.addon_info:translator_credit=\n§oAuto übersetzt mit Google Services auf Deutsch übersetzt§r
+ui.addon_info:body.paragraph:2=Dieses Addon wurde in meiner Freizeit als Leidenschaftsprojekt erstellt. Ich hoffe wirklich, dass es Ihnen Spaß macht! ^_^
+ui.addon_info:body.paragraph:3=Wenn Sie Fragen, Vorschläge oder Probleme haben, können Sie sich gerne mit GitHub oder Discord wenden.
+ui.addon_info:body.paragraph:4=§l§9Girub§r: https://github.com/Davis8483/MCBE-Shovel-Land-Claim
+ui.addon_info:body.paragraph:5=§l§9Zwietracht§r: https://discord.gg/JGsXDubjek
+ui.addon_info:body.paragraph:6=§oSchaufelandanspruch von NDAVIS ist unter CC BY-NC-SA 4.0 lizenziert§r
+ui.addon_info.button:changelog=Sehen Sie sich die neueste ChangeLog an
+
+ui.manage:title=Anspruch verwalten
+ui.manage.body:no_claims=§oSie haben keine Ansprüche ...
+ui.manage.button:new_claim=§q§lNeuer Anspruch +§r
+
+ui.manage.body:claim_start=Anspruchsstart:§cX§r=%s§9MIT§r=%s
+ui.manage.body:claim_end=Anspruchsende:§cX§r=%s§9MIT§r=%s
+ui.manage.button:config=Konfiguration
+ui.manage.button:public_permissions=Öffentliche Berechtigungen
+ui.manage.button:player_permissions=Spielerberechtigungen
+ui.manage.button:view=Behauptung anzeigen
+ui.manage.button:remove=§cAnspruch entfernen§r
+
+ui.manage.remove:title=Anspruch entfernen
+ui.manage.remove:body_1=Sind Sie sicher, dass Sie diese Behauptung entfernen möchten?
+ui.manage.remove:body_2=Die Blöcke werden in Ihr Gleichgewicht zurückgegeben.
+ui.manage.remove:label:claim_blocks=§6Anspruchsblöcke§r
+ui.manage.remove.button:confirm=§cAnspruch entfernen§r
+ui.manage.remove.button:cancel=Stornieren
+
+ui.manage.permissions.public:title=Öffentliche Berechtigungen:%s
+ui.manage.permissions.player:title=%sBerechtigungen:%s
+ui.manage.global_permissions.player:title=%sGlobale Berechtigungen
+ui.manage.permissions.header:entities=§bEntitäten
+ui.manage.permissions.header:general=§eAllgemein
+ui.manage.permissions:enter_claim=Anspruch eingeben
+ui.manage.permissions.tooltip:enter_claim=Zeigt rote Grenzpartikel und wendet den Rückschlag an, um den Spieler zu entfernen.
+ui.manage.permissions:break_blocks=Blöcke brechen
+ui.manage.permissions:use_items_on_blocks=Verwenden Sie Elemente auf Blöcken
+ui.manage.permissions.tooltip:use_items_on_blocks=Beispiel: Blockplätze platzieren, versuchen, eine Schaufel zu verwenden, um Pfade zu erstellen, usw.
+ui.manage.permissions:hurt_mobs=Verletzte Mobs
+ui.manage.permissions:hurt_monsters=Verletzte Monster
+ui.manage.permissions.tooltip:hurt_monsters=Es wird nicht empfohlen, dies zu deaktivieren. Alle Schadensquellen werden verhindert und sogar im Sonnenlicht brennen!§oMob Farms werden nicht funktionieren!§r
+ui.manage.permissions:hurt_players=Verletzt die Spieler
+ui.manage.permissions:interact_with_blocks=Mit Blöcken interagieren
+ui.manage.permissions:interact_with_entities=Mit Einheiten interagieren
+ui.manage.permissions:use_doors=Verwenden Sie Türen
+ui.manage.permissions:use_switches=Verwenden Sie Schalter
+ui.manage.permissions.tooltip:use_switches=Beispiel: Hebel, Tasten usw. Die Druckplatten sind nicht enthalten.
+ui.manage.permissions:use_beds=Verwenden Sie Betten
+ui.manage.permissions:open_containers=Offene Behälter
+ui.manage.permissions.tooltip:open_containers=Beispiel: Truhen, Öfen usw.
+ui.manage.permissions:edit_signs=Schilder bearbeiten
+ui.manage.permissions:use_tnt=Verwenden Sie TNT
+
+ui.manage.permissions.player.selection:title=Spielerberechtigungen
+ui.manage.global_permissions.player.selection:title=Global Player -Berechtigungen
+ui.manage.global_permissions.player.selection:body=Die folgenden Berechtigungen gelten für alle Ihre Ansprüche ...
+ui.manage.permissions.player.selection:body=Die folgenden Overs öffentlichen Berechtigungen ...
+ui.manage.permissions.player.selection:add_player=§2Spieler hinzufügen§r
+ui.manage.permissions.player.selection:remove_player=§cSpieler entfernen§r
+ui.manage.permissions.player.selection.online=§2Online§r
+ui.manage.permissions.player.selection.offline=§cOffline§r
+ui.manage.permissions.player.selection:global_online=§l§9Global§r-§2Online§r
+ui.manage.permissions.player.selection:global_offline=§l§9Global§r-§cOffline§r
+
+ui.manage.permissions.player.selection.modify.add:title=Spieler hinzufügen
+ui.manage.permissions.player.selection.modify.remove:title=Spieler entfernen
+ui.manage.permissions.player.selection.modify:player_dropdown=Spieler
+ui.manage.permissions.player.selection.modify.add:submit=Spieler hinzufügen
+ui.manage.permissions.player.selection.modify.remove:submit=Spieler entfernen
+
+ui.manage.view:loading=Laden...
+ui.manage.view:loading_subtitle=§dCrouch zu stornieren
+
+ui.claim.new:title=Neue Behauptung
+ui.claim.new:submit=Anspruch erstellen
+
+ui.claim.resize:title=Größen Sie die Größe des Anspruchs
+ui.claim.resize:body_1=Sind Sie sicher, dass Sie diese Behauptung ändern möchten?
+ui.claim.resize:body_2=Die Blöcke werden von Ihrem Gleichgewicht hinzugefügt/abgezogen.
+ui.manage.resize:label:claim_blocks=§6Anspruchsblöcke§r
+ui.claim.resize.button:cancel=Stornieren
+ui.claim.resize.button:resize=§dGrößen Sie die Größe des Anspruchs§r
+
+ui.claim.config:title=Anspruchskonfiguration
+ui.claim.config.textbox:name=Name
+ui.claim.config:name_placeholder=Beispiel: Zuhause
+ui.claim.config.dropdown:icon=Symbol
+ui.claim.config.toggle:border_particles=Grenzpartikel
+ui.claim.config.tooltip:border_particles=Partikel werden weiterhin gezeigt, wenn sie die Schaufel der Schadensschaufel halten.
+ui.claim.config.submit=Konfiguration speichern
+ui.claim.config.error:no_name=§cSie müssen einen Namen angeben!§r
+ui.claim.config.error:unique_name=§cSie können den Namen eines vorhandenen Anspruchs nicht verwenden!§r
+ui.claim.config.error:particles_required=§cDer öffentliche Eingang ist nicht zugelassen, Partikel müssen aktiviert werden!§r
+
+ui.claim.icons:land=Land
+ui.claim.icons:bed=Bett
+ui.claim.icons:farmland=Ackerland
+ui.claim.icons:weapons=Waffen
+ui.claim.icons:flowers=Blumen
+
+ui.changelog:title=%sChangelog
+ui.changelog.label:1=§9Willkommen bei v1.0.4! Dieses Update bringt noch mehr Stabilitätsverbesserungen und fügt einige neue Funktionen hinzu, die Sie alle in der Zwietracht gefragt haben!
+ui.changelog.header:changes=§eFunktionen/Änderungen§r
+ui.changelog.label:2=- Änderungen der Spieler sind jetzt optional; Eine Setup -UI wird fragen.
+ui.changelog.label:3=- Das Tag "Shovel.OP" wird nicht mehr benötigt. Alle Weltbetreiber haben jetzt Zugang zum OP -Panel.
+ui.changelog.label:4=- Erste Punktauswahlpartikel hinzugefügt.
+ui.changelog.label:5=- Ansprüche, die Sie nicht eingeben können§crote Partikel§r.
+ui.changelog.label:6=- Verbesserte mobile Steuerelemente.
+ui.changelog.label:7=- Teilen Sie "verletzte Einheiten" -permision in "Hurt Mobs", "Hurt Monsters" und "Hurt Spieler" aufgeteilt, und "verletzte Spieler"
+ui.changelog.header:bug_fixes=§bFehlerbehebungen§r
+ui.changelog.label:8=- Hockern, ohne einen Gegenstand zu halten, um die Forderungsberechtigungen nicht mehr umgeht.
+ui.changelog.label:9=- Lava -Hühnerfarmen veranlassen den Server nicht mehr. :)
+ui.changelog.label:10=- Verbesserte Formulierung der Formularfehlermeldung.
+ui.changelog.label:11=- Behobene UI -Navigationsbehandlung.
+ui.changelog.label:12=- Gespritztes Unternehmen wird beim Eintritt in einen nicht zugelassenen Anspruch nicht mehr gestiegen.
+ui.changelog.label:13=- Mehrere Konsolenfehler aufgelöst.
+ui.changelog.label:14=- Die Gesundheit der Entität wird bei unzulässigen Schäden nicht mehr zurückgesetzt.
+ui.changelog.label:15=- Feste Monster, die nicht in Sonnenlicht in Ansprüchen brennen.
+ui.changelog.label:16=- Das Menü wurde nach dem Betrachten eines Anspruchs nicht wieder erschien.
+ui.changelog.label:17=- Verschiedene andere Probleme mit dem Schutz des Unternehmens behoben.
+ui.changelog.button:back=<< Hauptmenü
+
+ui.addon_setup:title=§5Schaufel§rLandansprüche - Setup (%s/%s)
+ui.addon_setup.body:page_1=\n§5SLC§rIch möchte das Spieler "Showtags" deaktivieren. Dadurch wird der Text "Elemente, der nicht fallen lassen" ausgeblendet, wenn Sie die Schaufel der Schadensschaufel halten.\n\n§o§6Sie sehen das, weil Sie ein Weltbetreiber sind.§r\n
+ui.addon_setup.body:page_2=\n§5SLC§rSie möchte das "Dofiretick" -Plamerule deaktivieren, um zu verhindern, dass sich das Feuer in Ansprüchen ausbreitet.\n\n§o§6Sie sehen das, weil Sie ein Weltbetreiber sind.§r\n
+ui.addon_setup.button:disable_showTags=Disable "showTags"
+ui.addon_setup.button:disable_doFireTick=Deaktivieren Sie "Dofiretick"
+ui.addon_setup.button:skip=§cÜberspringen§r
+
+actionbar.claim:name_color=§5
