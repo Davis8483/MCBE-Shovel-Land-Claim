@@ -1,7 +1,6 @@
 name: Auto Translate Texts
 permissions:
   contents: write
-  workflows: write
 
 on:
   push:
