@@ -9,7 +9,8 @@ A Minecraft Bedrock Edition addon that allows you to protect your builds from gr
 
 ## Creating Claims
 Use the Claim Shovel to break a block, setting the first corner of your claim. Then break another block while crouching to set the opposite corner. This will bring up the claim creation menu.
-> Note: On mobile, in the claims list menu, you must click the `New Claim` button first!
+> [!NOTE]
+> On mobile, in the claims list menu, you must click the `New Claim` button first!
 
 <img src=docs/create_claim.webp width=100%>
 
@@ -25,7 +26,8 @@ This addon uses a block balance for claim creation. Your claim block balance is 
 ## Operator Panel
 An Operator Panel is included for managing all aspects of this addon. World operators have access automatically.
 
-> Note: In versions before v1.0.4 you must give yourself the `shovel.op` tag to gain access.<br> 
+> [!NOTE]
+> In versions before v1.0.4 you must give yourself the `shovel.op` tag to gain access.<br> 
 `/tag @s add shovel.op`
 
 **Addon Config** - Allows you to change the Claim Block hourly payment, starting claim block amount, claim minimum width requirement, and max number of claims a player can have.
