@@ -2,5 +2,5 @@
 * text=auto
 
 gh_assets/* linguist-documentation
-BP/* linguist-detectable
-RP/* linguist-detectable
+BP/** linguist-detectable
+RP/** linguist-detectable
