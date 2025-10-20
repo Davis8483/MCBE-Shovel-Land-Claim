@@ -10,7 +10,7 @@ A Minecraft Bedrock Edition addon that allows you to protect your builds from gr
 ## Creating Claims
 Use the Claim Shovel to break a block, setting the first corner of your claim. Then break another block while crouching to set the opposite corner. This will bring up the claim creation menu.
 > [!NOTE]
-> On mobile, in the claims list menu, you must click the `New Claim` button first!
+> On mobile, in the claims list menu, you must click the `New/Resize Mode >>` button first!
 
 <img src=docs/create_claim.webp width=100%>
 
