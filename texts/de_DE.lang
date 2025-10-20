@@ -218,7 +218,7 @@ ui.claim.new:submit=Anspruch erstellen
 
 ui.claim.resize:title=Anspruchsgröße ändern
 ui.claim.resize:body_1=Sind Sie sicher, dass Sie die Größe dieses Anspruchs ändern möchten?
-ui.claim.resize:body_2=Die Blöcke werden von Ihrem Guthaben addiert/subtrahiert.
+ui.claim.resize:body_2=Die Blöcke werden Ihrem Guthaben hinzugefügt bzw. davon abgezogen.
 ui.manage.resize:label:claim_blocks=§6Anspruchssperren§r
 ui.claim.resize.button:cancel=Stornieren
 ui.claim.resize.button:resize=§dAnspruchsgröße ändern§r
@@ -257,7 +257,7 @@ ui.changelog.label:11=- Die Handhabung der UI-Navigation wurde korrigiert.
 ui.changelog.label:12=- Die gerittene Entität wird nicht mehr abgestiegen, wenn sie einen nicht zugelassenen Anspruch betritt.
 ui.changelog.label:13=- Mehrere Konsolenfehler behoben.
 ui.changelog.label:14=- Die Gesundheit einer Entität wird nicht mehr zurückgesetzt, wenn sie unzulässigen Schaden erleidet.
-ui.changelog.label:15=- Problem behoben, bei dem Monster in Claims nicht im Sonnenlicht brannten.
+ui.changelog.label:15=- Problem behoben, bei dem Monster innerhalb von Claims nicht im Sonnenlicht brannten.
 ui.changelog.label:16=- Problem behoben, bei dem das Menü nach dem Anzeigen eines Anspruchs nicht erneut angezeigt wurde.
 ui.changelog.label:17=– Verschiedene andere Probleme mit dem Entitätsschutz behoben.
 ui.changelog.button:back=<< Hauptmenü
