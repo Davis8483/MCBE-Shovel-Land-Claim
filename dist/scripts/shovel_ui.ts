@@ -510,7 +510,7 @@ export class ShovelUI {
 
         // conditionaly show the new claim button for mobile players only
         if (this.player.clientSystemInfo.platformType == PlatformType.Mobile) {
-            form.button({"translate": "ui.manage.button:new_claim"}, undefined, () => {
+            form.button({"translate": "ui.manage.button:claim_mode_mobile"}, undefined, () => {
                 // set flag to no longer open the menu and only allow claim creation
                 playerData.setMobileMode(ShovelMobileMode.CLAIM);
 
