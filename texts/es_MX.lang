@@ -151,7 +151,7 @@ ui.addon_info.button:changelog=Ver Ultimo Historial de Cambios
 
 ui.manage:title=Gestionar Reclamo
 ui.manage.body:no_claims=§oNo tienes ningun reclamo...
-ui.manage.button:new_claim=§q§lNuevo Reclamo +§r
+ui.manage.button:claim_mode_mobile=##TODO: Translate the following "§2New/Resize Mode >>§r"
 
 ui.manage.body:claim_start=Inicio del Reclamo: §cX§r=%s §9Z§r=%s
 ui.manage.body:claim_end=Fin del Reclamo: §cX§r=%s §9Z§r=%s

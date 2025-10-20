@@ -151,7 +151,7 @@ ui.addon_info.button:changelog=View Latest Changelog
 
 ui.manage:title=Manage Claim
 ui.manage.body:no_claims=§oYou don't have any claims...
-ui.manage.button:new_claim=§q§lNew Claim +§r
+ui.manage.button:claim_mode_mobile=§2New/Resize Mode >>§r
 
 ui.manage.body:claim_start=Claim Start: §cX§r=%s §9Z§r=%s
 ui.manage.body:claim_end=Claim End: §cX§r=%s §9Z§r=%s

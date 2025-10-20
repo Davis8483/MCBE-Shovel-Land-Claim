@@ -151,7 +151,7 @@ ui.addon_info.button:changelog=Neuestes Änderungsprotokoll anzeigen
 
 ui.manage:title=Anspruch verwalten
 ui.manage.body:no_claims=§oDu hast keine Ansprüche...
-ui.manage.button:new_claim=§q§lNeuer Anspruch +§r
+ui.manage.button:claim_mode_mobile=§2Neu/Größenänderungsmodus >>§r
 
 ui.manage.body:claim_start=Anspruchsbeginn:§cX§r=%s§9MIT§r=%s
 ui.manage.body:claim_end=Anspruchsende:§cX§r=%s§9MIT§r=%s
