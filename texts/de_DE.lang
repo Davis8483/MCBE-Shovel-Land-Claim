@@ -1,4 +1,4 @@
-pack.name=Shovel Land Claim v1.0.4
+pack.name=Shovel Land Claim v1.0.5
 pack.description=Willkommen bei Shovel Land Claim! Mit diesem Add-on können Sie Ihre Builds vor Griefing und Plünderung schützen. Es funktioniert ähnlich wie der Java Golden Shovel Mod.
 
 item.slc:claim_shovel=Anspruchsschaufel
@@ -37,10 +37,10 @@ chat.claim.permission:use_item_on_block=§cEs ist nicht gestattet, Gegenstände 
 chat.claim.permission:use_tnt=§cDu darfst tnt nicht verwenden!§r
 chat.claim.permission:hurt_entities=§cEs ist dir nicht gestattet, Wesen zu verletzen!§r
 chat.claim.permission:enter_claim=§cSie dürfen diesen Anspruch nicht eingeben!§r
-chat.claim.permission:enter_claim_warning=§pSie befinden sich in der Nähe einer Forderung, auf die Sie keinen Zugriff haben. Seien Sie vorsichtig!§r\nAnspruchsname:§5%s§r\nAnspruchsinhaber:§9%s§r
+chat.claim.permission:enter_claim_warning=§pSie befinden sich in der Nähe einer Schadensforderung, auf die Sie keinen Zugriff haben. Seien Sie vorsichtig!§r\nAnspruchsname:§5%s§r\nAnspruchsinhaber:§9%s§r
 chat.claim.permission:teleport_enter_claim=§cDu darfst diesen Anspruch nicht betreten, der Teleport wurde abgebrochen!§r
 chat.claim.permission:interact_with_entities=§cEs ist Ihnen nicht gestattet, mit Entitäten zu interagieren!§r
-chat.claim.permission:use_doors=§cEs ist nicht gestattet, Türen zu benutzen!§r
+chat.claim.permission:use_doors=§cDas Betreten von Türen ist nicht gestattet!§r
 chat.claim.permission:use_switches=§cEs ist nicht gestattet, Schalter zu verwenden!§r
 chat.claim.permission:use_beds=§cEs ist nicht gestattet, Betten zu benutzen!§r
 chat.claim.permission:open_containers=§cDas Öffnen von Behältern ist nicht gestattet!§r
@@ -85,7 +85,7 @@ ui.op_disallowed_blocks.button:remove_block=Block entfernen
 
 ui.op_edit_disallowed_blocks:title=Bearbeiten Sie unzulässige Blöcke/Elemente
 ui.op_edit_disallowed_blocks.textbox:block_id=Typ-ID
-ui.op_edit_disallowed_blocks.textbox:block_id_placeholder=Beispiel: Minecraft:Stein
+ui.op_edit_disallowed_blocks.textbox:block_id_placeholder=Bsp.: Minecraft:Stein
 ui.op_edit_disallowed_blocks.dropdown:block_id=Typ-ID
 ui.op_edit_disallowed_blocks.error:must_not_be_empty=§cSie müssen eine Typ-ID angeben!§r
 ui.op_edit_disallowed_blocks.error:block_already_disallowed=§cDieser Block/Artikel ist bereits nicht zulässig!§r
@@ -248,9 +248,9 @@ ui.changelog.label:1=§9Willkommen bei v1.0.5! Dieses Update bietet Schutz für 
 ui.changelog.header:changes=§eFunktionen/Änderungen§r
 ui.changelog.label:2=- Manuelle spanische Übersetzung hinzugefügt, danke an JakeJuegaMC! (Wenn Sie helfen möchten, dieses Add-on in andere Sprachen zu übersetzen, wenden Sie sich bitte an Discord!)
 ui.changelog.label:3=- Aktualisierte Texte zur Anspruchserstellung/-größenänderung, um auf Mobilgeräten klarer zu sein.
-ui.changelog.label:4=- Die Berechtigung „Mit Gegenstandsdisplays interagieren“ wurde hinzugefügt, um die Interaktion mit Regalen, gemeißelten Bücherregalen und Rüstungsständern zu erlauben/verbieten. Artikelrahmen werden aufgrund technischer Einschränkungen immer noch nicht unterstützt.
+ui.changelog.label:4=- Die Berechtigung „Interagieren mit Gegenstandsdisplays“ wurde hinzugefügt, um die Interaktion mit Regalen, gemeißelten Bücherregalen und Rüstungsständern zu erlauben/verbieten. Artikelrahmen werden aufgrund technischer Einschränkungen immer noch nicht unterstützt.
 ui.changelog.header:bug_fixes=§bFehlerbehebungen§r
-ui.changelog.label:5=– Es wurde ein Problem behoben, das dazu führte, dass Blöcke im Menüöffnungsmodus auf Mobilgeräten aufgehoben werden konnten.
+ui.changelog.label:5=- Es wurde ein Problem behoben, durch das Blöcke im Menüöffnungsmodus auf Mobilgeräten aufgehoben werden konnten.
 ui.changelog.button:back=<< Hauptmenü
 
 ui.addon_setup:title=§5Schaufel§rLandanspruch – Einrichtung (%s/%s)
