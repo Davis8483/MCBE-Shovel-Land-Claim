@@ -45,6 +45,7 @@ chat.claim.permission:use_switches=§c¡No tienes permitido usar interruptores!�
 chat.claim.permission:use_beds=§c¡No tienes permitido usar camas!§r
 chat.claim.permission:open_containers=§c¡No tienes permitido abrir contenedores!§r
 chat.claim.permission:edit_signs=§c¡No tienes permitido editar letreros!§r
+chat.claim.permission:interact_with_item_displays=##TODO: Translate the following "§cYou're not allowed to interact with item displays!§r"
 chat.claim.fireballs=§c¡No puedes usar bolas de fuego en este reclamo!§r
 chat.claim:view=§c¡Solo puede ver un reclamo en el Overworld!§r
 chat.claim:piston=§c¡No puedes usar un pistón fuera de este reclamo!§r
@@ -190,6 +191,8 @@ ui.manage.permissions.tooltip:use_switches=Ejemplo: palancas, \nbotones, etc. \n
 ui.manage.permissions:use_beds=Usar Camas
 ui.manage.permissions:open_containers=Abrir Contenedores
 ui.manage.permissions.tooltip:open_containers=Ejemplo: cofres, hornos, etc.
+ui.manage.permissions:interact_with_item_displays=##TODO: Translate the following "Interact With Item Displays"
+ui.manage.permissions.tooltip:interact_with_item_displays=##TODO: Translate the following "Includes shelves, chiseled bookshelves, and armor stands. Item frames are not supported :("
 ui.manage.permissions:edit_signs=Editar Letreros
 ui.manage.permissions:use_tnt=Usar TNT
 
