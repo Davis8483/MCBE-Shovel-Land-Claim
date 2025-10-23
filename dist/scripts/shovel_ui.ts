@@ -789,6 +789,11 @@ export class ShovelUI {
 
                 return new ModalDataCorrect();
             })
+            .toggle({"translate": "ui.manage.permissions:interact_with_item_displays"}, {"defaultValue": defaults.getPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS), "tooltip": {"translate": "ui.manage.permissions.tooltip:interact_with_item_displays"} }, (value)=> {
+                target.setPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS, value);
+
+                return new ModalDataCorrect();
+            })
             .toggle({"translate": "ui.manage.permissions:edit_signs"}, {"defaultValue": defaults.getPermission(PermissionTypes.EDIT_SIGNS)}, (value)=> {
                 target.setPermission(PermissionTypes.EDIT_SIGNS, value);
 

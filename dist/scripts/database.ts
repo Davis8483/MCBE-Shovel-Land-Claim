@@ -139,6 +139,7 @@ export enum PermissionTypes {
     USE_SWITCHES = "useSwitches",
     USE_BEDS = "useBeds",
     OPEN_CONTAINERS = "openContainers",
+    INTERACT_WITH_ITEM_DISPLAYS = "interactWithItemDisplays",
     EDIT_SIGNS = "editSigns"
 }
 
@@ -174,6 +175,7 @@ export class Permissions {
             [PermissionTypes.USE_SWITCHES]: true,
             [PermissionTypes.USE_BEDS]: false,
             [PermissionTypes.OPEN_CONTAINERS]: false,
+            [PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS]: false,
             [PermissionTypes.EDIT_SIGNS]: false,
         };
     }
@@ -221,6 +223,7 @@ export class Permissions {
         permissions.setPermission(PermissionTypes.USE_SWITCHES, data._permissions?.useSwitches !== undefined ? data._permissions.useSwitches : defaultPermissions.getPermission(PermissionTypes.USE_SWITCHES));
         permissions.setPermission(PermissionTypes.USE_BEDS, data._permissions?.useBeds !== undefined ? data._permissions.useBeds : defaultPermissions.getPermission(PermissionTypes.USE_BEDS));
         permissions.setPermission(PermissionTypes.OPEN_CONTAINERS, data._permissions?.openContainers !== undefined ? data._permissions.openContainers : defaultPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS));
+        permissions.setPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS, data._permissions?.interactWithItemDisplays !== undefined ? data._permissions.interactWithItemDisplays : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS));
         permissions.setPermission(PermissionTypes.EDIT_SIGNS, data._permissions?.editSigns !== undefined ? data._permissions.editSigns : defaultPermissions.getPermission(PermissionTypes.EDIT_SIGNS));
         return permissions;
     }
@@ -281,6 +284,7 @@ export class PlayerPermissions extends Permissions {
         permissions.setPermission(PermissionTypes.USE_SWITCHES, data._permissions?.useSwitches !== undefined ? data._permissions.useSwitches : defaultPermissions.getPermission(PermissionTypes.USE_SWITCHES));
         permissions.setPermission(PermissionTypes.USE_BEDS, data._permissions?.useBeds !== undefined ? data._permissions.useBeds : defaultPermissions.getPermission(PermissionTypes.USE_BEDS));
         permissions.setPermission(PermissionTypes.OPEN_CONTAINERS, data._permissions?.openContainers !== undefined ? data._permissions.openContainers : defaultPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS));
+        permissions.setPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS, data._permissions?.interactWithItemDisplays !== undefined ? data._permissions.interactWithItemDisplays : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS));
         permissions.setPermission(PermissionTypes.EDIT_SIGNS, data._permissions?.editSigns !== undefined ? data._permissions.editSigns : defaultPermissions.getPermission(PermissionTypes.EDIT_SIGNS));
         return permissions;
     }

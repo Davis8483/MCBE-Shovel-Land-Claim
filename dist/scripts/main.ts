@@ -485,8 +485,16 @@ world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
                     notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:enter_claim");
                 }
 
+                // disallow player from interacting with item displays (armor stands) based on permissions
+                if (!claim.hasPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS, data.player) && data.target.typeId == "minecraft:armor_stand") {
+                    // cancel the action
+                    data.cancel = true;
+
+                    // notify player they don't have permissions
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:interact_with_item_displays");
+                }
                 // disallow player from interacting with entities based on permissions
-                if(!claim.hasPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data.player)) {
+                else if(!claim.hasPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data.player)) {
 
                     // cancel the action
                     data.cancel = true;
@@ -580,6 +588,16 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
 
                     // notify player they don't have permissions
                     notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:edit_signs");
+                }
+            }
+            // item display interaction permissions
+            else if (claim.isOverlap(data.block.location) && (data.block.typeId.includes("_shelf") || data.block.matches("minecraft:chiseled_bookshelf")) && !(data.player.isSneaking && data.itemStack)) {
+                if (!claim.hasPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS, data.player)){
+                    // cancel the action
+                    data.cancel = true;
+
+                    // notify player they don't have permissions
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:interact_with_item_displays");
                 }
             }
             // block placing/using items on blocks permissions
