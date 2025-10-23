@@ -45,6 +45,7 @@ chat.claim.permission:use_switches=§cYou're not allowed to use switches!§r
 chat.claim.permission:use_beds=§cYou're not allowed to use beds!§r
 chat.claim.permission:open_containers=§cYou're not allowed to open containers!§r
 chat.claim.permission:edit_signs=§cYou're not allowed to edit signs!§r
+chat.claim.permission:interact_with_item_displays=§cYou're not allowed to interact with item displays!§r
 chat.claim.fireballs=§cYou can't use fireballs in this claim!§r
 chat.claim:view=§cYou can only view a claim from the overworld!§r
 chat.claim:piston=§cYou can't use a piston from outside this claim!§r
@@ -190,6 +191,8 @@ ui.manage.permissions.tooltip:use_switches=Example: levers, buttons, etc. Pressu
 ui.manage.permissions:use_beds=Use Beds
 ui.manage.permissions:open_containers=Open Containers
 ui.manage.permissions.tooltip:open_containers=Example: chests, furnaces, etc.
+ui.manage.permissions:interact_with_item_displays=Interact With Item Displays
+ui.manage.permissions.tooltip:interact_with_item_displays=Includes shelves, chiseled bookshelves, and armor stands. Item frames are not supported :(
 ui.manage.permissions:edit_signs=Edit Signs
 ui.manage.permissions:use_tnt=Use Tnt
 
