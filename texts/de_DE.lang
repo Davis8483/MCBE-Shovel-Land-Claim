@@ -34,7 +34,7 @@ chat.point.resize:disallowed=§cSie müssen der Eigentümer sein, um die Größe
 
 chat.claim.permission:break_blocks=§cEs ist nicht erlaubt, Blöcke zu zerstören!§r
 chat.claim.permission:use_item_on_block=§cEs ist nicht gestattet, Gegenstände auf Blöcken zu verwenden!§r
-chat.claim.permission:use_tnt=§cDu darfst tnt nicht verwenden!§r
+chat.claim.permission:use_tnt=§cSie dürfen tnt nicht verwenden!§r
 chat.claim.permission:hurt_entities=§cEs ist dir nicht gestattet, Wesen zu verletzen!§r
 chat.claim.permission:enter_claim=§cSie dürfen diesen Anspruch nicht eingeben!§r
 chat.claim.permission:enter_claim_warning=§pSie befinden sich in der Nähe einer Schadensforderung, auf die Sie keinen Zugriff haben. Seien Sie vorsichtig!§r\nAnspruchsname:§5%s§r\nAnspruchsinhaber:§9%s§r
@@ -85,7 +85,7 @@ ui.op_disallowed_blocks.button:remove_block=Block entfernen
 
 ui.op_edit_disallowed_blocks:title=Bearbeiten Sie unzulässige Blöcke/Elemente
 ui.op_edit_disallowed_blocks.textbox:block_id=Typ-ID
-ui.op_edit_disallowed_blocks.textbox:block_id_placeholder=Bsp.: Minecraft:Stein
+ui.op_edit_disallowed_blocks.textbox:block_id_placeholder=Beispiel: Minecraft:Stein
 ui.op_edit_disallowed_blocks.dropdown:block_id=Typ-ID
 ui.op_edit_disallowed_blocks.error:must_not_be_empty=§cSie müssen eine Typ-ID angeben!§r
 ui.op_edit_disallowed_blocks.error:block_already_disallowed=§cDieser Block/Artikel ist bereits nicht zulässig!§r
@@ -221,7 +221,7 @@ ui.claim.new:submit=Anspruch erstellen
 
 ui.claim.resize:title=Anspruchsgröße ändern
 ui.claim.resize:body_1=Sind Sie sicher, dass Sie die Größe dieses Anspruchs ändern möchten?
-ui.claim.resize:body_2=Die Blöcke werden von Ihrem Guthaben addiert/subtrahiert.
+ui.claim.resize:body_2=Die Blöcke werden Ihrem Guthaben hinzugefügt bzw. davon abgezogen.
 ui.manage.resize:label:claim_blocks=§6Anspruchssperren§r
 ui.claim.resize.button:cancel=Stornieren
 ui.claim.resize.button:resize=§dAnspruchsgröße ändern§r
