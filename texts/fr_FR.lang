@@ -1,4 +1,4 @@
-pack.name=##TODO: Translate the following "Shovel Land Claim v1.0.5"
+pack.name=Shovel Land Claim v1.0.5
 pack.description=Bienvenue dans Shovel Land Claim ! Cet addon vous permet de protéger vos constructions contre le pillage et le vandalisme. Il fonctionne de manière similaire au mod Golden Shovel sur Java.
 
 item.slc:claim_shovel=Pelle de Claim
@@ -45,7 +45,7 @@ chat.claim.permission:use_switches=§cVous n'êtes pas autorisé à utiliser des
 chat.claim.permission:use_beds=§cVous n'êtes pas autorisé à utiliser des lits !§r
 chat.claim.permission:open_containers=§cVous n'êtes pas autorisé à ouvrir des conteneurs !§r
 chat.claim.permission:edit_signs=§cVous n'êtes pas autorisé à modifier des panneaux !§r
-chat.claim.permission:interact_with_item_displays=##TODO: Translate the following "§cYou're not allowed to interact with item displays!§r"
+chat.claim.permission:interact_with_item_displays=§cVous n'êtes pas autorisé à interagir avec les étalages d'objets !§r
 chat.claim.fireballs=§cVous ne pouvez pas utiliser de boules de feu dans ce claim !§r
 chat.claim:view=§cVous ne pouvez visualiser un claim que depuis l'Overworld !§r
 chat.claim:piston=§cVous ne pouvez pas utiliser un piston depuis l’extérieur de ce claim !§r
@@ -152,7 +152,7 @@ ui.addon_info.button:changelog=Voir le dernier changelog
 
 ui.manage:title=Gérer le claim
 ui.manage.body:no_claims=§oVous n’avez aucun claim...
-ui.manage.button:claim_mode_mobile=##TODO: Translate the following "§2New/Resize Mode >>§r"
+ui.manage.button:claim_mode_mobile=§2Nouveau/Mode Redimensionnement >>§r
 
 ui.manage.body:claim_start=Début du claim : §cX§r=%s §9Z§r=%s
 ui.manage.body:claim_end=Fin du claim : §cX§r=%s §9Z§r=%s
@@ -191,8 +191,8 @@ ui.manage.permissions.tooltip:use_switches=Exemple : leviers, boutons, etc. Les 
 ui.manage.permissions:use_beds=Utiliser les lits
 ui.manage.permissions:open_containers=Ouvrir les conteneurs
 ui.manage.permissions.tooltip:open_containers=Exemple : coffres, fours, etc.
-ui.manage.permissions:interact_with_item_displays=##TODO: Translate the following "Interact With Item Displays"
-ui.manage.permissions.tooltip:interact_with_item_displays=##TODO: Translate the following "Includes shelves, chiseled bookshelves, and armor stands. Item frames are not supported :("
+ui.manage.permissions:interact_with_item_displays=Interagir avec les étalages d'objets
+ui.manage.permissions.tooltip:interact_with_item_displays=Inclut les étagères, les bibliothèques sculptées et les porte-armures. Les cadres d'objets ne sont pas pris en charge :(
 ui.manage.permissions:edit_signs=Modifier les panneaux
 ui.manage.permissions:use_tnt=Utiliser la TNT
 
