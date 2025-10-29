@@ -142,7 +142,7 @@ ui.edit_global_permissions_intent.button:edit=Modifier les §l§9Permissions glo
 ui.addon_info:title=Infos de l’addon
 ui.addon_info:body.paragraph:1=§l§5Shovel§7 Land Claim§r\n§oCréé par nDavis§r
 ## if your translating this file, this is where you can credit yourself. Ex: \n§oTranslated to Spanish by John Doe§r
-ui.addon_info:translator_credit=§oTraduit en français par yo4l
+ui.addon_info:translator_credit=§oTraduit en français par yo4l & Yello
 ui.addon_info:body.paragraph:2=Cet addon a été créé comme projet passion durant mon temps libre, j’espère vraiment que vous l’apprécierez ! ^_^
 ui.addon_info:body.paragraph:3=Si vous avez des questions, suggestions ou problèmes, n’hésitez pas à me contacter sur GitHub ou Discord.
 ui.addon_info:body.paragraph:4=§l§9GitHub§r : https://github.com/Davis8483/MCBE-Shovel-Land-Claim
@@ -244,13 +244,13 @@ ui.claim.icons:weapons=Armes
 ui.claim.icons:flowers=Fleurs
 
 ui.changelog:title=Journal des modifications %s
-ui.changelog.label:1=##TODO: Translate the following "§9Welcome to v1.0.5! This update adds protection for the new shelves added in the Copper Age update, along with a manual Spanish translation!§r"
+ui.changelog.label:1=§9 Bienvenue à v1.0.5! Cette mise à jour a un protection pour les nouvelles étagères dans la mise à jour pour le jeu du nom de “Copper Age”, avec une traduction manuelle en espagnol!§r
 ui.changelog.header:changes=§eFonctionnalités/Modifications§r
-ui.changelog.label:2=##TODO: Translate the following "- Manual Spanish translation added, thanks to JakeJuegaMC! (If you would like to help translate this addon to other languages, please reach out on discord!)"
-ui.changelog.label:3=##TODO: Translate the following "- Updated texts on claim creation/resizing to be more clear on mobile."
-ui.changelog.label:4=##TODO: Translate the following "- Added the "Interact With Item Displays" permission to allow/disallow interaction with shelves, chiseled bookshelves, and armor stands. Item frames are still not supported due to techinical limitations."
+ui.changelog.label:2=- La mise à jour a une traduction manuelle en espagnol, grâce à JakeJuegaMC! (Si vous savez une autre langue et vous voulez à traduire la add-on, contactez moi dans Discord si vous plait!)
+ui.changelog.label:3=- Après la mise à jour, les textes pour créer ou redimensionner les déclarations sont plus clairs pour les joueurs sur les portables.
+ui.changelog.label:4=- La mise à jour a le droit d'accès de s’appelle “Interagir avec les étalages des objets.” Avec le droit d'accès, les joueurs peuvent interagir avec les étagères, les bibliothèques sculptées, et les porte-armures. Les cadres ne sont pas supportés parce que les limitations techniques.
 ui.changelog.header:bug_fixes=§bCorrections de bugs§r
-ui.changelog.label:5=##TODO: Translate the following "- Fixed an issue allowing blocks to be broken when in menu opening mode on mobile."
+ui.changelog.label:5=- La mise à jour a réparé une problème avec les joueurs cassent les blocs quand sur le menu sur les portables.
 ui.changelog.button:back=<< Menu principal
 
 ui.addon_setup:title=§5Shovel§r Land Claim - Configuration (%s/%s)
