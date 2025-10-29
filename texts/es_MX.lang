@@ -1,4 +1,4 @@
-pack.name=##TODO: Translate the following "Shovel Land Claim v1.0.5"
+pack.name=Pala Reclamadora de Tierras v1.0.5
 pack.description=¡Bienvenido a Shovel Land Claim! Este addon le permite proteger sus construcciones del grifeo y saqueo. Funciona de manera similar al Mod de Java Golden Shovel.
 
 item.slc:claim_shovel=§dPala Reclamadora
@@ -45,7 +45,7 @@ chat.claim.permission:use_switches=§c¡No tienes permitido usar interruptores!�
 chat.claim.permission:use_beds=§c¡No tienes permitido usar camas!§r
 chat.claim.permission:open_containers=§c¡No tienes permitido abrir contenedores!§r
 chat.claim.permission:edit_signs=§c¡No tienes permitido editar letreros!§r
-chat.claim.permission:interact_with_item_displays=##TODO: Translate the following "§cYou're not allowed to interact with item displays!§r"
+chat.claim.permission:interact_with_item_displays=§c¡No tienes permitido interactuar con exhibidores de items!§r
 chat.claim.fireballs=§c¡No puedes usar bolas de fuego en este reclamo!§r
 chat.claim:view=§c¡Solo puede ver un reclamo en el Overworld!§r
 chat.claim:piston=§c¡No puedes usar un pistón fuera de este reclamo!§r
@@ -62,7 +62,7 @@ ui.main:body.paragraph:1=¡Bienvenido a Reclamación de Tierras!
 ui.main:body.paragraph:2=§bCrea un reclamo§r rompiendo con la §dPala Reclamadora§r dos esquinas opuestas.
 ui.main:body.paragraph:3=§dRedimensiona un reclamo §rrompiendo cualquier esquina y especificando una nueva.
 ui.main:body.paragraph:4=§l§6Saldo Bloques de Reclamo§r:
-ui.main:body.paragraph:5=§oRecibirás§a %s §rmás§9 %s §rminutos.
+ui.main:body.paragraph:5=§oRecibirás§a %s §rmás en§9 %s §rminutos.
 ui.main.button:manage=Gestionar Reclamos
 ui.main.button:op_panel=Panel de Operador
 ui.main.button:global_player_permissions=§l§9Permisos Globales§r del Jugador
@@ -152,7 +152,7 @@ ui.addon_info.button:changelog=Ver Ultimo Historial de Cambios
 
 ui.manage:title=Gestionar Reclamo
 ui.manage.body:no_claims=§oNo tienes ningun reclamo...
-ui.manage.button:claim_mode_mobile=##TODO: Translate the following "§2New/Resize Mode >>§r"
+ui.manage.button:claim_mode_mobile=§2Nuevo/Modo Redimensionar >>§r
 
 ui.manage.body:claim_start=Inicio del Reclamo: §cX§r=%s §9Z§r=%s
 ui.manage.body:claim_end=Fin del Reclamo: §cX§r=%s §9Z§r=%s
@@ -191,8 +191,8 @@ ui.manage.permissions.tooltip:use_switches=Ejemplo: palancas, \nbotones, etc. \n
 ui.manage.permissions:use_beds=Usar Camas
 ui.manage.permissions:open_containers=Abrir Contenedores
 ui.manage.permissions.tooltip:open_containers=Ejemplo: cofres, hornos, etc.
-ui.manage.permissions:interact_with_item_displays=##TODO: Translate the following "Interact With Item Displays"
-ui.manage.permissions.tooltip:interact_with_item_displays=##TODO: Translate the following "Includes shelves, chiseled bookshelves, and armor stands. Item frames are not supported :("
+ui.manage.permissions:interact_with_item_displays=Interactuar con Exhibidores de Items
+ui.manage.permissions.tooltip:interact_with_item_displays=Incluye estantes, \nestanterías cinceladas \ny soporte para armaduras. \nLos Marcos no \nson compatibles :(
 ui.manage.permissions:edit_signs=Editar Letreros
 ui.manage.permissions:use_tnt=Usar TNT
 
@@ -244,13 +244,13 @@ ui.claim.icons:weapons=Armas
 ui.claim.icons:flowers=Flores
 
 ui.changelog:title=%sHistorial de Cambios
-ui.changelog.label:1=##TODO: Translate the following "§9Welcome to v1.0.5! This update adds protection for the new shelves added in the Copper Age update, along with a manual Spanish translation!§r"
+ui.changelog.label:1=§9Bienvenido a la v1.0.5! Esta actualización agrega protección para los nuevos estantes agregados en la actualización de la Era del Cobre, ¡junto con una traducción manual al español!§r
 ui.changelog.header:changes=§eCaracterísticas/Cambios§r
-ui.changelog.label:2=##TODO: Translate the following "- Manual Spanish translation added, thanks to JakeJuegaMC! (If you would like to help translate this addon to other languages, please reach out on discord!)"
-ui.changelog.label:3=##TODO: Translate the following "- Updated texts on claim creation/resizing to be more clear on mobile."
-ui.changelog.label:4=##TODO: Translate the following "- Added the "Interact With Item Displays" permission to allow/disallow interaction with shelves, chiseled bookshelves, and armor stands. Item frames are still not supported due to techinical limitations."
+ui.changelog.label:2=- Añadida traducción manual al español, ¡gracias a JakeJuegaMC! (Si deseas ayudar a traducir este addon a otros idiomas, comunícate en Discord!)
+ui.changelog.label:3=- Actualizados los textos en la creación/redimensión de reclamos para que sean más claros en dispositivos móviles.
+ui.changelog.label:4=- Añadido el permiso "Interactuar con Exhibidores de Items" para habilitar/deshabilitar la interacción con estantes, estanterías cinceladas y soportes para armaduras. Los marcos de ítems aún no son compatibles debido a limitaciones técnicas.
 ui.changelog.header:bug_fixes=§bCorrecciones de Errores§r
-ui.changelog.label:5=##TODO: Translate the following "- Fixed an issue allowing blocks to be broken when in menu opening mode on mobile."
+ui.changelog.label:5=- Arreglado un problema que permitía romper bloques cuando se estaba en el modo de apertura de menú en dispositivos móviles.
 ui.changelog.button:back=<< Menú Principal
 
 ui.addon_setup:title=§dPala Reclamadora§r de Tierras - Configuración (%s/%s)
