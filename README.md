@@ -38,8 +38,8 @@ An Operator Panel is included for managing all aspects of this addon. World oper
 
 ## Supported Languages
 - English
-- French - Translation by `yo4l`
-- Spanish - Auto-translated using Google Services
+- French - Translation by `yo4l` & `Yello`
+- Spanish - Translation by `JakeJuegaMC`
 - German - Auto-translated using Google Services
 
 More to come soon, the auto translation script I wrote makes this super easy!!!<br>
