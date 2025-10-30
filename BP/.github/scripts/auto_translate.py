@@ -16,8 +16,9 @@ DESTINATION_FOLDER = os.path.join(PROJECT_FOLDER, settings['destination'])
 if not DESTINATION_FOLDER.endswith('/'):
     DESTINATION_FOLDER += '/'
 
-TARGET_LANGS_AUTO = settings['target_langs_auto']
-TARGET_LANGS_MANUAL = settings['target_langs_manual']
+# Ensure language codes are strings (safe if YAML contains numbers or other types)
+TARGET_LANGS_AUTO = [str(l) for l in settings.get('target_langs_auto', [])]
+TARGET_LANGS_MANUAL = [str(l) for l in settings.get('target_langs_manual', [])]
 
 
 # Split value into chunks: formatting codes and text
@@ -125,7 +126,7 @@ async def main():
         in_lines = parse_lang_file(SOURCE_FILE)
         cached_lines = parse_lang_file(CACHED_FILE)
 
-        existing_file_path = os.path.join(DESTINATION_FOLDER, f'{lang}_{lang.upper()}.lang')
+        existing_file_path = os.path.join(DESTINATION_FOLDER, f'{lang}.lang')
         existing_lines = []
         if os.path.exists(existing_file_path):
             existing_lines = parse_lang_file(existing_file_path)
@@ -169,7 +170,7 @@ async def main():
                 # Preserve all non-entry lines exactly as in the source
                 out_lines.append(in_item)
 
-        out_path = f"{DESTINATION_FOLDER}{f'{lang}_{lang.upper()}'}.lang"
+        out_path = f"{DESTINATION_FOLDER}{f'{lang}'}.lang"
         write_lang_file(out_path, out_lines)
         print(f"Prepared manual translation for {lang}: {out_path}")
 
@@ -179,7 +180,7 @@ async def main():
     # MARK: Auto Translate
     for lang in TARGET_LANGS_AUTO:
         in_lines = parse_lang_file(SOURCE_FILE)
-        in_lines = insert_translator_credit(in_lines, LANGUAGES[lang].capitalize())
+        in_lines = insert_translator_credit(in_lines, LANGUAGES[lang.split('_')[0]].capitalize())
 
         # Prepare chunks for translation
         entry_chunks = []
@@ -198,7 +199,7 @@ async def main():
         all_texts = [text for texts in entry_texts for text in texts]
         if all_texts:
             async with Translator() as translator:
-                translations = await translator.translate(all_texts, dest=lang)
+                translations = await translator.translate(all_texts, dest=lang.split('_')[0])
             translated_texts = [t.text for t in translations]
         else:
             translated_texts = []
@@ -217,7 +218,7 @@ async def main():
             }
             idx += num_texts
 
-        out_path = f"{DESTINATION_FOLDER}{f'{lang}_{lang.upper()}'}.lang"
+        out_path = f"{DESTINATION_FOLDER}{f'{lang}'}.lang"
         write_lang_file(out_path, out_lines)
         print(f"Translated to {lang}: {out_path}")
 

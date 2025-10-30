@@ -1,4 +1,4 @@
-pack.name=Shovel Land Claim v1.0.4
+pack.name=Shovel Land Claim v1.0.5
 pack.description=Welcome to Shovel Land Claim! This addon allows you to protect your builds from griefing and looting. It works similarly to the Java Golden Shovel mod.
 
 item.slc:claim_shovel=Claim Shovel
@@ -45,6 +45,7 @@ chat.claim.permission:use_switches=§cYou're not allowed to use switches!§r
 chat.claim.permission:use_beds=§cYou're not allowed to use beds!§r
 chat.claim.permission:open_containers=§cYou're not allowed to open containers!§r
 chat.claim.permission:edit_signs=§cYou're not allowed to edit signs!§r
+chat.claim.permission:interact_with_item_displays=§cYou're not allowed to interact with item displays!§r
 chat.claim.fireballs=§cYou can't use fireballs in this claim!§r
 chat.claim:view=§cYou can only view a claim from the overworld!§r
 chat.claim:piston=§cYou can't use a piston from outside this claim!§r
@@ -151,7 +152,7 @@ ui.addon_info.button:changelog=View Latest Changelog
 
 ui.manage:title=Manage Claim
 ui.manage.body:no_claims=§oYou don't have any claims...
-ui.manage.button:new_claim=§q§lNew Claim +§r
+ui.manage.button:claim_mode_mobile=§2New/Resize Mode >>§r
 
 ui.manage.body:claim_start=Claim Start: §cX§r=%s §9Z§r=%s
 ui.manage.body:claim_end=Claim End: §cX§r=%s §9Z§r=%s
@@ -190,6 +191,8 @@ ui.manage.permissions.tooltip:use_switches=Example: levers, buttons, etc. Pressu
 ui.manage.permissions:use_beds=Use Beds
 ui.manage.permissions:open_containers=Open Containers
 ui.manage.permissions.tooltip:open_containers=Example: chests, furnaces, etc.
+ui.manage.permissions:interact_with_item_displays=Interact With Item Displays
+ui.manage.permissions.tooltip:interact_with_item_displays=Includes shelves, chiseled bookshelves, and armor stands. Item frames are not supported :(
 ui.manage.permissions:edit_signs=Edit Signs
 ui.manage.permissions:use_tnt=Use Tnt
 
@@ -241,25 +244,13 @@ ui.claim.icons:weapons=Weapons
 ui.claim.icons:flowers=Flowers
 
 ui.changelog:title=%s Changelog
-ui.changelog.label:1=§9Welcome to v1.0.4! This update brings even more stability improvements and adds a few new features that you all asked for in the discord!
+ui.changelog.label:1=§9Welcome to v1.0.5! This update adds protection for the new shelves added in the Copper Age update, along with a manual Spanish translation!§r
 ui.changelog.header:changes=§eFeatures/Changes§r
-ui.changelog.label:2=- Gamerule changes are now optional; a setup ui will ask.
-ui.changelog.label:3=- The "shovel.op" tag is no longer needed, all world operators have access to the op panel now.
-ui.changelog.label:4=- Added first point selection particles.
-ui.changelog.label:5=- Claims you can't enter will now render with §cred particles§r.
-ui.changelog.label:6=- Improved mobile controls.
-ui.changelog.label:7=- Split "Hurt Entities" permision into "Hurt Mobs", "Hurt Monsters", and "Hurt Players"
+ui.changelog.label:2=- Manual Spanish translation added, thanks to JakeJuegaMC! (If you would like to help translate this addon to other languages, please reach out on discord!)
+ui.changelog.label:3=- Updated texts on claim creation/resizing to be more clear on mobile.
+ui.changelog.label:4=- Added the "Interact With Item Displays" permission to allow/disallow interaction with shelves, chiseled bookshelves, and armor stands. Item frames are still not supported due to techinical limitations.
 ui.changelog.header:bug_fixes=§bBug Fixes§r
-ui.changelog.label:8=- Crouching while not holding an item no longer bypasses claim permissions.
-ui.changelog.label:9=- Lava chicken farms no longer cause the server to hang. :)
-ui.changelog.label:10=- Improved form error message handling.
-ui.changelog.label:11=- Fixed UI navigation handling.
-ui.changelog.label:12=- Ridden entity is no longer dismounted when entering a disallowed claim.
-ui.changelog.label:13=- Resolved several console errors.
-ui.changelog.label:14=- Entity health is no longer reset when taking disallowed damage.
-ui.changelog.label:15=- Fixed monsters not burning in sunlight within claims.
-ui.changelog.label:16=- Fixed menu not re-appearing after viewing a claim.
-ui.changelog.label:17=- Fixed various other issues with entity protection.
+ui.changelog.label:5=- Fixed an issue allowing blocks to be broken when in menu opening mode on mobile.
 ui.changelog.button:back=<< Main Menu
 
 ui.addon_setup:title=§5Shovel§r Land Claim - Setup (%s/%s)

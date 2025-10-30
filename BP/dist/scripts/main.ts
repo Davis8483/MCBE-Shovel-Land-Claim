@@ -134,192 +134,195 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
     const playerData = PlayerData.fromId(data.player.id);
     const notifManager = NotificationManagerStack.getById(data.player.id);
 
-    // if player is on mobile, make sure the shovel is in claim creation mode
-    if ((data.itemStack?.typeId == SHOVEL_ID) && ((playerData.mobileMode == null) || (playerData.mobileMode == ShovelMobileMode.CLAIM))) {
+    if (data.itemStack?.typeId == SHOVEL_ID) {
         // stop the shovel from breaking the block
-        data.cancel = true
+        data.cancel = true;
 
-        if (data.dimension == world.getDimension("overworld")) {
+        // if player is on mobile, make sure the shovel is in claim creation mode
+        if (!((playerData.mobileMode == null) || (playerData.mobileMode == ShovelMobileMode.CLAIM))) {
+            return;
+        }
 
-            // only allow if cooldown is over
-            if (data.player.getItemCooldown("land_shovel_use") == 0) {
+        // player is not in the overworld, warn them that they are not allowed to create a claim here
+        if (!(data.dimension == world.getDimension("overworld"))) {
+            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.shovel:dimension_warning");
 
-                // start shovel cooldown of 1 sec
-                system.run(() => {
-                    data.player.startItemCooldown("land_shovel_use", 20);
-                });
+            return;
+        }
 
-                var isResize = false;
+        // only allow if cooldown is over
+        if (data.player.getItemCooldown("land_shovel_use") == 0) {
 
-                if (!data.player.isSneaking) {
-                    playerData.setResizingClaimName("");
-                    playerData.setFirstPoint(data.block.location);
+            // start shovel cooldown of 1 sec
+            system.run(() => {
+                data.player.startItemCooldown("land_shovel_use", 20);
+            });
 
-                    runInAllClaims((claim) => {
+            var isResize = false;
 
-                        // user defined start and end points of the claim
-                        var s = claim.start;
-                        var e = claim.end;
+            if (!data.player.isSneaking) {
+                playerData.setResizingClaimName("");
+                playerData.setFirstPoint(data.block.location);
 
-                        // all 4 points of the claim
-                        var points = [
-                            [[s.x, s.z], [s.x, e.z]],
-                            [[e.x, s.z], [e.x, e.z]]
-                        ];
+                runInAllClaims((claim) => {
 
-                        var aIndex = null;
-                        var bIndex = null;
+                    // user defined start and end points of the claim
+                    var s = claim.start;
+                    var e = claim.end;
 
-                        // find the index of the broken block
-                        for (var a = 0; a < points.length; a++) {
-                            for (var b = 0; b < points[a].length; b++) {
-                                if (points[a][b][0] == data.block.x && points[a][b][1] == data.block.z) {
-                                    aIndex = a;
-                                    bIndex = b;
-                                }
+                    // all 4 points of the claim
+                    var points = [
+                        [[s.x, s.z], [s.x, e.z]],
+                        [[e.x, s.z], [e.x, e.z]]
+                    ];
+
+                    var aIndex = null;
+                    var bIndex = null;
+
+                    // find the index of the broken block
+                    for (var a = 0; a < points.length; a++) {
+                        for (var b = 0; b < points[a].length; b++) {
+                            if (points[a][b][0] == data.block.x && points[a][b][1] == data.block.z) {
+                                aIndex = a;
+                                bIndex = b;
                             }
                         }
+                    }
 
-                        // if broken block is on a claim corner
-                        if (aIndex != null) {
-                            isResize = true;
-                            if (claim.getOwnerData().id == data.player.id) {
-                                playerData.setOppositeCorner({ "x": points[aIndex ^ 1][bIndex ^ 1][0], "y": data.block.y, "z": points[aIndex ^ 1][bIndex ^ 1][1] });
-                                playerData.setResizingClaimName(claim.name);
+                    // if broken block is on a claim corner
+                    if (aIndex != null) {
+                        isResize = true;
+                        if (claim.getOwnerData().id == data.player.id) {
+                            playerData.setOppositeCorner({ "x": points[aIndex ^ 1][bIndex ^ 1][0], "y": data.block.y, "z": points[aIndex ^ 1][bIndex ^ 1][1] });
+                            playerData.setResizingClaimName(claim.name);
 
-                                notifManager.send(data.player, AddonSounds.Shovel.RESIZE, undefined, "chat.point.resize:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
+                            notifManager.send(data.player, AddonSounds.Shovel.RESIZE, undefined, "chat.point.resize:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
 
-                            } else {
-                                notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.point.resize:disallowed");
-                            }
+                        } else {
+                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.point.resize:disallowed");
+                        }
+                    }
+                });
+
+                if (!isResize) {
+                    notifManager.send(data.player, AddonSounds.Shovel.SELECT, undefined, "chat.point.new:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
+                }
+            }
+            // if player is crouching
+            else {
+                var secondPoint = { ...data.block.location }; // Ensure a new object is created
+                var claimIntersectingClaim = false;
+                var playerIntersectingClaim = false;
+
+                // if player has not set the first point yet
+                if (playerData.firstPoint == null) {
+                    // notify and don't continue with claim creation
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:point_not_set");
+                }
+                // if claim is resized
+                else if (playerData.resizingClaimName.length > 0) {
+
+                    // get the claim object that is being resized
+                    var resizingClaim = playerData.getClaim(playerData.resizingClaimName);
+
+                    const oldClaimWidth = Math.abs(resizingClaim.start.x - resizingClaim.end.x) + 1;
+                    const oldClaimLength = Math.abs(resizingClaim.start.z - resizingClaim.end.z) + 1;
+
+                    const newClaimWidth = Math.abs(playerData.oppositeCorner.x - secondPoint.x) + 1;
+                    const newClaimLength = Math.abs(playerData.oppositeCorner.z - secondPoint.z) + 1;
+
+                    const blockDifference = (newClaimLength * newClaimWidth) - (oldClaimLength * oldClaimWidth);
+
+                    // make sure new claim isn't intersecting others not counting itself
+                    runInAllClaims((claim) => {
+                        if (claim.isOverlap(playerData.oppositeCorner, secondPoint) && ((claim.getOwnerData().id != data.player.id) || (claim.name != playerData.resizingClaimName))) {
+                            claimIntersectingClaim = true;
                         }
                     });
 
-                    if (!isResize) {
-                        notifManager.send(data.player, AddonSounds.Shovel.SELECT, undefined, "chat.point.new:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
-                    }
-                }
-                // if player is crouching
-                else {
-                    var secondPoint = { ...data.block.location }; // Ensure a new object is created
-                    var claimIntersectingClaim = false;
-                    var playerIntersectingClaim = false;
-
-                    // if player has not set the first point yet
-                    if (playerData.firstPoint == null) {
-                        // notify and don't continue with claim creation
-                        notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:point_not_set");
-                    }
-                    // if claim is resized
-                    else if (playerData.resizingClaimName.length > 0) {
-
-                        // get the claim object that is being resized
-                        var resizingClaim = playerData.getClaim(playerData.resizingClaimName);
-
-                        const oldClaimWidth = Math.abs(resizingClaim.start.x - resizingClaim.end.x) + 1;
-                        const oldClaimLength = Math.abs(resizingClaim.start.z - resizingClaim.end.z) + 1;
-
-                        const newClaimWidth = Math.abs(playerData.oppositeCorner.x - secondPoint.x) + 1;
-                        const newClaimLength = Math.abs(playerData.oppositeCorner.z - secondPoint.z) + 1;
-
-                        const blockDifference = (newClaimLength * newClaimWidth) - (oldClaimLength * oldClaimWidth);
-
-                        // make sure new claim isn't intersecting others not counting itself
-                        runInAllClaims((claim) => {
-                            if (claim.isOverlap(playerData.oppositeCorner, secondPoint) && ((claim.getOwnerData().id != data.player.id) || (claim.name != playerData.resizingClaimName))) {
-                                claimIntersectingClaim = true;
-                            }
-                        });
-
-                        // make sure another player isn't in the area
-                        for (var p of world.getAllPlayers()) {
-                            // we are creating a claim object just to use the isOverlap utility, this is not saved to the database
-                            if (new Claim("", playerData.oppositeCorner, secondPoint, "").isOverlap(p.location) && (p.id != data.player.id)) {
-                                playerIntersectingClaim = true;
-                            }
-                        }
-
-                        // intersecting claim warning message, cancel resize
-                        if (claimIntersectingClaim) {
-                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:claim_intersecting");
-                        }
-                        // player is in the way warning message, cancel resize
-                        else if (playerIntersectingClaim) {
-                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:player_intersecting");
-                        }
-                        // claim isn't wide enough warning message, cancel resize
-                        else if (newClaimWidth < settings.claimMinimumWidth || newClaimLength < settings.claimMinimumWidth) {
-                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:width", settings.claimMinimumWidth.toString());
-                        }
-                        // not enough claim blocks warning message, cancel resize
-                        else if ((playerData.claimBlocks.behavior != ClaimBlocksBehavior.UNLIMITED) && (playerData.claimBlocks.amount < blockDifference)) {
-                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:blocks_resize", ((blockDifference) - playerData.claimBlocks.amount).toString());
-                        }
-                        // all requirements met, open the claim resizing ui
-                        else {
-                            system.run(() => {
-                                playSound(data.player, AddonSounds.Shovel.SELECT);
-                                new ShovelUI(data.player, notifManager).resizeClaim(resizingClaim, playerData.oppositeCorner, secondPoint);
-                            });
+                    // make sure another player isn't in the area
+                    for (var p of world.getAllPlayers()) {
+                        // we are creating a claim object just to use the isOverlap utility, this is not saved to the database
+                        if (new Claim("", playerData.oppositeCorner, secondPoint, "").isOverlap(p.location) && (p.id != data.player.id)) {
+                            playerIntersectingClaim = true;
                         }
                     }
-                    // not resizing, create a new claim
+
+                    // intersecting claim warning message, cancel resize
+                    if (claimIntersectingClaim) {
+                        notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:claim_intersecting");
+                    }
+                    // player is in the way warning message, cancel resize
+                    else if (playerIntersectingClaim) {
+                        notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:player_intersecting");
+                    }
+                    // claim isn't wide enough warning message, cancel resize
+                    else if (newClaimWidth < settings.claimMinimumWidth || newClaimLength < settings.claimMinimumWidth) {
+                        notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:width", settings.claimMinimumWidth.toString());
+                    }
+                    // not enough claim blocks warning message, cancel resize
+                    else if ((playerData.claimBlocks.behavior != ClaimBlocksBehavior.UNLIMITED) && (playerData.claimBlocks.amount < blockDifference)) {
+                        notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:blocks_resize", ((blockDifference) - playerData.claimBlocks.amount).toString());
+                    }
+                    // all requirements met, open the claim resizing ui
                     else {
-
-                        const claimWidth = Math.abs(playerData.firstPoint.x - secondPoint.x) + 1;
-                        const claimLength = Math.abs(playerData.firstPoint.z - secondPoint.z) + 1;
-
-                        runInAllClaims((claim) => {
-                            // make sure new claim isn't intersecting others
-                            if (claim.isOverlap(playerData.firstPoint, secondPoint)) {
-                                claimIntersectingClaim = true;
-                            }
+                        system.run(() => {
+                            playSound(data.player, AddonSounds.Shovel.SELECT);
+                            new ShovelUI(data.player, notifManager).resizeClaim(resizingClaim, playerData.oppositeCorner, secondPoint);
                         });
+                    }
+                }
+                // not resizing, create a new claim
+                else {
 
-                        // make sure another player isn't in the area
-                        for (var p of world.getAllPlayers()) {
-                            // we are creating a claim object just to use the isOverlap utility, this is not saved to the database
-                            if (new Claim("", playerData.firstPoint, secondPoint, "").isOverlap(p.location) && (p.id != data.player.id)) {
-                                playerIntersectingClaim = true;
-                            }
-                        }
+                    const claimWidth = Math.abs(playerData.firstPoint.x - secondPoint.x) + 1;
+                    const claimLength = Math.abs(playerData.firstPoint.z - secondPoint.z) + 1;
 
-                        // intersecting claim warning message, cancel creation
-                        if (claimIntersectingClaim) {
-                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:claim_intersecting");
+                    runInAllClaims((claim) => {
+                        // make sure new claim isn't intersecting others
+                        if (claim.isOverlap(playerData.firstPoint, secondPoint)) {
+                            claimIntersectingClaim = true;
                         }
-                        // player is in the way warning message, cancel creation
-                        else if (playerIntersectingClaim) {
-                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:player_intersecting");
-                        }
-                        // claim is not wide enough warning message, cancel creation
-                        else if (claimWidth < settings.claimMinimumWidth || claimLength < settings.claimMinimumWidth) {
-                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:width", settings.claimMinimumWidth.toString());
-                        }
-                        // not enough claim blocks warning message, cancel creation
-                        else if ((playerData.claimBlocks.behavior != ClaimBlocksBehavior.UNLIMITED) && (playerData.claimBlocks.amount < (claimWidth * claimLength))) {
-                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:blocks_new", ((claimWidth * claimLength) - playerData.claimBlocks.amount).toString());
-                        }
-                        // check if this new claim doesn't exceed the players max number of claims
-                        else if ((settings.maxClaimAmount > 0) && (playerData.claims.length >= settings.maxClaimAmount)) {
-                            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:max_claims", playerData.claims.length.toString());
-                        }
-                        // all requirements are met, open the claim creation ui
-                        else {
-                            system.run(() => {
-                                playSound(data.player, AddonSounds.Shovel.SELECT);
-                                new ShovelUI(data.player, notifManager).newClaim(playerData.firstPoint, secondPoint);
-                            });
+                    });
+
+                    // make sure another player isn't in the area
+                    for (var p of world.getAllPlayers()) {
+                        // we are creating a claim object just to use the isOverlap utility, this is not saved to the database
+                        if (new Claim("", playerData.firstPoint, secondPoint, "").isOverlap(p.location) && (p.id != data.player.id)) {
+                            playerIntersectingClaim = true;
                         }
                     }
 
+                    // intersecting claim warning message, cancel creation
+                    if (claimIntersectingClaim) {
+                        notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:claim_intersecting");
+                    }
+                    // player is in the way warning message, cancel creation
+                    else if (playerIntersectingClaim) {
+                        notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:player_intersecting");
+                    }
+                    // claim is not wide enough warning message, cancel creation
+                    else if (claimWidth < settings.claimMinimumWidth || claimLength < settings.claimMinimumWidth) {
+                        notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:width", settings.claimMinimumWidth.toString());
+                    }
+                    // not enough claim blocks warning message, cancel creation
+                    else if ((playerData.claimBlocks.behavior != ClaimBlocksBehavior.UNLIMITED) && (playerData.claimBlocks.amount < (claimWidth * claimLength))) {
+                        notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:blocks_new", ((claimWidth * claimLength) - playerData.claimBlocks.amount).toString());
+                    }
+                    // check if this new claim doesn't exceed the players max number of claims
+                    else if ((settings.maxClaimAmount > 0) && (playerData.claims.length >= settings.maxClaimAmount)) {
+                        notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:max_claims", playerData.claims.length.toString());
+                    }
+                    // all requirements are met, open the claim creation ui
+                    else {
+                        system.run(() => {
+                            playSound(data.player, AddonSounds.Shovel.SELECT);
+                            new ShovelUI(data.player, notifManager).newClaim(playerData.firstPoint, secondPoint);
+                        });
+                    }
                 }
-            }
 
-        }
-        // player is not in the overworld, warn them that they are not allowed to create a claim here
-        else {
-            notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.shovel:dimension_warning");
+            }
         }
 
     }
@@ -482,8 +485,16 @@ world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
                     notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:enter_claim");
                 }
 
+                // disallow player from interacting with item displays (armor stands) based on permissions
+                if (!claim.hasPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS, data.player) && data.target.typeId == "minecraft:armor_stand") {
+                    // cancel the action
+                    data.cancel = true;
+
+                    // notify player they don't have permissions
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:interact_with_item_displays");
+                }
                 // disallow player from interacting with entities based on permissions
-                if(!claim.hasPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data.player)) {
+                else if(!claim.hasPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data.player)) {
 
                     // cancel the action
                     data.cancel = true;
@@ -577,6 +588,16 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
 
                     // notify player they don't have permissions
                     notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:edit_signs");
+                }
+            }
+            // item display interaction permissions
+            else if (claim.isOverlap(data.block.location) && (data.block.typeId.includes("_shelf") || data.block.matches("minecraft:chiseled_bookshelf")) && !(data.player.isSneaking && data.itemStack)) {
+                if (!claim.hasPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS, data.player)){
+                    // cancel the action
+                    data.cancel = true;
+
+                    // notify player they don't have permissions
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:interact_with_item_displays");
                 }
             }
             // block placing/using items on blocks permissions

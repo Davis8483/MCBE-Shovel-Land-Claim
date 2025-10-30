@@ -1,4 +1,4 @@
-pack.name=Shovel Land Claim v1.0.4
+pack.name=Shovel Land Claim v1.0.5
 pack.description=Bienvenue dans Shovel Land Claim ! Cet addon vous permet de protéger vos constructions contre le pillage et le vandalisme. Il fonctionne de manière similaire au mod Golden Shovel sur Java.
 
 item.slc:claim_shovel=Pelle de Claim
@@ -45,6 +45,7 @@ chat.claim.permission:use_switches=§cVous n'êtes pas autorisé à utiliser des
 chat.claim.permission:use_beds=§cVous n'êtes pas autorisé à utiliser des lits !§r
 chat.claim.permission:open_containers=§cVous n'êtes pas autorisé à ouvrir des conteneurs !§r
 chat.claim.permission:edit_signs=§cVous n'êtes pas autorisé à modifier des panneaux !§r
+chat.claim.permission:interact_with_item_displays=§cVous n'êtes pas autorisé à interagir avec les étalages d'objets !§r
 chat.claim.fireballs=§cVous ne pouvez pas utiliser de boules de feu dans ce claim !§r
 chat.claim:view=§cVous ne pouvez visualiser un claim que depuis l'Overworld !§r
 chat.claim:piston=§cVous ne pouvez pas utiliser un piston depuis l’extérieur de ce claim !§r
@@ -141,7 +142,7 @@ ui.edit_global_permissions_intent.button:edit=Modifier les §l§9Permissions glo
 ui.addon_info:title=Infos de l’addon
 ui.addon_info:body.paragraph:1=§l§5Shovel§7 Land Claim§r\n§oCréé par nDavis§r
 ## if your translating this file, this is where you can credit yourself. Ex: \n§oTranslated to Spanish by John Doe§r
-ui.addon_info:translator_credit=§oTraduit en français par yo4l
+ui.addon_info:translator_credit=§oTraduit en français par yo4l & Yello
 ui.addon_info:body.paragraph:2=Cet addon a été créé comme projet passion durant mon temps libre, j’espère vraiment que vous l’apprécierez ! ^_^
 ui.addon_info:body.paragraph:3=Si vous avez des questions, suggestions ou problèmes, n’hésitez pas à me contacter sur GitHub ou Discord.
 ui.addon_info:body.paragraph:4=§l§9GitHub§r : https://github.com/Davis8483/MCBE-Shovel-Land-Claim
@@ -151,7 +152,7 @@ ui.addon_info.button:changelog=Voir le dernier changelog
 
 ui.manage:title=Gérer le claim
 ui.manage.body:no_claims=§oVous n’avez aucun claim...
-ui.manage.button:new_claim=§q§lNouveau claim +§r
+ui.manage.button:claim_mode_mobile=§2Nouveau/Mode Redimensionnement >>§r
 
 ui.manage.body:claim_start=Début du claim : §cX§r=%s §9Z§r=%s
 ui.manage.body:claim_end=Fin du claim : §cX§r=%s §9Z§r=%s
@@ -190,6 +191,8 @@ ui.manage.permissions.tooltip:use_switches=Exemple : leviers, boutons, etc. Les 
 ui.manage.permissions:use_beds=Utiliser les lits
 ui.manage.permissions:open_containers=Ouvrir les conteneurs
 ui.manage.permissions.tooltip:open_containers=Exemple : coffres, fours, etc.
+ui.manage.permissions:interact_with_item_displays=Interagir avec les étalages d'objets
+ui.manage.permissions.tooltip:interact_with_item_displays=Inclut les étagères, les bibliothèques sculptées et les porte-armures. Les cadres d'objets ne sont pas pris en charge :(
 ui.manage.permissions:edit_signs=Modifier les panneaux
 ui.manage.permissions:use_tnt=Utiliser la TNT
 
@@ -241,25 +244,13 @@ ui.claim.icons:weapons=Armes
 ui.claim.icons:flowers=Fleurs
 
 ui.changelog:title=Journal des modifications %s
-ui.changelog.label:1=§9Bienvenue dans la v1.0.4 ! Cette mise à jour apporte encore plus de stabilité et ajoute quelques nouvelles fonctionnalités que vous avez demandées sur Discord !
+ui.changelog.label:1=§9 Bienvenue à v1.0.5! Cette mise à jour a un protection pour les nouvelles étagères dans la mise à jour pour le jeu du nom de “Copper Age”, avec une traduction manuelle en espagnol!§r
 ui.changelog.header:changes=§eFonctionnalités/Modifications§r
-ui.changelog.label:2=- Les modifications de gamerules sont désormais facultatives ; une interface de configuration vous le demandera.
-ui.changelog.label:3=- Le tag "shovel.op" n’est plus nécessaire, tous les opérateurs du monde ont désormais accès au panneau d’opérateur.
-ui.changelog.label:4=- Ajout de particules lors de la sélection du premier point.
-ui.changelog.label:5=- Les claims auxquels vous ne pouvez pas accéder s’affichent désormais avec des §cparticules rouges§r.
-ui.changelog.label:6=- Amélioration des contrôles mobiles.
-ui.changelog.label:7=- La permission "Blesser les entités" a été divisée en "Blesser les créatures", "Blesser les monstres" et "Blesser les joueurs".
+ui.changelog.label:2=- La mise à jour a une traduction manuelle en espagnol, grâce à JakeJuegaMC! (Si vous savez une autre langue et vous voulez à traduire la add-on, contactez moi dans Discord si vous plait!)
+ui.changelog.label:3=- Après la mise à jour, les textes pour créer ou redimensionner les déclarations sont plus clairs pour les joueurs sur les portables.
+ui.changelog.label:4=- La mise à jour a le droit d'accès de s’appelle “Interagir avec les étalages des objets.” Avec le droit d'accès, les joueurs peuvent interagir avec les étagères, les bibliothèques sculptées, et les porte-armures. Les cadres ne sont pas supportés parce que les limitations techniques.
 ui.changelog.header:bug_fixes=§bCorrections de bugs§r
-ui.changelog.label:8=- S’accroupir sans tenir d’objet ne contourne plus les permissions de claim.
-ui.changelog.label:9=- Les fermes à poulets en lave ne font plus planter le serveur. :)
-ui.changelog.label:10=- Amélioration de la gestion des messages d’erreur dans les formulaires.
-ui.changelog.label:11=- Correction de la navigation dans l’interface.
-ui.changelog.label:12=- L’entité montée n’est plus désarçonnée en entrant dans un claim interdit.
-ui.changelog.label:13=- Résolution de plusieurs erreurs dans la console.
-ui.changelog.label:14=- La santé des entités n’est plus réinitialisée lors de dégâts interdits.
-ui.changelog.label:15=- Les monstres brûlent désormais correctement au soleil dans les claims.
-ui.changelog.label:16=- Correction du menu qui ne réapparaissait pas après avoir consulté un claim.
-ui.changelog.label:17=- Correction de divers autres problèmes liés à la protection des entités.
+ui.changelog.label:5=- La mise à jour a réparé une problème avec les joueurs cassent les blocs quand sur le menu sur les portables.
 ui.changelog.button:back=<< Menu principal
 
 ui.addon_setup:title=§5Shovel§r Land Claim - Configuration (%s/%s)

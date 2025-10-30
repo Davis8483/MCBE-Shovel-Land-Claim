@@ -510,7 +510,7 @@ export class ShovelUI {
 
         // conditionaly show the new claim button for mobile players only
         if (this.player.clientSystemInfo.platformType == PlatformType.Mobile) {
-            form.button({"translate": "ui.manage.button:new_claim"}, undefined, () => {
+            form.button({"translate": "ui.manage.button:claim_mode_mobile"}, undefined, () => {
                 // set flag to no longer open the menu and only allow claim creation
                 playerData.setMobileMode(ShovelMobileMode.CLAIM);
 
@@ -786,6 +786,11 @@ export class ShovelUI {
             })
             .toggle({"translate": "ui.manage.permissions:open_containers"}, {"defaultValue": defaults.getPermission(PermissionTypes.OPEN_CONTAINERS), "tooltip": {"translate": "ui.manage.permissions.tooltip:open_containers"}}, (value)=> {
                 target.setPermission(PermissionTypes.OPEN_CONTAINERS, value);
+
+                return new ModalDataCorrect();
+            })
+            .toggle({"translate": "ui.manage.permissions:interact_with_item_displays"}, {"defaultValue": defaults.getPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS), "tooltip": {"translate": "ui.manage.permissions.tooltip:interact_with_item_displays"} }, (value)=> {
+                target.setPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS, value);
 
                 return new ModalDataCorrect();
             })
@@ -1299,21 +1304,9 @@ export class ShovelUI {
             .label({"translate": "ui.changelog.label:2"})
             .label({"translate": "ui.changelog.label:3"})
             .label({"translate": "ui.changelog.label:4"})
-            .label({"translate": "ui.changelog.label:5"})
-            .label({"translate": "ui.changelog.label:6"})
-            .label({"translate": "ui.changelog.label:7"})
             .header({"translate": "ui.changelog.header:bug_fixes"})
             .divider()
-            .label({"translate": "ui.changelog.label:8"})
-            .label({"translate": "ui.changelog.label:9"})
-            .label({"translate": "ui.changelog.label:10"})
-            .label({"translate": "ui.changelog.label:11"})
-            .label({"translate": "ui.changelog.label:12"})
-            .label({"translate": "ui.changelog.label:13"})
-            .label({"translate": "ui.changelog.label:14"})
-            .label({"translate": "ui.changelog.label:15"})
-            .label({"translate": "ui.changelog.label:16"})
-            .label({"translate": "ui.changelog.label:17"})
+            .label({"translate": "ui.changelog.label:5"})
             .button({"translate": "ui.changelog.button:back"}, undefined, () => {this.main();});
 
         form.show(this.player);
