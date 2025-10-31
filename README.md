@@ -19,6 +19,107 @@ While holding the Claim Shovel, break any corner of your claim, then break anoth
 
 <img src=docs/resize_claim.webp width=100%>
 
+## Available Permissions
+### General
+ <table>
+  <tr>
+    <th>Permission</th>
+    <th>Info</th>
+    <th>Default State</th>
+  </tr>
+  <tr>
+    <td>Enter Claim</td>
+    <td>Applies knockback and the Wither effect to prevent players from entering the claim. Players without this permission will always see red border particles on your claim even if its "Border Particles" setting is disabled. A warning in chat will also be issued to them when walking near the claim.</td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>Break Blocks</td>
+    <td></td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>Use Items On Blocks</td>
+    <td>Example: placing blocks, attempting to use a shovel to make paths, etc.</td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>Interact With Blocks</td>
+    <td></td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>Interact With Entities</td>
+    <td></td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>Use Doors</td>
+    <td></td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>Use Switches</td>
+    <td>Example: levers, buttons, etc. Pressure plates are not included due to technical limitations.</td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>Use Beds</td>
+    <td></td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>Open Containers</td>
+    <td>Example: chests, furnaces, etc.</td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>Interact With Item Displays</td>
+    <td>Includes shelves, chiseled bookshelves, and armor stands. Item frames are not supported :(</td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>Edit Signs</td>
+    <td></td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>Use Tnt</td>
+    <td>This can only be toggled for the entire claim in its "Public Permissions" menu.</td>
+    <td>False</td>
+  </tr>
+</table> 
+
+### Entities
+ <table>
+  <tr>
+    <th>Permission</th>
+    <th>Info</th>
+    <th>Default State</th>
+  </tr>
+  <tr>
+    <td>Hurt Mobs</td>
+    <td>Any entity not included in "Hurt Monsters" or "Hurt Players" will be covered by this permission. Example: Cows, Chickens, etc.</td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>Hurt Monsters</td>
+    <td>Example: Zombies, Spiders, etc. It's not recommended to disable this. All damage sources will be prevented, even burning in sunlight! <em><b>Mob farms will not work!</b></em></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>Hurt Players</td>
+    <td>Due to how the entity protection system is implemented, Player protection is a bit limited. When a player is hit, that damage taken will be restored. Although if the hit brings them to 0 health, nothing can be done. Typically when this happens with non-player entities, a previous copy of the entity will be loaded back into the world; this cannot be done with players sadly.</td>
+    <td>False</td>
+  </tr>
+</table>
+
+---
+
+The following protections are also included by default, although cannot be toggled...
+- Protection against pistons moving blocks in/out of claim borders.
+- Fireballs being launched into claims.
+- Spawning Withers in the overworld.
+
 ## Claim blocks
 
 This addon uses a block balance for claim creation. Your claim block balance is displayed in the main menu of the claim shovel. You will obtain x number of claim blocks(set by admin) for every hour you play.
