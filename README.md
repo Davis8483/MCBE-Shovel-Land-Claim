@@ -1,7 +1,7 @@
 <img src=docs/SLC_Animated_Banner.webp width=500vw align="left">
 
 ### Welcome to Shovel Land Claim!
-A Minecraft Bedrock Edition addon that allows you to protect your builds from griefing and looting. It works similarly to the Java Golden Shovel mod
+A Minecraft Bedrock Edition addon that allows you to protect your builds from griefing and looting. Entity protection included!
 
 [![](https://dcbadge.limes.pink/api/server/https://discord.gg/JGsXDubjek)](https://discord.gg/JGsXDubjek)
 
@@ -112,6 +112,12 @@ While holding the Claim Shovel, break any corner of your claim, then break anoth
     <td>False</td>
   </tr>
 </table>
+
+> <details>
+> <summary>Entity Protection Technical Details (dropdown)</summary>
+> <be>
+> For most protections Before Events are used to prevent an action before it happens. There's unfortunately not an Entity Hurt Before Event, only an After Event. Now with this we can still reset an entities health to what it was. Although, if its health reaches 0, the game will count the entity as dead, which cannot be undone. To get around this, the Structure Manager is used to proactively create entity saves that can be loaded back upon death. This method has proved to be very reliable, although it can occasionaly result in unexpected behavior.
+> </details>
 
 ---
 
