@@ -6,6 +6,13 @@ export enum ShovelBehavior {
     MUST_BE_CRAFTED = 2
 }
 
+export enum NameDisplayBehavior {
+    ACTION_BAR = 0,
+    CHAT_ON_ENTER = 1,
+    CHAT_ON_ENTER_AND_EXIT = 2,
+    DISABLED = 3
+}
+
 /**
  * An object containing global settings for the addon
  */
@@ -16,6 +23,7 @@ export class Settings{
     private _disallowedBlocks: string[];
     private _maxClaimAmount: number;
     private _claimShovelItemBehavior: ShovelBehavior;
+    private _claimNameDisplayBehavior: NameDisplayBehavior;
 
     /**
      * Creates a new Settings object with default values
@@ -38,6 +46,7 @@ export class Settings{
         ];
         this._maxClaimAmount = 0;
         this._claimShovelItemBehavior = ShovelBehavior.LOCK_TO_INVENTORY;
+        this._claimNameDisplayBehavior = NameDisplayBehavior.ACTION_BAR;
     }
 
     get claimBlockHourlyPayment(): number {
@@ -61,6 +70,10 @@ export class Settings{
 
     get claimShovelItemBehavior(): ShovelBehavior {
         return this._claimShovelItemBehavior;
+    }
+
+    get claimNameDisplayBehavior(): NameDisplayBehavior {
+        return this._claimNameDisplayBehavior;
     }
 
     setClaimBlockHourlyPayment(value: number) {
@@ -105,7 +118,20 @@ export class Settings{
     setClaimShovelItemBehavior(value: ShovelBehavior) {
         this._claimShovelItemBehavior = value;
     }
-    
+
+    /**
+     * Sets the behavior for displaying the claim name.
+     * 
+     * Action bar: Displays the claim name in the action bar (directly above the hotbar; may conflict with other addons).
+     * Chat: Sends the claim name as a chat message directly when entering a claim.
+     * Disabled: Disables claim name display entirely.
+     * 
+     * @param value - Action bar; chat; disabled
+     */
+    setClaimNameDisplayBehavior(value: NameDisplayBehavior) {
+        this._claimNameDisplayBehavior = value;
+    }
+
     /**
      * Returns a Settings object loaded from JSON, if a key is missing it will be replaced with the default value.
      * 
@@ -122,6 +148,7 @@ export class Settings{
         settings._disallowedBlocks = data._disallowedBlocks || defaultSettings._disallowedBlocks;
         settings._maxClaimAmount = data._maxClaimAmount || defaultSettings._maxClaimAmount;
         settings._claimShovelItemBehavior = data._claimShovelItemBehavior || defaultSettings._claimShovelItemBehavior;
+        settings._claimNameDisplayBehavior = data._claimNameDisplayBehavior || defaultSettings._claimNameDisplayBehavior;
         return settings;
     }
 }
@@ -659,6 +686,8 @@ export class PlayerData {
     private _name: string;
     private _mobileMode: ShovelMobileMode | null;
     private _inClaim: boolean;
+    private _inClaimName: string;
+    private _inClaimOwnerName: string;
     private _viewingClaim: boolean;
     private _resizingClaimName: string;
     private _firstPoint: Vector3 | null;
@@ -678,6 +707,8 @@ export class PlayerData {
         this._name = playerName;
         this._mobileMode = null;
         this._inClaim = false;
+        this._inClaimName = "";
+        this._inClaimOwnerName = "";
         this._viewingClaim = false;
         this._resizingClaimName = "";
         this._firstPoint = null; // null means the player has not set the first point yet
@@ -710,6 +741,14 @@ export class PlayerData {
 
     get inClaim(): boolean {
         return this._inClaim;
+    }
+
+    get inClaimName(): string {
+        return this._inClaimName;
+    }
+
+    get inClaimOwnerName(): string {
+        return this._inClaimOwnerName;
     }
 
     get viewingClaim(): boolean {
@@ -801,6 +840,14 @@ export class PlayerData {
 
     setInClaim(value: boolean): void {
         this._inClaim = value;
+    }
+
+    setInClaimName(value: string): void {
+        this._inClaimName = value;
+    }
+
+    setInClaimOwnerName(value: string): void {
+        this._inClaimOwnerName = value;
     }
 
     setViewingClaim(value: boolean): void {
@@ -987,6 +1034,8 @@ export class PlayerData {
         playerData.setShownChangeLog(data._shownChangeLog !== undefined ? data._shownChangeLog : defaultPlayerData.shownChangeLog);
         playerData.setShownSetupScreen(data._shownSetupScreen !== undefined ? data._shownSetupScreen : defaultPlayerData.shownSetupScreen);
         playerData.setInClaim(data._inClaim !== undefined ? data._inClaim : defaultPlayerData.inClaim);
+        playerData.setInClaimName(data._inClaimName || defaultPlayerData.inClaimName);
+        playerData.setInClaimOwnerName(data._inClaimOwnerName || defaultPlayerData.inClaimOwnerName);
         playerData.setMobileMode(data._mobileMode || defaultPlayerData.mobileMode);
         playerData.setViewingClaim(data._viewingClaim !== undefined ? data._viewingClaim : defaultPlayerData.viewingClaim);
         playerData.setResizingClaimName(data._resizingClaimName || defaultPlayerData._resizingClaimName);

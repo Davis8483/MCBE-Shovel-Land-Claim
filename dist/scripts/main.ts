@@ -1,5 +1,5 @@
 import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel, InvalidEntityError, EntityDamageCause, RGB, PlatformType, Entity, WorldLoadAfterEvent } from '@minecraft/server';
-import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior, ShovelMobileMode } from './database.js';
+import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior, ShovelMobileMode, NameDisplayBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { NotificationManagerStack } from './notifications.js';
 import { ShovelUI } from './shovel_ui.js';
@@ -971,8 +971,10 @@ system.runInterval(() => {
                     const distanceMoved = playerData.distanceToPrevLocation();
 
                     playerData.setInClaim(true);
+                    playerData.setInClaimName(claim.name);
+                    playerData.setInClaimOwnerName(claim.getOwnerData().name);
 
-                    if (!playerData.viewingClaim) {
+                    if ((settings.claimNameDisplayBehavior == NameDisplayBehavior.ACTION_BAR) && !playerData.viewingClaim) {
                         // show claim name and owner onscreen
                         p.onScreenDisplay.setActionBar(
                             {
@@ -1043,15 +1045,28 @@ system.runInterval(() => {
 
             // player has entered claim
             if (!inClaimOld && playerData.inClaim) {
-                // play entrance sound
-                playSound(p, AddonSounds.Claim.ENTER)
+                if ((settings.claimNameDisplayBehavior == NameDisplayBehavior.CHAT_ON_ENTER)
+                    || (settings.claimNameDisplayBehavior == NameDisplayBehavior.CHAT_ON_ENTER_AND_EXIT)) {
+                    // show claim name and owner in chat
+                    notifManager.send(p, AddonSounds.Claim.ENTER, undefined, "chat.claim:entered", playerData.inClaimName, playerData.inClaimOwnerName);
+                }
+                else {
+                    // just play entrance sound
+                    playSound(p, AddonSounds.Claim.ENTER)
+                }
             }
             // player has exited the claim
             else if (inClaimOld && !playerData.inClaim) {
-                // play exit sound
-                playSound(p, AddonSounds.Claim.LEAVE)
+                if (settings.claimNameDisplayBehavior == NameDisplayBehavior.CHAT_ON_ENTER_AND_EXIT) {
+                    // show claim name and owner in chat
+                    notifManager.send(p, AddonSounds.Claim.LEAVE, undefined, "chat.claim:exited", playerData.inClaimName, playerData.inClaimOwnerName);
+                }
+                else {
+                    // just play exit sound
+                    playSound(p, AddonSounds.Claim.LEAVE)
+                }
             }
-            
+
             // the flag should always be false if player is not in a claim
             if (!playerData.inClaim){
                 // set pending entrance disallow flag to false; after this point the player will not be able to enter the claim again

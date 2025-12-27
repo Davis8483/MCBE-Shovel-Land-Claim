@@ -200,6 +200,17 @@ export class ShovelUI {
                     return new ModalDataCorrect();
                 }
             })
+            .dropdown({"translate": "ui.op_panel.addon_settings.dropdown:claim_name_display_behavior"},
+                [
+                    {"translate": "ui.op_panel.addon_settings.dropdown_option:action_bar"},
+                    {"translate": "ui.op_panel.addon_settings.dropdown_option:chat_on_enter"},
+                    {"translate": "ui.op_panel.addon_settings.dropdown_option:chat_on_enter_and_exit"},
+                    {"translate": "ui.op_panel.addon_settings.dropdown_option:disabled"}
+                ],
+                {"defaultValueIndex": settings.claimNameDisplayBehavior}, (value) => {
+                    settings.setClaimNameDisplayBehavior(value);
+                    return new ModalDataCorrect();
+                })
             .label({"text": ""})
             .header({"translate": "ui.op_panel.addon_settings.header:claim_shovel_section"})
             .divider()
