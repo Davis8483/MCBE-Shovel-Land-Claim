@@ -457,8 +457,18 @@ world.afterEvents.pistonActivate.subscribe((data) => {
 
 world.beforeEvents.itemUse.subscribe((data) => {
 
+    const notifManager = NotificationManagerStack.getById(data.source.id);
+
     // disallow player from using items while viewing claim
     if (PlayerData.fromId(data.source.id).viewingClaim) {
+        data.cancel = true;
+    }
+
+    // items that are disabled by admin; can't be used
+    if (settings.disallowedBlocks.includes(data.itemStack.typeId)) {
+        // notify player
+        notifManager.send(data.source, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.world:disabled_item");
+
         data.cancel = true;
     }
 });
