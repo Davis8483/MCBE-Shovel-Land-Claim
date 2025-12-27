@@ -27,6 +27,8 @@ chat.claim:public_permissions_updated_notif=%s §aha actualizado los permisos p�
 chat.claim:global_permissions_updated_notif=%s §a¡ha actualizado tus permisos globales!§r
 chat.claim:player_permissions_reset_notif=%s §bha restablecido tus permisos para §r§5%s§r
 chat.claim:global_player_permissions_reset_notif=%s§bha restablecido tus permisos globales
+chat.claim:entered=##TODO: Translate the following "§6You have entered a claim...§r\nClaim Name: §5%s§r\nClaim Owner: §9%s§r"
+chat.claim:exited=##TODO: Translate the following "§6You have left a claim...§r\nClaim Name: §5%s§r\nClaim Owner: §9%s§r"
 
 chat.point.new:selected=Primer bloque seleccionado: [§c%s§r,§a%s§r,§9%s§r]\n§b¡Agachate y usa la §dPala Reclamadora§b en otro bloque para establecer la esquina opuesta del reclamo!§r
 chat.point.resize:selected=Esquina de Reclamo Seleccionado: [§c%s§r,§a%s§r,§9%s§r]\n§d¡Agachate y usa la §bPala Reclamadora§d en otro bloque para redimensionar el reclamo!§r
@@ -125,6 +127,11 @@ ui.op_panel.addon_settings.textbox:claim_min_width=Ancho y Largo Minimo de Recla
 ui.op_panel.addon_settings.textbox:claim_min_width_placeholder=Ej: 10
 ui.op_panel.addon_settings.textbox:max_claim_amount=Maxima Cantidad de Reclamos por Jugador\n0 = ilimitado
 ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder=Ej: 10
+ui.op_panel.addon_settings.dropdown:claim_name_display_behavior=##TODO: Translate the following "Claim Name Display"
+ui.op_panel.addon_settings.dropdown_option:action_bar=##TODO: Translate the following "Action Bar"
+ui.op_panel.addon_settings.dropdown_option:chat_on_enter=##TODO: Translate the following "Send in Chat on Enter"
+ui.op_panel.addon_settings.dropdown_option:chat_on_enter_and_exit=##TODO: Translate the following "Send in Chat on Enter & Exit"
+ui.op_panel.addon_settings.dropdown_option:disabled=##TODO: Translate the following "Disabled"
 ui.op_panel.addon_settings.header:claim_shovel_section=§dPala Reclamadora
 ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior=Comportamiento del Item §dPala Reclamadora
 ui.op_panel.addon_settings.dropdown_option:lock_to_inventory=Bloquear en el inventario

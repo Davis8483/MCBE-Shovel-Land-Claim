@@ -27,6 +27,8 @@ chat.claim:public_permissions_updated_notif=%s§ahat die öffentlichen Berechtig
 chat.claim:global_permissions_updated_notif=%s§ahat Ihre globalen Berechtigungen aktualisiert!§r
 chat.claim:player_permissions_reset_notif=%s§bhat Ihre Berechtigungen zurückgesetzt für§r§5%s§r
 chat.claim:global_player_permissions_reset_notif=%s§bhat Ihre globalen Berechtigungen zurückgesetzt
+chat.claim:entered=§6Sie haben einen Anspruch eingereicht...§r\nAnspruchsname:§5%s§r\nAnspruchsinhaber:§9%s§r
+chat.claim:exited=§6Sie haben eine Reklamation hinterlassen...§r\nAnspruchsname:§5%s§r\nAnspruchsinhaber:§9%s§r
 
 chat.point.new:selected=Erster Block ausgewählt: [§c%s§r,§a%s§r,§9%s§r]\n§bKlicken Sie in die Hocke, um die gegenüberliegende Ecke des Anspruchs festzulegen!§r
 chat.point.resize:selected=Anspruchsecke ausgewählt: [§c%s§r,§a%s§r,§9%s§r]\n§dKlicken Sie in die Hocke und klicken Sie auf einen anderen Block, um die Größe des Anspruchs zu ändern!§r
@@ -34,10 +36,10 @@ chat.point.resize:disallowed=§cSie müssen der Eigentümer sein, um die Größe
 
 chat.claim.permission:break_blocks=§cEs ist nicht erlaubt, Blöcke zu zerstören!§r
 chat.claim.permission:use_item_on_block=§cEs ist nicht gestattet, Gegenstände auf Blöcken zu verwenden!§r
-chat.claim.permission:use_tnt=§cSie dürfen tnt nicht verwenden!§r
+chat.claim.permission:use_tnt=§cDu darfst tnt nicht verwenden!§r
 chat.claim.permission:hurt_entities=§cEs ist dir nicht gestattet, Wesen zu verletzen!§r
 chat.claim.permission:enter_claim=§cSie dürfen diesen Anspruch nicht eingeben!§r
-chat.claim.permission:enter_claim_warning=§pSie befinden sich in der Nähe einer Schadensforderung, auf die Sie keinen Zugriff haben. Seien Sie vorsichtig!§r\nAnspruchsname:§5%s§r\nAnspruchsinhaber:§9%s§r
+chat.claim.permission:enter_claim_warning=§pSie befinden sich in der Nähe einer Forderung, auf die Sie keinen Zugriff haben. Seien Sie vorsichtig!§r\nAnspruchsname:§5%s§r\nAnspruchsinhaber:§9%s§r
 chat.claim.permission:teleport_enter_claim=§cDu darfst diesen Anspruch nicht betreten, der Teleport wurde abgebrochen!§r
 chat.claim.permission:interact_with_entities=§cEs ist Ihnen nicht gestattet, mit Entitäten zu interagieren!§r
 chat.claim.permission:use_doors=§cDas Betreten von Türen ist nicht gestattet!§r
@@ -125,6 +127,11 @@ ui.op_panel.addon_settings.textbox:claim_min_width=Fordern Sie die Mindestbreite
 ui.op_panel.addon_settings.textbox:claim_min_width_placeholder=Beispiel: 10
 ui.op_panel.addon_settings.textbox:max_claim_amount=Maximaler Anspruchsbetrag pro Spieler\n0 = Unbegrenzt
 ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder=Beispiel: 10
+ui.op_panel.addon_settings.dropdown:claim_name_display_behavior=Anzeige des Anspruchsnamens
+ui.op_panel.addon_settings.dropdown_option:action_bar=Aktionsleiste
+ui.op_panel.addon_settings.dropdown_option:chat_on_enter=Senden Sie den Chat bei Enter ein
+ui.op_panel.addon_settings.dropdown_option:chat_on_enter_and_exit=Senden Sie den Chat beim Betreten und Verlassen
+ui.op_panel.addon_settings.dropdown_option:disabled=Deaktiviert
 ui.op_panel.addon_settings.header:claim_shovel_section=§dAnspruchsschaufel
 ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior=Verhalten von Schaufelgegenständen beanspruchen
 ui.op_panel.addon_settings.dropdown_option:lock_to_inventory=Auf Inventar sperren
@@ -248,9 +255,9 @@ ui.changelog.label:1=§9Willkommen bei v1.0.5! Dieses Update bietet Schutz für 
 ui.changelog.header:changes=§eFunktionen/Änderungen§r
 ui.changelog.label:2=- Manuelle spanische Übersetzung hinzugefügt, danke an JakeJuegaMC! (Wenn Sie helfen möchten, dieses Add-on in andere Sprachen zu übersetzen, wenden Sie sich bitte an Discord!)
 ui.changelog.label:3=- Aktualisierte Texte zur Anspruchserstellung/-größenänderung, um auf Mobilgeräten klarer zu sein.
-ui.changelog.label:4=- Die Berechtigung „Interagieren mit Gegenstandsdisplays“ wurde hinzugefügt, um die Interaktion mit Regalen, gemeißelten Bücherregalen und Rüstungsständern zu erlauben/verbieten. Artikelrahmen werden aufgrund technischer Einschränkungen immer noch nicht unterstützt.
+ui.changelog.label:4=- Die Berechtigung „Mit Gegenstandsdisplays interagieren“ wurde hinzugefügt, um die Interaktion mit Regalen, gemeißelten Bücherregalen und Rüstungsständern zu erlauben/verbieten. Artikelrahmen werden aufgrund technischer Einschränkungen immer noch nicht unterstützt.
 ui.changelog.header:bug_fixes=§bFehlerbehebungen§r
-ui.changelog.label:5=- Es wurde ein Problem behoben, durch das Blöcke im Menüöffnungsmodus auf Mobilgeräten aufgehoben werden konnten.
+ui.changelog.label:5=– Es wurde ein Problem behoben, das dazu führte, dass Blöcke im Menüöffnungsmodus auf Mobilgeräten aufgehoben werden konnten.
 ui.changelog.button:back=<< Hauptmenü
 
 ui.addon_setup:title=§5Schaufel§rLandanspruch – Einrichtung (%s/%s)

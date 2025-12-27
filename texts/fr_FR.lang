@@ -27,6 +27,8 @@ chat.claim:public_permissions_updated_notif=%s §a a mis à jour les permissions
 chat.claim:global_permissions_updated_notif=%s §a a mis à jour vos permissions globales !§r
 chat.claim:player_permissions_reset_notif=%s §b a réinitialisé vos permissions pour§r §5%s§r
 chat.claim:global_player_permissions_reset_notif=%s §b a réinitialisé vos permissions globales
+chat.claim:entered=##TODO: Translate the following "§6You have entered a claim...§r\nClaim Name: §5%s§r\nClaim Owner: §9%s§r"
+chat.claim:exited=##TODO: Translate the following "§6You have left a claim...§r\nClaim Name: §5%s§r\nClaim Owner: §9%s§r"
 
 chat.point.new:selected=Premier bloc sélectionné : [§c%s§r, §a%s§r, §9%s§r]\n§bClique accroupi pour définir le coin opposé du claim !§r
 chat.point.resize:selected=Coin du claim sélectionné : [§c%s§r, §a%s§r, §9%s§r]\n§dClique accroupi sur un autre bloc pour redimensionner le claim !§r
@@ -125,6 +127,11 @@ ui.op_panel.addon_settings.textbox:claim_min_width=Largeur minimale du claim
 ui.op_panel.addon_settings.textbox:claim_min_width_placeholder=Ex : 10
 ui.op_panel.addon_settings.textbox:max_claim_amount=Nombre max de claims par joueur\n0 = Illimité
 ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder=Ex : 10
+ui.op_panel.addon_settings.dropdown:claim_name_display_behavior=##TODO: Translate the following "Claim Name Display"
+ui.op_panel.addon_settings.dropdown_option:action_bar=##TODO: Translate the following "Action Bar"
+ui.op_panel.addon_settings.dropdown_option:chat_on_enter=##TODO: Translate the following "Send in Chat on Enter"
+ui.op_panel.addon_settings.dropdown_option:chat_on_enter_and_exit=##TODO: Translate the following "Send in Chat on Enter & Exit"
+ui.op_panel.addon_settings.dropdown_option:disabled=##TODO: Translate the following "Disabled"
 ui.op_panel.addon_settings.header:claim_shovel_section=§dPelle de claim
 ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior=Comportement de la pelle de claim
 ui.op_panel.addon_settings.dropdown_option:lock_to_inventory=Verrouiller dans l’inventaire
