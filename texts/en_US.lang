@@ -27,6 +27,8 @@ chat.claim:public_permissions_updated_notif=%s §ahas updated the public permiss
 chat.claim:global_permissions_updated_notif=%s §ahas updated your global permissions!§r
 chat.claim:player_permissions_reset_notif=%s §bhas reset your permissions for§r §5%s§r
 chat.claim:global_player_permissions_reset_notif=%s §bhas reset your global permissions
+chat.claim:entered=§6You have entered a claim...§r\nClaim Name: §5%s§r\nClaim Owner: §9%s§r
+chat.claim:exited=§6You have left a claim...§r\nClaim Name: §5%s§r\nClaim Owner: §9%s§r
 
 chat.point.new:selected=First block selected: [§c%s§r, §a%s§r, §9%s§r]\n§bCrouch click to set the opposite corner of the claim!§r
 chat.point.resize:selected=Claim corner selected: [§c%s§r, §a%s§r, §9%s§r]\n§dCrouch click a another block to resize the claim!§r
@@ -125,6 +127,11 @@ ui.op_panel.addon_settings.textbox:claim_min_width=Claim Minimum Width
 ui.op_panel.addon_settings.textbox:claim_min_width_placeholder=Ex: 10
 ui.op_panel.addon_settings.textbox:max_claim_amount=Per Player Max Claim Amount\n0 = Unlimited
 ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder=Ex: 10
+ui.op_panel.addon_settings.dropdown:claim_name_display_behavior=Claim Name Display
+ui.op_panel.addon_settings.dropdown_option:action_bar=Action Bar
+ui.op_panel.addon_settings.dropdown_option:chat_on_enter=Send in Chat on Enter
+ui.op_panel.addon_settings.dropdown_option:chat_on_enter_and_exit=Send in Chat on Enter & Exit
+ui.op_panel.addon_settings.dropdown_option:disabled=Disabled
 ui.op_panel.addon_settings.header:claim_shovel_section=§dClaim Shovel
 ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior=Claim Shovel Item Behavior
 ui.op_panel.addon_settings.dropdown_option:lock_to_inventory=Lock to Inventory
