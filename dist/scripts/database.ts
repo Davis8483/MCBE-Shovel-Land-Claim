@@ -24,6 +24,7 @@ export class Settings{
     private _maxClaimAmount: number;
     private _claimShovelItemBehavior: ShovelBehavior;
     private _claimNameDisplayBehavior: NameDisplayBehavior;
+    private _allowWitherSpawningInOverworld: boolean;
 
     /**
      * Creates a new Settings object with default values
@@ -47,6 +48,7 @@ export class Settings{
         this._maxClaimAmount = 0;
         this._claimShovelItemBehavior = ShovelBehavior.LOCK_TO_INVENTORY;
         this._claimNameDisplayBehavior = NameDisplayBehavior.ACTION_BAR;
+        this._allowWitherSpawningInOverworld = false;
     }
 
     get claimBlockHourlyPayment(): number {
@@ -74,6 +76,10 @@ export class Settings{
 
     get claimNameDisplayBehavior(): NameDisplayBehavior {
         return this._claimNameDisplayBehavior;
+    }
+
+    get allowWitherSpawningInOverworld(): boolean {
+        return this._allowWitherSpawningInOverworld;
     }
 
     setClaimBlockHourlyPayment(value: number) {
@@ -133,6 +139,15 @@ export class Settings{
     }
 
     /**
+     * Should players be allowed to spawn Withers in the overworld? This is a global setting that applies to all players.
+     * 
+     * @param value - True to allow, False to disallow
+     */
+    setAllowWitherSpawningInOverworld(value: boolean) {
+        this._allowWitherSpawningInOverworld = value;
+    }
+
+    /**
      * Returns a Settings object loaded from JSON, if a key is missing it will be replaced with the default value.
      * 
      * @param data - The JSON object to load the Settings object from
@@ -149,6 +164,7 @@ export class Settings{
         settings._maxClaimAmount = data._maxClaimAmount || defaultSettings._maxClaimAmount;
         settings._claimShovelItemBehavior = data._claimShovelItemBehavior || defaultSettings._claimShovelItemBehavior;
         settings._claimNameDisplayBehavior = data._claimNameDisplayBehavior || defaultSettings._claimNameDisplayBehavior;
+        settings._allowWitherSpawningInOverworld = data._allowWitherSpawningInOverworld || defaultSettings._allowWitherSpawningInOverworld;
         return settings;
     }
 }

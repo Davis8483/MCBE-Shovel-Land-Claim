@@ -637,7 +637,7 @@ world.afterEvents.entitySpawn.subscribe(async (data) => {
         if (data.entity.dimension == world.getDimension("overworld")) {
 
             // disallow the wither from spawning in the overworld, as when damaged it will remove blocks and cause griefing
-            if (data.entity.typeId == "minecraft:wither") {
+            if (data.entity.typeId == "minecraft:wither" && !settings.allowWitherSpawningInOverworld) {
 
                 // get the closest player to the wither spawn location, we will assume they spawned it
                 const closestPlayer: Player = getClosestPlayer(data.entity.location);

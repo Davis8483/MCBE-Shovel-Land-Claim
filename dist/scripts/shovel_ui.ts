@@ -233,6 +233,12 @@ export class ShovelUI {
                 return new ModalDataCorrect();
             })
             .label({"text": ""})
+            .header({"translate": "ui.op_panel.addon_settings.header:world_protections_section"})
+            .divider()
+            .toggle({"translate": "ui.op_panel.addon_settings.toggle:allow_wither"}, {"defaultValue": settings.allowWitherSpawningInOverworld}, (value) => {
+                settings.setAllowWitherSpawningInOverworld(value);
+                return new ModalDataCorrect(); })
+            .label({"text": ""})
             .submitButton({"translate": "ui.op_panel.addon_settings.button:save"}, (response) => {
                 playSound(this.player, AddonSounds.Claim.SAVE);
                 this.navigationStack.back();
