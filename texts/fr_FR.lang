@@ -134,6 +134,7 @@ ui.op_panel.addon_settings.dropdown_option:chat_on_enter_and_exit=##TODO: Transl
 ui.op_panel.addon_settings.dropdown_option:disabled=##TODO: Translate the following "Disabled"
 ui.op_panel.addon_settings.header:claim_shovel_section=§dPelle de claim
 ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior=Comportement de la pelle de claim
+ui.op_panel.addon_settings.tooltip:claim_shovel_item_behavior=##TODO: Translate the following "The Claim Shovel is manually crafted by surrounding any regular shovel with Amethyst Shards."
 ui.op_panel.addon_settings.dropdown_option:lock_to_inventory=Verrouiller dans l’inventaire
 ui.op_panel.addon_settings.dropdown_option:give_at_spawn=Donner au spawn
 ui.op_panel.addon_settings.dropdown_option:must_be_crafted=Doit être fabriquée

@@ -134,6 +134,7 @@ ui.op_panel.addon_settings.dropdown_option:chat_on_enter_and_exit=Send in Chat o
 ui.op_panel.addon_settings.dropdown_option:disabled=Disabled
 ui.op_panel.addon_settings.header:claim_shovel_section=§dClaim Shovel
 ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior=Claim Shovel Item Behavior
+ui.op_panel.addon_settings.tooltip:claim_shovel_item_behavior=The Claim Shovel is manually crafted by surrounding any regular shovel with Amethyst Shards.
 ui.op_panel.addon_settings.dropdown_option:lock_to_inventory=Lock to Inventory
 ui.op_panel.addon_settings.dropdown_option:give_at_spawn=Give at Spawn
 ui.op_panel.addon_settings.dropdown_option:must_be_crafted=Must be Crafted

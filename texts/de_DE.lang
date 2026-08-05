@@ -36,7 +36,7 @@ chat.point.resize:disallowed=§cSie müssen der Eigentümer sein, um die Größe
 
 chat.claim.permission:break_blocks=§cEs ist nicht erlaubt, Blöcke zu zerstören!§r
 chat.claim.permission:use_item_on_block=§cEs ist nicht gestattet, Gegenstände auf Blöcken zu verwenden!§r
-chat.claim.permission:use_tnt=§cSie dürfen tnt nicht verwenden!§r
+chat.claim.permission:use_tnt=§cDu darfst tnt nicht verwenden!§r
 chat.claim.permission:hurt_entities=§cEs ist dir nicht gestattet, Wesen zu verletzen!§r
 chat.claim.permission:enter_claim=§cSie dürfen diesen Anspruch nicht eingeben!§r
 chat.claim.permission:enter_claim_warning=§pSie befinden sich in der Nähe einer Forderung, auf die Sie keinen Zugriff haben. Seien Sie vorsichtig!§r\nAnspruchsname:§5%s§r\nAnspruchsinhaber:§9%s§r
@@ -87,7 +87,7 @@ ui.op_disallowed_blocks.button:remove_block=Block entfernen
 
 ui.op_edit_disallowed_blocks:title=Bearbeiten Sie unzulässige Blöcke/Elemente
 ui.op_edit_disallowed_blocks.textbox:block_id=Typ-ID
-ui.op_edit_disallowed_blocks.textbox:block_id_placeholder=Beispiel: Minecraft:Stein
+ui.op_edit_disallowed_blocks.textbox:block_id_placeholder=Bsp.: Minecraft:Stein
 ui.op_edit_disallowed_blocks.dropdown:block_id=Typ-ID
 ui.op_edit_disallowed_blocks.error:must_not_be_empty=§cSie müssen eine Typ-ID angeben!§r
 ui.op_edit_disallowed_blocks.error:block_already_disallowed=§cDieser Block/Artikel ist bereits nicht zulässig!§r
@@ -134,6 +134,7 @@ ui.op_panel.addon_settings.dropdown_option:chat_on_enter_and_exit=Senden Sie den
 ui.op_panel.addon_settings.dropdown_option:disabled=Deaktiviert
 ui.op_panel.addon_settings.header:claim_shovel_section=§dAnspruchsschaufel
 ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior=Verhalten von Schaufelgegenständen beanspruchen
+ui.op_panel.addon_settings.tooltip:claim_shovel_item_behavior=Die Claim-Schaufel wird manuell hergestellt, indem jede normale Schaufel mit Amethystsplittern umgeben wird.
 ui.op_panel.addon_settings.dropdown_option:lock_to_inventory=Auf Inventar sperren
 ui.op_panel.addon_settings.dropdown_option:give_at_spawn=Bei Spawn geben
 ui.op_panel.addon_settings.dropdown_option:must_be_crafted=Muss hergestellt werden
