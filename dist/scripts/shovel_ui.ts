@@ -220,7 +220,7 @@ export class ShovelUI {
                     {"translate": "ui.op_panel.addon_settings.dropdown_option:give_at_spawn"},
                     {"translate": "ui.op_panel.addon_settings.dropdown_option:must_be_crafted"}
                 ],
-                {"defaultValueIndex": settings.claimShovelItemBehavior}, (value) => {
+                {"defaultValueIndex": settings.claimShovelItemBehavior, "tooltip": "ui.op_panel.addon_settings.tooltip:claim_shovel_item_behavior"}, (value) => {
 
                 // loop through all online players to modify their inventory
                 for (var p of world.getAllPlayers()) {
