@@ -187,6 +187,22 @@ export enum PermissionTypes {
 }
 
 /**
+ * Applies permissions from a JSON object to a Permissions or PlayerPermissions object, using default permissions for any missing keys.
+ * 
+ * @param target - Either a Permissions or PlayerPermissions object
+ * @param data - The JSON object to load the permissions from
+ * @param defaultPermissions - The default permissions to use if a key is missing
+ */
+function applyPermissionsFromJSON(target: Permissions, data: any, defaultPermissions: Permissions): void {
+    const permissionData = data?._permissions ?? {};
+
+    for (const permission of Object.values(PermissionTypes) as PermissionTypes[]) {
+        const hasSavedValue = permissionData[permission] !== undefined;
+        target.setPermission(permission, hasSavedValue ? permissionData[permission] : defaultPermissions.getPermission(permission));
+    }
+}
+
+/**
  * Represents global player permissions, claim public, and claim global permissisons
  */
 export class Permissions {
@@ -255,19 +271,7 @@ export class Permissions {
     static fromJSON(data: any): Permissions {
         const defaultPermissions = new Permissions();
         const permissions = new Permissions();
-        permissions.setPermission(PermissionTypes.ENTER_CLAIM, data._permissions?.enterClaim !== undefined ? data._permissions.enterClaim : defaultPermissions.getPermission(PermissionTypes.ENTER_CLAIM));
-        permissions.setPermission(PermissionTypes.BREAK_BLOCKS, data._permissions?.breakBlocks !== undefined ? data._permissions.breakBlocks : defaultPermissions.getPermission(PermissionTypes.BREAK_BLOCKS));
-        permissions.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data._permissions?.useItemsOnBlocks !== undefined ? data._permissions.useItemsOnBlocks : defaultPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS));
-        permissions.setPermission(PermissionTypes.HURT_MOBS, data._permissions?.hurtMobs !== undefined ? data._permissions.hurtMobs : defaultPermissions.getPermission(PermissionTypes.HURT_MOBS));
-        permissions.setPermission(PermissionTypes.HURT_MONSTERS, data._permissions?.hurtMonsters !== undefined ? data._permissions.hurtMonsters : defaultPermissions.getPermission(PermissionTypes.HURT_MONSTERS));
-        permissions.setPermission(PermissionTypes.HURT_PLAYERS, data._permissions?.hurtPlayers !== undefined ? data._permissions.hurtPlayers : defaultPermissions.getPermission(PermissionTypes.HURT_PLAYERS));
-        permissions.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data._permissions?.interactWithEntities !== undefined ? data._permissions.interactWithEntities : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES));
-        permissions.setPermission(PermissionTypes.USE_DOORS, data._permissions?.useDoors !== undefined ? data._permissions.useDoors : defaultPermissions.getPermission(PermissionTypes.USE_DOORS));
-        permissions.setPermission(PermissionTypes.USE_SWITCHES, data._permissions?.useSwitches !== undefined ? data._permissions.useSwitches : defaultPermissions.getPermission(PermissionTypes.USE_SWITCHES));
-        permissions.setPermission(PermissionTypes.USE_BEDS, data._permissions?.useBeds !== undefined ? data._permissions.useBeds : defaultPermissions.getPermission(PermissionTypes.USE_BEDS));
-        permissions.setPermission(PermissionTypes.OPEN_CONTAINERS, data._permissions?.openContainers !== undefined ? data._permissions.openContainers : defaultPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS));
-        permissions.setPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS, data._permissions?.interactWithItemDisplays !== undefined ? data._permissions.interactWithItemDisplays : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS));
-        permissions.setPermission(PermissionTypes.EDIT_SIGNS, data._permissions?.editSigns !== undefined ? data._permissions.editSigns : defaultPermissions.getPermission(PermissionTypes.EDIT_SIGNS));
+        applyPermissionsFromJSON(permissions, data, defaultPermissions);
         return permissions;
     }
 }
@@ -316,19 +320,7 @@ export class PlayerPermissions extends Permissions {
     static fromJSON(data: any): PlayerPermissions {
         const defaultPermissions = new PlayerPermissions(data._id, data._name);
         const permissions = new PlayerPermissions(data._id, data._name);
-        permissions.setPermission(PermissionTypes.ENTER_CLAIM, data._permissions?.enterClaim !== undefined ? data._permissions.enterClaim : defaultPermissions.getPermission(PermissionTypes.ENTER_CLAIM));
-        permissions.setPermission(PermissionTypes.BREAK_BLOCKS, data._permissions?.breakBlocks !== undefined ? data._permissions.breakBlocks : defaultPermissions.getPermission(PermissionTypes.BREAK_BLOCKS));
-        permissions.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data._permissions?.useItemsOnBlocks !== undefined ? data._permissions.useItemsOnBlocks : defaultPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS));
-        permissions.setPermission(PermissionTypes.HURT_MOBS, data._permissions?.hurtMobs !== undefined ? data._permissions.hurtMobs : defaultPermissions.getPermission(PermissionTypes.HURT_MOBS));
-        permissions.setPermission(PermissionTypes.HURT_MONSTERS, data._permissions?.hurtMonsters !== undefined ? data._permissions.hurtMonsters : defaultPermissions.getPermission(PermissionTypes.HURT_MONSTERS));
-        permissions.setPermission(PermissionTypes.HURT_PLAYERS, data._permissions?.hurtPlayers !== undefined ? data._permissions.hurtPlayers : defaultPermissions.getPermission(PermissionTypes.HURT_PLAYERS));
-        permissions.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data._permissions?.interactWithEntities !== undefined ? data._permissions.interactWithEntities : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES));
-        permissions.setPermission(PermissionTypes.USE_DOORS, data._permissions?.useDoors !== undefined ? data._permissions.useDoors : defaultPermissions.getPermission(PermissionTypes.USE_DOORS));
-        permissions.setPermission(PermissionTypes.USE_SWITCHES, data._permissions?.useSwitches !== undefined ? data._permissions.useSwitches : defaultPermissions.getPermission(PermissionTypes.USE_SWITCHES));
-        permissions.setPermission(PermissionTypes.USE_BEDS, data._permissions?.useBeds !== undefined ? data._permissions.useBeds : defaultPermissions.getPermission(PermissionTypes.USE_BEDS));
-        permissions.setPermission(PermissionTypes.OPEN_CONTAINERS, data._permissions?.openContainers !== undefined ? data._permissions.openContainers : defaultPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS));
-        permissions.setPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS, data._permissions?.interactWithItemDisplays !== undefined ? data._permissions.interactWithItemDisplays : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS));
-        permissions.setPermission(PermissionTypes.EDIT_SIGNS, data._permissions?.editSigns !== undefined ? data._permissions.editSigns : defaultPermissions.getPermission(PermissionTypes.EDIT_SIGNS));
+        applyPermissionsFromJSON(permissions, data, defaultPermissions);
         return permissions;
     }
 }
