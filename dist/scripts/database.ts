@@ -692,6 +692,7 @@ export class PlayerData {
     private _shownSetupScreen: boolean;
     private _id: string;
     private _name: string;
+    private _lastOnline: string;
     private _mobileMode: ShovelMobileMode | null;
     private _inClaim: boolean;
     private _inClaimName: string;
@@ -713,6 +714,7 @@ export class PlayerData {
         this._shownSetupScreen = false; // default to false so all admins can go through the setup ui
         this._id = playerID;
         this._name = playerName;
+        this._lastOnline = new Date().toISOString();
         this._mobileMode = null;
         this._inClaim = false;
         this._inClaimName = "";
@@ -736,6 +738,10 @@ export class PlayerData {
 
     get name(): string {
         return this._name;
+    }
+
+    get lastOnline(): string {
+        return this._lastOnline;
     }
 
     /**
@@ -835,6 +841,17 @@ export class PlayerData {
 
     setName(newName: string): void {
         this._name = newName;
+    }
+
+    private setLastOnline(timestamp: string): void {
+        this._lastOnline = timestamp;
+    }
+
+    /**
+     * Updates the last online timestamp to the current time in ISO format.
+     */
+    updateLastOnline(): void {
+        this._lastOnline = new Date().toISOString();
     }
 
     /**
@@ -1044,6 +1061,7 @@ export class PlayerData {
         playerData.setInClaim(data._inClaim !== undefined ? data._inClaim : defaultPlayerData.inClaim);
         playerData.setInClaimName(data._inClaimName || defaultPlayerData.inClaimName);
         playerData.setInClaimOwnerName(data._inClaimOwnerName || defaultPlayerData.inClaimOwnerName);
+        playerData.setLastOnline(data._lastOnline || defaultPlayerData.lastOnline);
         playerData.setMobileMode(data._mobileMode || defaultPlayerData.mobileMode);
         playerData.setViewingClaim(data._viewingClaim !== undefined ? data._viewingClaim : defaultPlayerData.viewingClaim);
         playerData.setResizingClaimName(data._resizingClaimName || defaultPlayerData._resizingClaimName);

@@ -58,6 +58,10 @@ world.afterEvents.playerLeave.subscribe((data) => {
     if (playerData.viewingClaim) {
         world.getDimension("overworld").runCommand("tickingarea remove claimView");
     }
+
+    // update last online time
+    playerData.updateLastOnline();
+
 });
 
 world.afterEvents.playerSpawn.subscribe((data) => {
