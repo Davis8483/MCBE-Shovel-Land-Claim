@@ -105,7 +105,8 @@ ui.player_search.button:search=##TODO: Translate the following "Search"
 ui.player_picker:title=##TODO: Translate the following "Player Picker"
 ui.player_picker.button:search=##TODO: Translate the following "Search Players"
 ui.player_picker.label:search_results=##TODO: Translate the following "§oFiltered %s/%s players...§r"
-ui.player_picker.label:no_results=##TODO: Translate the following "§oNo players found...§r"
+ui.player_picker.label:no_results=##TODO: Translate the following "§o§cNo players found...§r"
+ui.player_picker.label:no_players=##TODO: Translate the following "§o§cNo players to pick...§r"
 
 ui.op_manage_player.button:player_config=Configuración del Jugador
 ui.op_manage_player.button:edit_claim_blocks=Editar Bloques de Reclamo:§l%s§r

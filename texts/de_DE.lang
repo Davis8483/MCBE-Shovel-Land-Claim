@@ -105,7 +105,8 @@ ui.player_search.button:search=Suchen
 ui.player_picker:title=Spielerauswahl
 ui.player_picker.button:search=Spieler suchen
 ui.player_picker.label:search_results=§oGefiltert%s/%sSpieler...§r
-ui.player_picker.label:no_results=§oKeine Spieler gefunden...§r
+ui.player_picker.label:no_results=§o§cKeine Spieler gefunden...§r
+ui.player_picker.label:no_players=§o§cKeine Spieler zur Auswahl...§r
 
 ui.op_manage_player.button:player_config=Spielerkonfiguration
 ui.op_manage_player.button:edit_claim_blocks=Anspruchssperren bearbeiten:§l%s§r
