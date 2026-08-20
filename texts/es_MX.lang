@@ -57,6 +57,11 @@ chat.shovel:how_to_craft=Craftea una §dPala Reclamadora§r Al rodear cualquier 
 
 ui.global.button:back=<< Atras
 ui.global.button:save=\/ Guardar
+ui.global.button:online=##TODO: Translate the following "§2Online§r"
+ui.global.button:offline=##TODO: Translate the following "§cOffline: "
+ui.global:last_online_days=##TODO: Translate the following "%s days ago"
+ui.global:last_online_yesterday=##TODO: Translate the following "Yesterday"
+ui.global:last_online_today=##TODO: Translate the following "Today"
 
 ui.main:title=§dPala Reclamadora §rde Tierras %s
 ui.main.op_mode:title=Gestionar Jugador: %s
@@ -91,6 +96,16 @@ ui.op_edit_disallowed_blocks.textbox:block_id_placeholder=Ej: minecraft:stone
 ui.op_edit_disallowed_blocks.dropdown:block_id=Tipo de ID
 ui.op_edit_disallowed_blocks.error:must_not_be_empty=§c¡Debe proporcionar un tipo de id!§r
 ui.op_edit_disallowed_blocks.error:block_already_disallowed=§c¡Este bloque/item ya esta deshabilitado!§r
+
+ui.player_search:title=##TODO: Translate the following "Search Players"
+ui.player_search.textbox:query=##TODO: Translate the following "Search Query"
+ui.player_search.textbox:query_placeholder=##TODO: Translate the following "Ex: %s"
+ui.player_search.button:search=##TODO: Translate the following "Search"
+
+ui.player_picker:title=##TODO: Translate the following "Player Picker"
+ui.player_picker.button:search=##TODO: Translate the following "Search Players"
+ui.player_picker.label:search_results=##TODO: Translate the following "§oFiltered %s/%s players...§r"
+ui.player_picker.label:no_results=##TODO: Translate the following "§oNo players found...§r"
 
 ui.op_manage_player.button:player_config=Configuración del Jugador
 ui.op_manage_player.button:edit_claim_blocks=Editar Bloques de Reclamo:§l%s§r
