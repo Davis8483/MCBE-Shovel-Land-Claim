@@ -116,23 +116,29 @@ export class ShovelUI {
         const form = new CallbackActionFormData(this.navigationStack, () => this.playerPicker(options, refinedOptions, callback))
             .title({"translate": "ui.player_picker:title"})
 
-            // only show if search has not been performed yet
-            if (!refinedOptions) {
-                form.button({"translate": "ui.player_picker.button:search"}, "textures/ui/magnifyingGlass.png", () => {
-                    this.playerSearch(options, (refinedOptions) => {
-                        this.playerPicker(options, refinedOptions, callback);
-                    })
-                })
+            // if there are no players to pick from, show a message instead of the search button
+            if (options.length == 0) {
+                form.label({"translate": "ui.player_picker.label:no_players"});
             }
             else {
-                form.label({"translate": "ui.player_picker.label:search_results", "with": [refinedOptions.length.toString(), options.length.toString()]})
+                // only show if search has not been performed yet
+                if (!refinedOptions) {
+                    form.button({"translate": "ui.player_picker.button:search"}, "textures/ui/magnifyingGlass.png", () => {
+                        this.playerSearch(options, (refinedOptions) => {
+                            this.playerPicker(options, refinedOptions, callback);
+                        })
+                    })
+                }
+                else {
+                    form.label({"translate": "ui.player_picker.label:search_results", "with": [refinedOptions.length.toString(), options.length.toString()]})
+                }
             }
-
-            form.divider();
 
             if (refinedOptions?.length == 0) {
                 form.label({"translate": "ui.player_picker.label:no_results"});
             }
+            
+            form.divider();
 
         for (const p of refinedOptions || options) {
             var isOnline = world.getAllPlayers().filter(player => player.id == p.id).length > 0 ? true : false;
