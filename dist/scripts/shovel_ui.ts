@@ -685,76 +685,72 @@ export class ShovelUI {
                 isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.managePermissions(listParent, pP.id)});
         }
 
-        if (listParent.getUnsavedPlayers().length > 0){
-            form.button({"translate": "ui.manage.permissions.player.selection:add_player"}, "textures/ui/realms_slot_check.png", () => {
-                // get all players that are not currently in the list
-                var options = listParent.getUnsavedPlayers().map(id => PlayerData.fromId(id));
-                
-                this.playerPicker(options, undefined, (selection) => {
+        form.button({"translate": "ui.manage.permissions.player.selection:add_player"}, "textures/ui/realms_slot_check.png", () => {
+            // get all players that are not currently in the list
+            var options = listParent.getUnsavedPlayers().map(id => PlayerData.fromId(id));
+            
+            this.playerPicker(options, undefined, (selection) => {
 
-                    // make sure to not include the player picker when going back
-                    this.navigationStack.pop();
+                // make sure to not include the player picker when going back
+                this.navigationStack.pop();
 
-                    // if player was added redirect to the permissions menu, this menu will handle adding the object to the list
-                    this.managePermissions(listParent, selection.id);
-                });
+                // if player was added redirect to the permissions menu, this menu will handle adding the object to the list
+                this.managePermissions(listParent, selection.id);
             });
-        }
+        });
 
-        if (listParent.playerPermissionsList.length > 0){
-            form.button({"translate": "ui.manage.permissions.player.selection:remove_player"}, "textures/ui/redX1.png", () => {
-                // get all players that are currently in the list
-                var options = listParent.playerPermissionsList.map(p => PlayerData.fromId(p.id));
+        form.button({"translate": "ui.manage.permissions.player.selection:remove_player"}, "textures/ui/redX1.png", () => {
+            // get all players that are currently in the list
+            var options = listParent.playerPermissionsList.map(p => PlayerData.fromId(p.id));
 
-                this.playerPicker(options, undefined, (selection) => {
+            this.playerPicker(options, undefined, (selection) => {
 
-                    // list of players that are set to be disallowed from entering the claim
-                    var pendingEntranceDisallowList: PlayerData[] = [];
-                    var pendingEntranceDisallowClaimName: string;
+                // list of players that are set to be disallowed from entering the claim
+                var pendingEntranceDisallowList: PlayerData[] = [];
+                var pendingEntranceDisallowClaimName: string;
 
-                    for (var p of world.getAllPlayers()) {
-                        var playerData: PlayerData = PlayerData.fromId(p.id);
+                for (var p of world.getAllPlayers()) {
+                    var playerData: PlayerData = PlayerData.fromId(p.id);
 
-                        // if a players permissions have been deleted notify them
-                        if (p.id == selection.id) {
-                            this.notificationManager.send(p, AddonSounds.Claim.SAVE, undefined, listParent instanceof Claim ? "chat.claim:player_permissions_reset_notif" : "chat.claim:global_player_permissions_reset_notif", this.player.name, listParent.name);
+                    // if a players permissions have been deleted notify them
+                    if (p.id == selection.id) {
+                        this.notificationManager.send(p, AddonSounds.Claim.SAVE, undefined, listParent instanceof Claim ? "chat.claim:player_permissions_reset_notif" : "chat.claim:global_player_permissions_reset_notif", this.player.name, listParent.name);
 
-                            // get the claim the player is in, this will be undefined if the player is not in a claim
-                            const claim = listParent instanceof Claim ? 
-                                listParent.isOverlap(p.location) ? 
-                                    listParent : undefined
-                                : listParent.claims.filter(c => c.isOverlap(p.location))[0];
+                        // get the claim the player is in, this will be undefined if the player is not in a claim
+                        const claim = listParent instanceof Claim ? 
+                            listParent.isOverlap(p.location) ? 
+                                listParent : undefined
+                            : listParent.claims.filter(c => c.isOverlap(p.location))[0];
 
-                            // check if the player will lose access to the claim they are in
-                            // compares permissions of soon to be deleted player permissions to the claim permissions
-                            if (claim && !claim.permissions.getPermission(PermissionTypes.ENTER_CLAIM) && claim.hasPermission(PermissionTypes.ENTER_CLAIM, p)) {
-                                
-                                // set flag so the player is not ejected from the claim
-                                playerData.setPendingEntranceDisallow(true);
+                        // check if the player will lose access to the claim they are in
+                        // compares permissions of soon to be deleted player permissions to the claim permissions
+                        if (claim && !claim.permissions.getPermission(PermissionTypes.ENTER_CLAIM) && claim.hasPermission(PermissionTypes.ENTER_CLAIM, p)) {
+                            
+                            // set flag so the player is not ejected from the claim
+                            playerData.setPendingEntranceDisallow(true);
 
-                                pendingEntranceDisallowList.push(playerData);
-                                pendingEntranceDisallowClaimName = claim.name;
+                            pendingEntranceDisallowList.push(playerData);
+                            pendingEntranceDisallowClaimName = claim.name;
 
-                            }
                         }
                     }
+                }
 
-                    // remove player from list
-                    listParent.removePlayerPermissions(selection.id);
+                // remove player from list
+                listParent.removePlayerPermissions(selection.id);
 
-                    playSound(this.player, AddonSounds.Claim.DELETE);
+                playSound(this.player, AddonSounds.Claim.DELETE);
 
-                    if (pendingEntranceDisallowList.length > 0) {
-                        // notify the owner that players are pending entrance disallowed
-                        this.pendingEntranceDisallow(pendingEntranceDisallowList, pendingEntranceDisallowClaimName);
-                    }
-                    else {
-                        // return to previous menu
-                        this.navigationStack.back();
-                    }
-                });
+                if (pendingEntranceDisallowList.length > 0) {
+                    // notify the owner that players are pending entrance disallowed
+                    this.pendingEntranceDisallow(pendingEntranceDisallowList, pendingEntranceDisallowClaimName);
+                }
+                else {
+                    // return to previous menu
+                    this.navigationStack.back();
+                }
             });
-        }
+        });
 
         form.button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();});
 
