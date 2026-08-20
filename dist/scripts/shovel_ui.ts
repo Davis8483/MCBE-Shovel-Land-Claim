@@ -88,6 +88,13 @@ export class ShovelUI {
         form.show(this.player);
     }
 
+    /**
+     * A search box for... well, searching players
+     * At lest one player must be in the list otherwise errors will be thrown
+     * 
+     * @param options - PlayerData objects to search through
+     * @param callback - A callback that returns to the menu requesting a playerSearch
+     */
     private playerSearch(options: PlayerData[], callback: (refinedOptions: PlayerData[]) => void) {
         const form  = new CallbackModalFormData(AddonSounds.Global.NEGATIVE_EVENT, this.navigationStack, () => this.playerSearch(options, callback))
             .title({"translate": "ui.player_search:title"})
