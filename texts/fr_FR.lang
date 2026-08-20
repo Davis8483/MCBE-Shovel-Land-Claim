@@ -92,10 +92,6 @@ ui.op_edit_disallowed_blocks.dropdown:block_id=ID du Type
 ui.op_edit_disallowed_blocks.error:must_not_be_empty=§cVous devez fournir un ID de type !§r
 ui.op_edit_disallowed_blocks.error:block_already_disallowed=§cCe bloc/objet est déjà interdit !§r
 
-ui.op_panel.player_list:title=Liste des Joueurs
-ui.op_panel.player_list.online=§aEn ligne§r
-ui.op_panel.player_list.offline=§cHors ligne§r
-
 ui.op_manage_player.button:player_config=Configuration du Joueur
 ui.op_manage_player.button:edit_claim_blocks=Modifier les Blocs de Claim : §l%s§r
 ui.op_manage_player.button:delete_player_data=§cSupprimer les Données du Joueur§r
@@ -212,16 +208,7 @@ ui.manage.global_permissions.player.selection:body=Les permissions suivantes s'a
 ui.manage.permissions.player.selection:body=Les permissions suivantes remplacent les permissions publiques...
 ui.manage.permissions.player.selection:add_player=§2Ajouter un joueur§r
 ui.manage.permissions.player.selection:remove_player=§cRetirer le joueur§r
-ui.manage.permissions.player.selection.online=§2En ligne§r
-ui.manage.permissions.player.selection.offline=§cHors ligne§r
-ui.manage.permissions.player.selection:global_online=§l§9Global§r - §2En ligne§r
-ui.manage.permissions.player.selection:global_offline=§l§9Global§r - §cHors ligne§r
-
-ui.manage.permissions.player.selection.modify.add:title=Ajouter un joueur
-ui.manage.permissions.player.selection.modify.remove:title=Retirer un joueur
-ui.manage.permissions.player.selection.modify:player_dropdown=Joueur
-ui.manage.permissions.player.selection.modify.add:submit=Ajouter le joueur
-ui.manage.permissions.player.selection.modify.remove:submit=Retirer le joueur
+ui.manage.permissions.player.selection:global_badge=§l[§9Global§r§l]§r
 
 ui.manage.view:loading=Chargement...
 ui.manage.view:loading_subtitle=§dAccroupissez-vous pour annuler

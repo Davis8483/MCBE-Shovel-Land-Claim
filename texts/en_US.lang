@@ -57,6 +57,11 @@ chat.shovel:how_to_craft=Craft a §5Claim Shovel§r by surrounding any vanilla s
 
 ui.global.button:back=<< Back
 ui.global.button:save=Save
+ui.global.button:online=§2Online§r
+ui.global.button:offline=§cOffline: 
+ui.global:last_online_days=%s days ago
+ui.global:last_online_yesterday=Yesterday
+ui.global:last_online_today=Today
 
 ui.main:title=§5Shovel§r Land Claim %s
 ui.main.op_mode:title=Manage Player: %s
@@ -92,9 +97,15 @@ ui.op_edit_disallowed_blocks.dropdown:block_id=Type ID
 ui.op_edit_disallowed_blocks.error:must_not_be_empty=§cYou must provide a type id!§r
 ui.op_edit_disallowed_blocks.error:block_already_disallowed=§cThis block/item is already disallowed!§r
 
-ui.op_panel.player_list:title=Player List
-ui.op_panel.player_list.online=§aOnline§r
-ui.op_panel.player_list.offline=§cOffline§r
+ui.player_search:title=Search Players
+ui.player_search.textbox:query=Search Query
+ui.player_search.textbox:query_placeholder=Ex: %s
+ui.player_search.button:search=Search
+
+ui.player_picker:title=Player Picker
+ui.player_picker.button:search=Search Players
+ui.player_picker.label:search_results=§oFiltered %s/%s players...§r
+ui.player_picker.label:no_results=§oNo players found...§r
 
 ui.op_manage_player.button:player_config=Player Config
 ui.op_manage_player.button:edit_claim_blocks=Edit Claim Blocks: §l%s§r
@@ -212,16 +223,7 @@ ui.manage.global_permissions.player.selection:body=The following permissions app
 ui.manage.permissions.player.selection:body=The following overides public permissions...
 ui.manage.permissions.player.selection:add_player=§2Add Player§r
 ui.manage.permissions.player.selection:remove_player=§cRemove Player§r
-ui.manage.permissions.player.selection.online=§2Online§r
-ui.manage.permissions.player.selection.offline=§cOffline§r
-ui.manage.permissions.player.selection:global_online=§l§9Global§r - §2Online§r
-ui.manage.permissions.player.selection:global_offline=§l§9Global§r - §cOffline§r
-
-ui.manage.permissions.player.selection.modify.add:title=Add Player
-ui.manage.permissions.player.selection.modify.remove:title=Remove Player
-ui.manage.permissions.player.selection.modify:player_dropdown=Player
-ui.manage.permissions.player.selection.modify.add:submit=Add Player
-ui.manage.permissions.player.selection.modify.remove:submit=Remove Player
+ui.manage.permissions.player.selection:global_badge=§l[§9Global§r§l]§r 
 
 ui.manage.view:loading=Loading...
 ui.manage.view:loading_subtitle=§dcrouch to cancel

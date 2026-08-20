@@ -92,10 +92,6 @@ ui.op_edit_disallowed_blocks.dropdown:block_id=Type ID
 ui.op_edit_disallowed_blocks.error:must_not_be_empty=§cYou must provide a type id!§r
 ui.op_edit_disallowed_blocks.error:block_already_disallowed=§cThis block/item is already disallowed!§r
 
-ui.op_panel.player_list:title=Player List
-ui.op_panel.player_list.online=§aOnline§r
-ui.op_panel.player_list.offline=§cOffline§r
-
 ui.op_manage_player.button:player_config=Player Config
 ui.op_manage_player.button:edit_claim_blocks=Edit Claim Blocks: §l%s§r
 ui.op_manage_player.button:delete_player_data=§cDelete Player Data§r
@@ -212,16 +208,7 @@ ui.manage.global_permissions.player.selection:body=The following permissions app
 ui.manage.permissions.player.selection:body=The following overides public permissions...
 ui.manage.permissions.player.selection:add_player=§2Add Player§r
 ui.manage.permissions.player.selection:remove_player=§cRemove Player§r
-ui.manage.permissions.player.selection.online=§2Online§r
-ui.manage.permissions.player.selection.offline=§cOffline§r
-ui.manage.permissions.player.selection:global_online=§l§9Global§r - §2Online§r
-ui.manage.permissions.player.selection:global_offline=§l§9Global§r - §cOffline§r
-
-ui.manage.permissions.player.selection.modify.add:title=Add Player
-ui.manage.permissions.player.selection.modify.remove:title=Remove Player
-ui.manage.permissions.player.selection.modify:player_dropdown=Player
-ui.manage.permissions.player.selection.modify.add:submit=Add Player
-ui.manage.permissions.player.selection.modify.remove:submit=Remove Player
+ui.manage.permissions.player.selection:global_badge=§l[§9Global§r§l]§r 
 
 ui.manage.view:loading=Loading...
 ui.manage.view:loading_subtitle=§dcrouch to cancel

@@ -92,10 +92,6 @@ ui.op_edit_disallowed_blocks.dropdown:block_id=Tipo de ID
 ui.op_edit_disallowed_blocks.error:must_not_be_empty=§c¡Debe proporcionar un tipo de id!§r
 ui.op_edit_disallowed_blocks.error:block_already_disallowed=§c¡Este bloque/item ya esta deshabilitado!§r
 
-ui.op_panel.player_list:title=Lista de Jugadores
-ui.op_panel.player_list.online=§aConectado§r
-ui.op_panel.player_list.offline=§cDesconectado§r
-
 ui.op_manage_player.button:player_config=Configuración del Jugador
 ui.op_manage_player.button:edit_claim_blocks=Editar Bloques de Reclamo:§l%s§r
 ui.op_manage_player.button:delete_player_data=§cEliminar Datos del Jugador§r
@@ -212,16 +208,7 @@ ui.manage.global_permissions.player.selection:body=Los siguientes permisos se ap
 ui.manage.permissions.player.selection:body=Lo siguiente sobrescribira los Permisos Publicos...
 ui.manage.permissions.player.selection:add_player=§2Agregar Jugador§r
 ui.manage.permissions.player.selection:remove_player=§cEliminar Jugador§r
-ui.manage.permissions.player.selection.online=§2Conectado§r
-ui.manage.permissions.player.selection.offline=§cDesconectado§r
-ui.manage.permissions.player.selection:global_online=§l§9Global§r-§2Conectado§r
-ui.manage.permissions.player.selection:global_offline=§l§9Global§r-§cDesconectado§r
-
-ui.manage.permissions.player.selection.modify.add:title=Agregar Jugador
-ui.manage.permissions.player.selection.modify.remove:title=Eliminar Jugador
-ui.manage.permissions.player.selection.modify:player_dropdown=Jugador
-ui.manage.permissions.player.selection.modify.add:submit=Agregar Jugador
-ui.manage.permissions.player.selection.modify.remove:submit=Eliminar Jugador
+ui.manage.permissions.player.selection:global_badge=§l[§9Global§r§l]§r
 
 ui.manage.view:loading=Cargando...
 ui.manage.view:loading_subtitle=§dAgachate para cancelar

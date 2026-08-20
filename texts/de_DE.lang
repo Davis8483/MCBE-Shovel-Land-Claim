@@ -92,10 +92,6 @@ ui.op_edit_disallowed_blocks.dropdown:block_id=Typ-ID
 ui.op_edit_disallowed_blocks.error:must_not_be_empty=§cSie müssen eine Typ-ID angeben!§r
 ui.op_edit_disallowed_blocks.error:block_already_disallowed=§cDieser Block/Artikel ist bereits nicht zulässig!§r
 
-ui.op_panel.player_list:title=Spielerliste
-ui.op_panel.player_list.online=§aOnline§r
-ui.op_panel.player_list.offline=§cOffline§r
-
 ui.op_manage_player.button:player_config=Spielerkonfiguration
 ui.op_manage_player.button:edit_claim_blocks=Anspruchssperren bearbeiten:§l%s§r
 ui.op_manage_player.button:delete_player_data=§cSpielerdaten löschen§r
@@ -212,16 +208,7 @@ ui.manage.global_permissions.player.selection:body=Die folgenden Berechtigungen 
 ui.manage.permissions.player.selection:body=Das Folgende überschreibt öffentliche Berechtigungen...
 ui.manage.permissions.player.selection:add_player=§2Spieler hinzufügen§r
 ui.manage.permissions.player.selection:remove_player=§cSpieler entfernen§r
-ui.manage.permissions.player.selection.online=§2Online§r
-ui.manage.permissions.player.selection.offline=§cOffline§r
-ui.manage.permissions.player.selection:global_online=§l§9Global§r-§2Online§r
-ui.manage.permissions.player.selection:global_offline=§l§9Global§r-§cOffline§r
-
-ui.manage.permissions.player.selection.modify.add:title=Spieler hinzufügen
-ui.manage.permissions.player.selection.modify.remove:title=Spieler entfernen
-ui.manage.permissions.player.selection.modify:player_dropdown=Spieler
-ui.manage.permissions.player.selection.modify.add:submit=Spieler hinzufügen
-ui.manage.permissions.player.selection.modify.remove:submit=Spieler entfernen
+ui.manage.permissions.player.selection:global_badge=§l[§9Global§r§l]§r
 
 ui.manage.view:loading=Laden...
 ui.manage.view:loading_subtitle=§dducken Sie sich, um abzubrechen
