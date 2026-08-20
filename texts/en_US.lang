@@ -105,7 +105,8 @@ ui.player_search.button:search=Search
 ui.player_picker:title=Player Picker
 ui.player_picker.button:search=Search Players
 ui.player_picker.label:search_results=§oFiltered %s/%s players...§r
-ui.player_picker.label:no_results=§oNo players found...§r
+ui.player_picker.label:no_results=§o§cNo players found...§r
+ui.player_picker.label:no_players=§o§cNo players to pick...§r
 
 ui.op_manage_player.button:player_config=Player Config
 ui.op_manage_player.button:edit_claim_blocks=Edit Claim Blocks: §l%s§r
