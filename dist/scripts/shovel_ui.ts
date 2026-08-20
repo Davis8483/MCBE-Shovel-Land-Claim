@@ -88,6 +88,64 @@ export class ShovelUI {
         form.show(this.player);
     }
 
+    private playerSearch(options: PlayerData[], callback: (refinedOptions: PlayerData[]) => void) {
+        const form  = new CallbackModalFormData(AddonSounds.Global.NEGATIVE_EVENT, this.navigationStack, () => this.playerSearch(options, callback))
+            .title({"translate": "ui.player_search:title"})
+            .textField({"translate": "ui.player_search.textbox:query"}, {"translate": "ui.player_search.textbox:query_placeholder", "with": [options[Math.floor(Math.random() * options.length)].name]}, {}, (value) => {
+                return new ModalDataCorrect();
+            })
+            .submitButton({"translate": "ui.player_search.button:search"}, (response) => {
+                var query = response.formValues[0] as string;
+
+                const refinedOptions = options.filter(player => player.name.toLowerCase().includes(query.toLowerCase()));
+                callback(refinedOptions);
+            })
+            .show(this.player);
+
+        this.navigationStack.pop(); // remove the search form from the navigation stack
+    }
+
+    private playerPicker(options: PlayerData[], refinedOptions: PlayerData[] | undefined, callback: (selection: PlayerData) => void) {
+        const form = new CallbackActionFormData(this.navigationStack, () => this.playerPicker(options, refinedOptions, callback))
+            .title({"translate": "ui.player_picker:title"})
+
+            // only show if search has not been performed yet
+            if (!refinedOptions) {
+                form.button({"translate": "ui.player_picker.button:search"}, "textures/ui/magnifyingGlass.png", () => {
+                    this.playerSearch(options, (refinedOptions) => {
+                        this.playerPicker(options, refinedOptions, callback);
+                    })
+                })
+            }
+            else {
+                form.label({"translate": "ui.player_picker.label:search_results", "with": [refinedOptions.length.toString(), options.length.toString()]})
+            }
+
+            form.divider();
+
+            if (refinedOptions?.length == 0) {
+                form.label({"translate": "ui.player_picker.label:no_results"});
+            }
+
+        for (const p of refinedOptions || options) {
+            var isOnline = world.getAllPlayers().filter(player => player.id == p.id).length > 0 ? true : false;
+            const statusText = isOnline
+                ? { "translate": "ui.global.button:online" }
+                : {"rawtext": [{"translate": "ui.global.button:offline" }, p.getLastOnlineFormated() ]};
+            form.button({"rawtext": [{"text": p.name + "\n"}, statusText]}, isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {callback(p)});
+        }
+
+        // if this is a search result, remove this page from the nav stack
+        // the back button will instead run .showCurrent to show the non-searched player list
+        // oh the hacky things I have to do to make navigation work properly :sob:
+        if (refinedOptions) {
+            this.navigationStack.pop();
+        }
+
+        form.button({"translate": "ui.global.button:back"}, undefined, () => {refinedOptions ? this.navigationStack.showCurrent() : this.navigationStack.back()})
+        form.show(this.player);
+    }
+
     /**
      * Menu for managing players and addon settings.
      */
@@ -95,7 +153,7 @@ export class ShovelUI {
         const form = new CallbackActionFormData(this.navigationStack, () => this.opPanel())
             .title({"translate": "ui.op_panel:title"})
             .button({"translate": "ui.op_panel.addon_settings:title"}, "textures/ui/icon_setting.png", () => {this.opAddonConfig()})
-            .button({"translate": "ui.op_panel.button:manage_players"}, "textures/ui/multiplayer_glyph_color.png", () => {this.opPlayerList()})
+            .button({"translate": "ui.op_panel.button:manage_players"}, "textures/ui/multiplayer_glyph_color.png", () => {this.playerPicker(database, undefined, (selection) => {this.opManagePlayer(selection.id)})})
             .button({"translate": "ui.op_panel.button:disallowed_blocks"}, "textures/blocks/barrier.png", () => {this.opDisallowedBlocks()})
 
             // conditionally show the finish setup button
@@ -105,20 +163,6 @@ export class ShovelUI {
 
             form.button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();})
             .show(this.player);
-    }
-
-    private opPlayerList() {
-        const form = new CallbackActionFormData(this.navigationStack, () => this.opPlayerList())
-            .title({"translate": "ui.op_panel.player_list:title"})
-
-        for (const p of database) {
-            var isOnline = world.getAllPlayers().filter(player => player.id == p.id).length > 0 ? true : false;
-
-            form.button({"rawtext": [{"text": p.name + "\n"}, {"translate": isOnline? "ui.op_panel.player_list.online": "ui.op_panel.player_list.offline"}]}, isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.opManagePlayer(p.id)});
-        }
-
-        form.button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();})
-        form.show(this.player);
     }
 
     private opAddonConfig() {
@@ -614,7 +658,12 @@ export class ShovelUI {
             for (const pP of listParent.getOwnerData().playerPermissionsList.filter(p => !listParent.playerPermissionsList.some(p2 => p2.id == p.id))) {
                 var isOnline = world.getAllPlayers().filter(player => player.id == pP.id).length > 0 ? true : false;
 
-                form.button({"rawtext": [{"text": pP.name + "\n"}, {"translate": isOnline? "ui.manage.permissions.player.selection:global_online": "ui.manage.permissions.player.selection:global_offline"}]}, isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.editGlobalPermissionIntent(listParent, pP.id)});
+                // get the players data
+                const pD = PlayerData.fromId(pP.id);
+
+                form.button({"rawtext": [{"text": pP.name + "\n"}, {"translate": "ui.manage.permissions.player.selection:global_badge"},
+                    isOnline? {"translate": "ui.global.button:online"} : {"rawtext": [{"translate": "ui.global.button:offline" }, pD.getLastOnlineFormated() ]}]},
+                    isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.editGlobalPermissionIntent(listParent, pP.id)});
             }
         }
         
@@ -622,56 +671,35 @@ export class ShovelUI {
         for (const pP of listParent instanceof Claim ? listParent.playerPermissionsList : listParent.playerPermissionsList) {
             var isOnline = world.getAllPlayers().filter(player => player.id == pP.id).length > 0 ? true : false;
 
-            form.button({"rawtext": [{"text": pP.name + "\n"}, {"translate": isOnline? "ui.manage.permissions.player.selection.online": "ui.manage.permissions.player.selection.offline"}]}, isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.managePermissions(listParent, pP.id)});
+            // get the players data
+            const pD = PlayerData.fromId(pP.id);
+
+            form.button({"rawtext": [{"text": pP.name + "\n"}, isOnline? {"translate": "ui.global.button:online"} : {"rawtext": [{"translate": "ui.global.button:offline" }, pD.getLastOnlineFormated() ]}]},
+                isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.managePermissions(listParent, pP.id)});
         }
 
         if (listParent.getUnsavedPlayers().length > 0){
-            form.button({"translate": "ui.manage.permissions.player.selection:add_player"}, "textures/ui/realms_slot_check.png", () => {this.playerPermissionsListModify(true, listParent)});
+            form.button({"translate": "ui.manage.permissions.player.selection:add_player"}, "textures/ui/realms_slot_check.png", () => {
+                // get all players that are not currently in the list
+                var options = listParent.getUnsavedPlayers().map(id => PlayerData.fromId(id));
+                
+                this.playerPicker(options, undefined, (selection) => {
+
+                    // make sure to not include the player picker when going back
+                    this.navigationStack.pop();
+
+                    // if player was added redirect to the permissions menu, this menu will handle adding the object to the list
+                    this.managePermissions(listParent, selection.id);
+                });
+            });
         }
 
         if (listParent.playerPermissionsList.length > 0){
-            form.button({"translate": "ui.manage.permissions.player.selection:remove_player"}, "textures/ui/redX1.png", () => {this.playerPermissionsListModify(false, listParent)});
-        }
+            form.button({"translate": "ui.manage.permissions.player.selection:remove_player"}, "textures/ui/redX1.png", () => {
+                // get all players that are currently in the list
+                var options = listParent.playerPermissionsList.map(p => PlayerData.fromId(p.id));
 
-        form.button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();});
-
-        form.show(this.player);
-    }
-    /**
-     * Creates a prompt to specify what player to add or remove from permissions list
-     * 
-     * @param add - Wether to add or remove the selected player from the specific player permissions list
-     * 
-     * @param listParent - The parent class that contains the player permissions list
-     */
-    private playerPermissionsListModify(add: boolean, listParent: Claim | PlayerData) {
-
-        // get unsaved players list
-        var unsavedPlayers: string[] = listParent.getUnsavedPlayers();
-
-        const form = new CallbackModalFormData(AddonSounds.Global.NEGATIVE_EVENT, this.navigationStack, () => this.playerPermissionsListModify(add, listParent))
-            .title(add ? {
-                "rawtext": [
-                    { "translate": "ui.manage.permissions.player.selection.modify.add:title" }
-                ]
-            } :
-                {
-                    "rawtext": [
-                        { "translate": "ui.manage.permissions.player.selection.modify.remove:title" }
-                    ]
-                }
-            )
-            .dropdown({"translate": "ui.manage.permissions.player.selection.modify:player_dropdown"}, add ? unsavedPlayers.map(id => ({"text": PlayerData.fromId(id).name})) : listParent.playerPermissionsList.map(p => ({"text": p.name || ""})))
-            .submitButton(add ? {"translate": "ui.manage.permissions.player.selection.modify.add:submit"} : {"translate": "ui.manage.permissions.player.selection.modify.remove:submit"}, (response) => {
-                const playerID = add ? unsavedPlayers[response.formValues[0] as number] : listParent.playerPermissionsList[response.formValues[0] as number].id;
-
-                if (add) {
-
-                    // if player was added open the permissions menu for them
-                    this.navigationStack.pop(); // remove the player permissions list menu from the stack
-                    this.managePermissions(listParent, playerID);
-                }
-                else {
+                this.playerPicker(options, undefined, (selection) => {
 
                     // list of players that are set to be disallowed from entering the claim
                     var pendingEntranceDisallowList: PlayerData[] = [];
@@ -681,7 +709,7 @@ export class ShovelUI {
                         var playerData: PlayerData = PlayerData.fromId(p.id);
 
                         // if a players permissions have been deleted notify them
-                        if (p.id == playerID) {
+                        if (p.id == selection.id) {
                             this.notificationManager.send(p, AddonSounds.Claim.SAVE, undefined, listParent instanceof Claim ? "chat.claim:player_permissions_reset_notif" : "chat.claim:global_player_permissions_reset_notif", this.player.name, listParent.name);
 
                             // get the claim the player is in, this will be undefined if the player is not in a claim
@@ -705,7 +733,7 @@ export class ShovelUI {
                     }
 
                     // remove player from list
-                    listParent.removePlayerPermissions(playerID);
+                    listParent.removePlayerPermissions(selection.id);
 
                     playSound(this.player, AddonSounds.Claim.DELETE);
 
@@ -717,11 +745,14 @@ export class ShovelUI {
                         // return to previous menu
                         this.navigationStack.back();
                     }
-                }
+                });
             });
-        form.show(this.player)
-    }
+        }
 
+        form.button({"translate": "ui.global.button:back"}, undefined, () => {this.navigationStack.back();});
+
+        form.show(this.player);
+    }
     /**
     * A page for editing permissions.
     * 

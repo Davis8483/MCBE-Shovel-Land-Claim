@@ -1,4 +1,4 @@
-import { world, Vector3, Player, system } from "@minecraft/server";
+import { world, Vector3, Player, system, RawMessage } from "@minecraft/server";
 
 export enum ShovelBehavior {
     LOCK_TO_INVENTORY = 0,
@@ -540,7 +540,8 @@ export class Claim {
     }
 
     /**
-     * Returns a list of player id's that are not saved in the public permissions list
+     * Returns a list of player id's that are not saved in the claim permissions list.
+     * Players included in the global permissions list will also be excluded from this list.
      */
     getUnsavedPlayers(): string[] {
         // player permissions not found in the claims list
@@ -849,9 +850,36 @@ export class PlayerData {
 
     /**
      * Updates the last online timestamp to the current time in ISO format.
+     * Note: time is in UTC, local time is not available in the Bedrock API.
      */
     updateLastOnline(): void {
         this._lastOnline = new Date().toISOString();
+    }
+
+    /**
+     * Returns the last online timestamp in a human-readable format, structured in a RawMessage object
+     * Ex: 3:30pm or 3 days ago
+     */
+    getLastOnlineFormated(): RawMessage {
+        const lastOnline = new Date(this._lastOnline);
+
+        if (isNaN(lastOnline.getTime())) {
+            return {"text": "..."};
+        }
+
+        const diffMs = Date.now() - lastOnline.getTime();
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        // Determine text type based on if player was last online today
+        if (diffDays > 1) {
+            return {"translate": "ui.global:last_online_days", "with": [diffDays.toString()]};
+        }
+        else if (diffDays === 1) {
+            return  {"translate": "ui.global:last_online_yesterday"};
+        }
+        else {
+            return  {"translate": "ui.global:last_online_today"};
+        }
     }
 
     /**
