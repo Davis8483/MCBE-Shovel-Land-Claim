@@ -287,7 +287,7 @@ export class CallbackModalFormData {
      * @param label - The label for the text input.
      * @param placeholder - The placeholder text for the text input.
      * @param textFieldOptions - The default value for the text input (optional).
-     * @param callback - The function to call when the button is pressed (optional).
+     * @param callback - Verify the input and return a ModalDataCorrect or ModalDataError (optional).
      * @returns - The current instance of the form for method chaining.
      */
     public textField(label: RawMessage, placeholder: RawMessage, textFieldOptions?: ModalFormDataTextFieldOptions, callback?: (value: string | RawMessage) => ModalDataCorrect | ModalDataError): this {
@@ -310,7 +310,7 @@ export class CallbackModalFormData {
      * 
      * @param label - The label for the toggle.
      * @param toggleOptions - The default value for the toggle (optional).
-     * @param callback - The function to call when the button is pressed (optional).
+     * @param callback - Verify the input and return a ModalDataCorrect or ModalDataError (optional).
      * @returns - The current instance of the form for method chaining.
      */
     public toggle(label: RawMessage, toggleOptions?: ModalFormDataToggleOptions, callback?: (value: boolean) => ModalDataCorrect | ModalDataError): this {
@@ -333,7 +333,7 @@ export class CallbackModalFormData {
      * @param label - The label for the dropdown.
      * @param options - The options for the dropdown.
      * @param defaultValue - The default value for the dropdown (optional).
-     * @param callback - The function to call when the button is pressed (optional).
+     * @param callback - Verify the input and return a ModalDataCorrect or ModalDataError (optional).
      * @returns - The current instance of the form for method chaining.
      */
     public dropdown(label: RawMessage, options: RawMessage[], dropdownOptions?: ModalFormDataDropdownOptions, callback?: (value: number) => ModalDataCorrect | ModalDataError): this {
@@ -357,9 +357,8 @@ export class CallbackModalFormData {
      * @param label - The label for the slider.
      * @param minimumValue - The minimum value for the slider.
      * @param maximumValue - The maximum value for the slider.
-     * @param valueStep - The step value for the slider.
-     * @param callback - The function to call when the button is pressed (optional).
-     * @param sliderOptions - The default value for the slider (optional).
+     * @param callback - Verify the input and return a ModalDataCorrect or ModalDataError (optional).
+     * @param sliderOptions - The optional additional values for the slider creation.
      * @returns - The current instance of the form for method chaining.
      */
     public slider(label: RawMessage, minimumValue: number, maximumValue: number, sliderOptions?: ModalFormDataSliderOptions, callback?: (value: number) => ModalDataCorrect | ModalDataError): this {
@@ -381,7 +380,9 @@ export class CallbackModalFormData {
     /**
      * Adds the submit button to the form
      *
-     * * @param text - The text to display on the button.
+     * @param text - The text to display on the button.
+     * @param callback - The function to call when the form is submitted (optional).
+     * @returns - The current instance of the form for method chaining.
      */
     public submitButton(text: RawMessage, callback?: (response: ModalFormResponse) => void) {
         this.form.submitButton(text);
