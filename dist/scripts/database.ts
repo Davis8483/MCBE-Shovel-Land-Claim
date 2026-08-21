@@ -695,6 +695,7 @@ export class PlayerData {
     private _name: string;
     private _lastOnline: string;
     private _mobileMode: ShovelMobileMode | null;
+    private _claimParticleDensity: number;
     private _inClaim: boolean;
     private _inClaimName: string;
     private _inClaimOwnerName: string;
@@ -716,6 +717,7 @@ export class PlayerData {
         this._id = playerID;
         this._name = playerName;
         this._lastOnline = new Date().toISOString();
+        this._claimParticleDensity = 5; // a value between 1 and 5, with 5 being the most dense spawning every second, and 1 being the least dense spawning every 5 seconds
         this._mobileMode = null;
         this._inClaim = false;
         this._inClaimName = "";
@@ -743,6 +745,10 @@ export class PlayerData {
 
     get lastOnline(): string {
         return this._lastOnline;
+    }
+
+    get claimParticleDensity(): number {
+        return this._claimParticleDensity;
     }
 
     /**
@@ -879,6 +885,24 @@ export class PlayerData {
         }
         else {
             return  {"translate": "ui.global:last_online_today"};
+        }
+    }
+
+    /**
+     * Sets the density of claim particles.
+     * A value of 5 spawns particles every second, while a value of 1 spawns particles every 5 seconds.
+     * 
+     * @param value - A value between 1 and 5, with 5 being the most dense.
+     */
+    setClaimParticleDensity(value: number): void {
+        if (value < 1) {
+            this._claimParticleDensity = 1;
+        }
+        else if (value > 5) {
+            this._claimParticleDensity = 5;
+        }
+        else {
+            this._claimParticleDensity = value;
         }
     }
 
@@ -1090,6 +1114,7 @@ export class PlayerData {
         playerData.setInClaimName(data._inClaimName || defaultPlayerData.inClaimName);
         playerData.setInClaimOwnerName(data._inClaimOwnerName || defaultPlayerData.inClaimOwnerName);
         playerData.setLastOnline(data._lastOnline || defaultPlayerData.lastOnline);
+        playerData.setClaimParticleDensity(data._claimParticleDensity || defaultPlayerData.claimParticleDensity);
         playerData.setMobileMode(data._mobileMode || defaultPlayerData.mobileMode);
         playerData.setViewingClaim(data._viewingClaim !== undefined ? data._viewingClaim : defaultPlayerData.viewingClaim);
         playerData.setResizingClaimName(data._resizingClaimName || defaultPlayerData._resizingClaimName);

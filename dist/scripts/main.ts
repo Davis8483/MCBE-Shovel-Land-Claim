@@ -903,6 +903,11 @@ system.runInterval(() => {
 
             }
 
+            // apply particle density setting, some particles will be dropped
+            if (Math.floor(world.getAbsoluteTime() / 20) % (6 - playerData.claimParticleDensity) != 0) {
+                continue; // skip rendering for this player
+            }
+
             runInAllClaims((claim) => {
 
                 // user defined start and end points of the claim

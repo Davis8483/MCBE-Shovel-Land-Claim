@@ -71,6 +71,9 @@ export class ShovelUI {
             .button({"translate": "ui.main.button:global_player_permissions"}, "textures/ui/worldsIcon.png", () => {
                 this.playerPermissionsList(playerData);
             })
+            .button({"translate": "ui.main.button:player_config"}, "textures/ui/icon_setting.png", () => {
+                this.playerConfig(playerData.id, false);
+            })
 
             // conditionally show the op panel button
             if (this.player.playerPermissionLevel == PlayerPermissionLevel.Operator) {
@@ -313,7 +316,7 @@ export class ShovelUI {
 
         const form = new CallbackActionFormData(this.navigationStack, () => this.opManagePlayer(playerId))
             .title({"translate": "ui.main.op_mode:title", "with": [playerData.name]})
-            .button({"translate": "ui.op_manage_player.button:player_config"}, "textures/ui/icon_setting.png", () => {this.opPlayerConfig(playerId)})
+            .button({"translate": "ui.op_manage_player.button:player_config"}, "textures/ui/icon_setting.png", () => {this.playerConfig(playerId, true)})
             .button({"translate": "ui.main.button:manage"}, "textures/ui/icon_saleribbon.png", () => {
                 this.claimsList(playerData.id);
             })
@@ -334,38 +337,52 @@ export class ShovelUI {
         form.show(this.player);
     }
 
-    private opPlayerConfig(playerId: string) {
+    private playerConfig(playerId: string, opMode: Boolean) {
 
         var playerData: PlayerData = PlayerData.fromId(playerId);
 
-        const form = new CallbackModalFormData(AddonSounds.Global.NEGATIVE_EVENT, this.navigationStack, () => this.opPlayerConfig(playerId))
-            .title({"translate": "ui.op_player_config:title", "with": [playerData.name]})
-            .dropdown({"translate": "ui.op_player_config.dropdown:claim_blocks_behavior"},
-                [
-                    {"translate": "ui.op_player_config.dropdown_option:default"},
-                    {"translate": "ui.op_player_config.dropdown_option:disable_payment"},
-                    {"translate": "ui.op_player_config.dropdown_option:unlimited"}
-                ],
-                {"defaultValueIndex": playerData.claimBlocks.behavior}, (value) => {
+        const form = new CallbackModalFormData(AddonSounds.Global.NEGATIVE_EVENT, this.navigationStack, () => this.playerConfig(playerId, opMode))
+            .title({"translate": "ui.player_config:title", "with": [playerData.name]})
+            .label({"translate": "ui.player_config.label:user_config"})
+            .divider();
 
-                    playerData.claimBlocks.setBehavior(value)
+            form.slider({"translate": "ui.player_config.slider:claim_particle_density"}, 1, 5, {"valueStep": 1, "defaultValue": playerData.claimParticleDensity, "tooltip": "ui.player_config.tooltip:claim_particle_density"}, (value) => {
+                playerData.setClaimParticleDensity(value as number);
 
-                    return new ModalDataCorrect();
+                return new ModalDataCorrect();
+            });
+
+            if (opMode) {
+                form.label({"translate": "ui.player_config.label:op_user_config"})
+                .divider()
+                .dropdown({"translate": "ui.player_config.dropdown:claim_blocks_behavior"},
+                    [
+                        {"translate": "ui.player_config.dropdown_option:default"},
+                        {"translate": "ui.player_config.dropdown_option:disable_payment"},
+                        {"translate": "ui.player_config.dropdown_option:unlimited"}
+                    ],
+                    {"defaultValueIndex": playerData.claimBlocks.behavior}, (value) => {
+
+                        playerData.claimBlocks.setBehavior(value)
+
+                        return new ModalDataCorrect();
+                    })
+                .textField({"translate": "ui.player_config.textbox:claim_blocks"}, {"translate": "ui.player_config.textbox:claim_blocks_placeholder"}, {"defaultValue": playerData.claimBlocks.amount.toString()}, (value) => {
+                    var newClaimBlocks = parseInt(value as string);
+
+                    if (isNaN(newClaimBlocks) || newClaimBlocks < 0) {
+                        return new ModalDataError("ui.player_config.error:must_be_positive_number");
+                    }
+                    else {
+                        // update claim blocks
+                        playerData.claimBlocks.setAmount(newClaimBlocks);
+
+                        return new ModalDataCorrect();
+                    }
                 })
-            .textField({"translate": "ui.op_player_config.textbox:claim_blocks"}, {"translate": "ui.op_player_config.textbox:claim_blocks_placeholder"}, {"defaultValue": playerData.claimBlocks.amount.toString()}, (value) => {
-                var newClaimBlocks = parseInt(value as string);
+            }
 
-                if (isNaN(newClaimBlocks) || newClaimBlocks < 0) {
-                    return new ModalDataError("ui.op_player_config.error:must_be_positive_number");
-                }
-                else {
-                    // update claim blocks
-                    playerData.claimBlocks.setAmount(newClaimBlocks);
-
-                    return new ModalDataCorrect();
-                }
-            })
-            .submitButton({"translate": "ui.global.button:save"}, (response) => {
+            form.submitButton({"translate": "ui.global.button:save"}, (response) => {
 
                 playSound(this.player, AddonSounds.Claim.SAVE);
 
