@@ -73,6 +73,7 @@ ui.main:body.paragraph:5=§oYou will recieve §a%s§r more in §9%s§r minutes.
 ui.main.button:manage=Manage Claims
 ui.main.button:op_panel=Operator Panel
 ui.main.button:global_player_permissions=§l§9Global§r Player Permissions
+ui.main.button:player_config=Player Config
 ui.main.button:addon_info=Addon Info
 ui.main.button:close=Close
 
@@ -112,14 +113,18 @@ ui.op_manage_player.button:player_config=Player Config
 ui.op_manage_player.button:edit_claim_blocks=Edit Claim Blocks: §l%s§r
 ui.op_manage_player.button:delete_player_data=§cDelete Player Data§r
 
-ui.op_player_config:title=Player Config: %s
-ui.op_player_config.dropdown:claim_blocks_behavior=Claim Blocks Behavior
-ui.op_player_config.dropdown_option:default=Default
-ui.op_player_config.dropdown_option:disable_payment=Disable Hourly Payment
-ui.op_player_config.dropdown_option:unlimited=Unlimited
-ui.op_player_config.textbox:claim_blocks=Edit Claim Block Balance
-ui.op_player_config.textbox:claim_blocks_placeholder=Ex: 500
-ui.op_player_config.error:must_be_positive_number=§cYou must provide a positive number!§r
+ui.player_config:title=Player Config: %s
+ui.player_config.slider:claim_particle_density=Claim Particle Density
+ui.player_config.tooltip:claim_particle_density=5 = Highest Density\n1 = Lowest Density
+ui.player_config.label:user_config=§l§5Player Config
+ui.player_config.label:op_user_config=§l§9Operator Player Config§r
+ui.player_config.dropdown:claim_blocks_behavior=Claim Blocks Behavior
+ui.player_config.dropdown_option:default=Default
+ui.player_config.dropdown_option:disable_payment=Disable Hourly Payment
+ui.player_config.dropdown_option:unlimited=Unlimited
+ui.player_config.textbox:claim_blocks=Edit Claim Block Balance
+ui.player_config.textbox:claim_blocks_placeholder=Ex: 500
+ui.player_config.error:must_be_positive_number=§cYou must provide a positive number!§r
 
 ui.op_delete_player:title=Delete Player Data
 ui.op_delete_player:body=Are you sure you want to delete this player's data? This will remove all claims and permissions.
