@@ -738,7 +738,7 @@ export class ShovelUI {
                 // get the players data
                 const pD = PlayerData.fromId(pP.id);
 
-                form.button({"rawtext": [{"text": pP.name + "\n"}, {"translate": "ui.manage.permissions.player.selection:global_badge"},
+                form.button({"rawtext": [{"text": pD.name + "\n"}, {"translate": "ui.manage.permissions.player.selection:global_badge"},
                     isOnline? {"translate": "ui.global.button:online"} : {"rawtext": [{"translate": "ui.global.button:offline" }, pD.getLastOnlineFormated() ]}]},
                     isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.editGlobalPermissionIntent(listParent, pP.id)});
             }
@@ -751,7 +751,7 @@ export class ShovelUI {
             // get the players data
             const pD = PlayerData.fromId(pP.id);
 
-            form.button({"rawtext": [{"text": pP.name + "\n"}, isOnline? {"translate": "ui.global.button:online"} : {"rawtext": [{"translate": "ui.global.button:offline" }, pD.getLastOnlineFormated() ]}]},
+            form.button({"rawtext": [{"text": pD.name + "\n"}, isOnline? {"translate": "ui.global.button:online"} : {"rawtext": [{"translate": "ui.global.button:offline" }, pD.getLastOnlineFormated() ]}]},
                 isOnline? "textures/ui/profile_glyph_color.png" : "textures/ui/profile_glyph.png", () => {this.managePermissions(listParent, pP.id)});
         }
 
@@ -840,7 +840,7 @@ export class ShovelUI {
         // player is not in the list, so we need to create a new player permissions object
         if (playerPermissions == undefined && playerID) {
 
-            playerPermissions = new PlayerPermissions(playerID, PlayerData.fromId(playerID).name);
+            playerPermissions = new PlayerPermissions(playerID);
 
             // if a claim, copy private permissions to new player permissions
             if (listParent instanceof Claim) {
@@ -858,7 +858,7 @@ export class ShovelUI {
         const form = new CallbackModalFormData(AddonSounds.Global.NEGATIVE_EVENT, this.navigationStack, () => this.managePermissions(listParent, playerID))
             .title(playerID ? {
                 "rawtext": [
-                    { "translate": listParent instanceof Claim? "ui.manage.permissions.player:title" : "ui.manage.global_permissions.player:title", "with": [playerPermissions.name, listParent.name] },
+                    { "translate": listParent instanceof Claim? "ui.manage.permissions.player:title" : "ui.manage.global_permissions.player:title", "with": [PlayerData.fromId(playerPermissions.id).name] },
                 ]
             } :
                 {

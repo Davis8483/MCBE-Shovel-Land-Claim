@@ -225,7 +225,7 @@ function applyPermissionsFromJSON(target: Permissions, data: any, defaultPermiss
 }
 
 /**
- * Represents global player permissions, claim public, and claim global permissisons
+ * Represents a claims public player permissions
  */
 export class Permissions {
     /**
@@ -236,11 +236,7 @@ export class Permissions {
     }
 
     /**
-     * Creates a new PlayerPermissions object
-     * 
-     * @param id - The entity id of the player
-     * 
-     * @param name - The name of the player
+     * Creates a new Permissions object
      */
     constructor() {
         this._permissions = {
@@ -298,6 +294,9 @@ export class Permissions {
     }
 }
 
+/**
+ * Represents a list of permissions a player has, can be used on an individual claim or globaly.
+ */
 export class PlayerPermissions extends Permissions {
     /**
     * The entity id of the player
@@ -305,31 +304,19 @@ export class PlayerPermissions extends Permissions {
     private _id: string;
 
     /**
-     * The name of the player; do not use for identification as it can change.
-     */
-    private _name: string;
-
-    /**
      * Creates a new PlayerPermissions object
      * 
      * @param id - The entity id of the player
-     * 
-     * @param name - The name of the player
      */
-    constructor(id: string, name: string) {
+    constructor(id: string) {
         super();
 
         this._id = id;
-        this._name = name;
     }
 
     // Getters
     get id(): string {
         return this._id;
-    }
-
-    get name(): string {
-        return this._name;
     }
 
     /**
@@ -340,8 +327,8 @@ export class PlayerPermissions extends Permissions {
      * @return - The PlayerPermissions object loaded from the JSON object
      */
     static fromJSON(data: any): PlayerPermissions {
-        const defaultPermissions = new PlayerPermissions(data._id, data._name);
-        const permissions = new PlayerPermissions(data._id, data._name);
+        const defaultPermissions = new PlayerPermissions(data._id);
+        const permissions = new PlayerPermissions(data._id);
         applyPermissionsFromJSON(permissions, data, defaultPermissions);
         return permissions;
     }
@@ -474,7 +461,7 @@ export class Claim {
         claim._playerPermissionsList = data._playerPermissionsList 
             ? data._playerPermissionsList
             .map(PlayerPermissions.fromJSON)
-            .filter(permission => permission.id !== undefined && permission.name !== undefined) 
+            .filter(permission => permission.id !== undefined) 
             : defaultClaim.playerPermissionsList;
 
         return claim;
@@ -1198,7 +1185,7 @@ export class PlayerData {
         playerData._playerPermissionsList = data._playerPermissionsList 
         ? data._playerPermissionsList
         .map(PlayerPermissions.fromJSON)
-        .filter(permission => permission.id !== undefined && permission.name !== undefined) 
+        .filter(permission => permission.id !== undefined) 
         : defaultPlayerData.playerPermissionsList;
 
         // upgrading from v1.0.2 to v1.0.3, schema version is broken in v1.0.2
