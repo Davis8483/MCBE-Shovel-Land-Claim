@@ -28,7 +28,7 @@ export class NotificationManager extends DropTimerManager {
      * @param langId - The language entry for the message.
      * @param slots - The %s slots to replace in the message.
      */
-    public send(player: Player, sound: AddonSounds.Shovel | AddonSounds.Claim | AddonSounds.Global, dropTimer: number | undefined, langId: string, ...slots: string[]) {
+    public send(player: Player, sound: AddonSounds.Shovel | AddonSounds.Claim | AddonSounds.Global | undefined, dropTimer: number | undefined, langId: string, ...slots: string[]) {
 
         this.clearExpiredTimers();
 
@@ -36,7 +36,9 @@ export class NotificationManager extends DropTimerManager {
         if (!this.activeTimers.find(timer => timer.Id === langId)) {
             player.sendMessage([{ "translate": "chat.prefix" }, { "text": " " }, { "translate": `${langId}` , "with": slots}]);
 
-            playSound(player, sound);
+            if (sound) {
+                playSound(player, sound);
+            }
 
             // push new timer to active timers
             this.activeTimers.push({

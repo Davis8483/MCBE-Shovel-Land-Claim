@@ -271,6 +271,22 @@ export class ShovelUI {
                     settings.setClaimNameDisplayBehavior(value);
                     return new ModalDataCorrect();
                 })
+            .textField({"translate": "ui.op_panel.addon_settings.textbox:default_entrance_sound"},
+                {"translate": "ui.op_panel.addon_settings.textbox:default_entrance_sound_placeholder"},
+                {"defaultValue": settings.defaultEntranceSound, "tooltip": "ui.op_panel.addon_settings.tooltip:custom_entrance_exit_sound"},
+                (value) => {
+                    settings.setDefaultEntranceSound(value as string);
+
+                    return new ModalDataCorrect();
+                })
+            .textField({"translate": "ui.op_panel.addon_settings.textbox:default_exit_sound"},
+                {"translate": "ui.op_panel.addon_settings.textbox:default_exit_sound_placeholder"},
+                {"defaultValue": settings.defaultExitSound, "tooltip": "ui.op_panel.addon_settings.tooltip:custom_entrance_exit_sound"},
+                (value) => {
+                    settings.setDefaultExitSound(value as string);
+
+                    return new ModalDataCorrect();
+                })
             .label({"text": ""})
             .header({"translate": "ui.op_panel.addon_settings.header:claim_shovel_section"})
             .divider()
@@ -352,6 +368,37 @@ export class ShovelUI {
                 return new ModalDataCorrect();
             });
 
+            form.toggle({"translate": "ui.player_config.toggle:enable_custom_entrance_exit_sounds"}, {"defaultValue": playerData.enableCustomEntranceExitSounds}, (value) => {
+                playerData.setEnableCustomEntranceExitSounds(value);
+
+                return new ModalDataCorrect();
+            })
+
+            form.textField({"translate": "ui.player_config.textbox:custom_entrance_sound"}, {"text": settings.defaultEntranceSound}, {"defaultValue": playerData.customEntranceSound, "tooltip": "ui.player_config.tooltip:custom_entrance_exit_sound"}, (value) => {
+
+                if ((value.toString().length == 0) || playerData.enableCustomEntranceExitSounds) {
+                    playerData.setCustomEntranceSound(value as string);
+
+                    return new ModalDataCorrect();
+                }
+                else {
+                    return new ModalDataError("ui.player_config.error:must_enable_toggle");
+                }
+
+            })
+            form.textField({"translate": "ui.player_config.textbox:custom_exit_sound"}, {"text": settings.defaultExitSound}, {"defaultValue": playerData.customExitSound, "tooltip": "ui.player_config.tooltip:custom_entrance_exit_sound"}, (value) => {
+
+                if ((value.toString().length == 0) || playerData.enableCustomEntranceExitSounds) {
+                    playerData.setCustomExitSound(value as string);
+
+                    return new ModalDataCorrect();
+                }
+                else {
+                    return new ModalDataError("ui.player_config.error:must_enable_toggle");
+                }
+
+            })
+
             if (opMode) {
                 form.label({"translate": "ui.player_config.label:op_user_config"})
                 .divider()
@@ -382,7 +429,7 @@ export class ShovelUI {
                 })
             }
 
-            form.submitButton({"translate": "ui.global.button:save"}, (response) => {
+            form.submitButton({"translate": "ui.player_config.submit"}, (response) => {
 
                 playSound(this.player, AddonSounds.Claim.SAVE);
 
@@ -923,7 +970,7 @@ export class ShovelUI {
                     this.notificationManager.send(p, AddonSounds.Claim.SAVE, undefined, listParent instanceof Claim ? "chat.claim:player_permissions_updated_notif" : "chat.claim:global_permissions_updated_notif" , this.player.name, listParent.name)
                 }
 
-                // if the claims global permissions have been updated notify all players in the claim
+                // if the claims public permissions have been updated notify all players in the claim
                 if (!playerID && listParent instanceof Claim && listParent.isOverlap(p.location) && (playerData.id != listParent.getOwnerData().id)) {
                     this.notificationManager.send(p, AddonSounds.Claim.SAVE, undefined, "chat.claim:public_permissions_updated_notif", this.player.name, listParent.name)
                 }

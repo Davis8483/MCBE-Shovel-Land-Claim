@@ -17,6 +17,8 @@ export enum NameDisplayBehavior {
  * An object containing global settings for the addon
  */
 export class Settings{
+    private _defaultEntranceSound: string;
+    private _defaultExitSound: string;
     private _claimBlockHourlyPayment: number;
     private _startingClaimBlocks: number;
     private _claimMinimumWidth: number;
@@ -30,6 +32,8 @@ export class Settings{
      * Creates a new Settings object with default values
      */
     constructor(){
+        this._defaultEntranceSound = "random.door_open";
+        this._defaultExitSound = "random.door_close";
         this._claimBlockHourlyPayment = 100;
         this._startingClaimBlocks = 200;
         this._claimMinimumWidth = 8;
@@ -49,6 +53,14 @@ export class Settings{
         this._claimShovelItemBehavior = ShovelBehavior.LOCK_TO_INVENTORY;
         this._claimNameDisplayBehavior = NameDisplayBehavior.ACTION_BAR;
         this._allowWitherSpawningInOverworld = false;
+    }
+
+    get defaultEntranceSound(): string {
+        return this._defaultEntranceSound;
+    }
+
+    get defaultExitSound(): string {
+        return this._defaultExitSound;
     }
 
     get claimBlockHourlyPayment(): number {
@@ -80,6 +92,14 @@ export class Settings{
 
     get allowWitherSpawningInOverworld(): boolean {
         return this._allowWitherSpawningInOverworld;
+    }
+
+    setDefaultEntranceSound(value: string) {
+        this._defaultEntranceSound = value;
+    }
+
+    setDefaultExitSound(value: string) {
+        this._defaultExitSound = value;
     }
 
     setClaimBlockHourlyPayment(value: number) {
@@ -157,6 +177,8 @@ export class Settings{
     static fromJSON(data: any): Settings {
         const defaultSettings = new Settings();
         var settings = new Settings();
+        settings._defaultEntranceSound = data._defaultEntranceSound || defaultSettings._defaultEntranceSound;
+        settings._defaultExitSound = data._defaultExitSound || defaultSettings._defaultExitSound;
         settings._claimBlockHourlyPayment = data._claimBlockHourlyPayment || defaultSettings._claimBlockHourlyPayment;
         settings._startingClaimBlocks = data._startingClaimBlocks || defaultSettings._startingClaimBlocks;
         settings._claimMinimumWidth = data._claimMinimumWidth || defaultSettings._claimMinimumWidth;
@@ -695,6 +717,9 @@ export class PlayerData {
     private _name: string;
     private _lastOnline: string;
     private _mobileMode: ShovelMobileMode | null;
+    private _enableCustomEntranceExitSounds: boolean;
+    private _customEntranceSound: string;
+    private _customExitSound: string;
     private _claimParticleDensity: number;
     private _inClaim: boolean;
     private _inClaimName: string;
@@ -717,6 +742,9 @@ export class PlayerData {
         this._id = playerID;
         this._name = playerName;
         this._lastOnline = new Date().toISOString();
+        this._enableCustomEntranceExitSounds = false;
+        this._customEntranceSound = "";
+        this._customExitSound = "";
         this._claimParticleDensity = 5; // a value between 1 and 5, with 5 being the most dense spawning every second, and 1 being the least dense spawning every 5 seconds
         this._mobileMode = null;
         this._inClaim = false;
@@ -745,6 +773,18 @@ export class PlayerData {
 
     get lastOnline(): string {
         return this._lastOnline;
+    }
+
+    get enableCustomEntranceExitSounds(): boolean {
+        return this._enableCustomEntranceExitSounds;
+    }
+
+    get customEntranceSound(): string {
+        return this._customEntranceSound;
+    }
+
+    get customExitSound(): string {
+        return this._customExitSound;
     }
 
     get claimParticleDensity(): number {
@@ -886,6 +926,30 @@ export class PlayerData {
         else {
             return  {"translate": "ui.global:last_online_today"};
         }
+    }
+
+    setEnableCustomEntranceExitSounds(value: boolean) {
+        this._enableCustomEntranceExitSounds = value;
+    }
+
+    /**
+     * The `enableCustomEntranceExitSounds` flag must be set to true for this to apply
+     * Leaving blank will disable claim entrance sounds.
+     * 
+     * @param value - A minecraft audio id
+     */
+    setCustomEntranceSound(value: string) {
+        this._customEntranceSound = value;
+    }
+
+    /**
+     * The `enableCustomEntranceExitSounds` flag must be set to true for this to apply
+     * Leaving blank will disable claim exit sounds.
+     * 
+     * @param value - A minecraft audio id
+     */
+    setCustomExitSound(value: string) {
+        this._customExitSound = value;
     }
 
     /**
@@ -1114,6 +1178,9 @@ export class PlayerData {
         playerData.setInClaimName(data._inClaimName || defaultPlayerData.inClaimName);
         playerData.setInClaimOwnerName(data._inClaimOwnerName || defaultPlayerData.inClaimOwnerName);
         playerData.setLastOnline(data._lastOnline || defaultPlayerData.lastOnline);
+        playerData.setEnableCustomEntranceExitSounds(data._enableCustomEntranceExitSounds !== undefined ? data._enableCustomEntranceExitSounds : defaultPlayerData.enableCustomEntranceExitSounds);
+        playerData.setCustomEntranceSound(data._customEntranceSound || defaultPlayerData.customEntranceSound);
+        playerData.setCustomExitSound(data._customExitSound || defaultPlayerData.customExitSound);
         playerData.setClaimParticleDensity(data._claimParticleDensity || defaultPlayerData.claimParticleDensity);
         playerData.setMobileMode(data._mobileMode || defaultPlayerData.mobileMode);
         playerData.setViewingClaim(data._viewingClaim !== undefined ? data._viewingClaim : defaultPlayerData.viewingClaim);
