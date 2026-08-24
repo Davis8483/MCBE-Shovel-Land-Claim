@@ -748,7 +748,7 @@ export class PlayerData {
     private _playerPermissionsList: PlayerPermissions[];
 
     constructor(playerID: string, playerName: string) {
-        this._schemaVersion = "v1.0.5";
+        this._schemaVersion = "v1.0.6";
         this._shownChangeLog = true; // default to true so new players don't see the changelog
         this._shownSetupScreen = false; // default to false so all admins can go through the setup ui
         this._isOp = false;
@@ -1290,6 +1290,13 @@ export class PlayerData {
                 // only a permission was added which fromJSON already handles
                 
                 playerData.setSchemaVersion("v1.0.5");
+            }
+
+            // v1.0.5 -> v1.0.6 migration logic
+            if (currentSchemaVersion === "v1.0.5" && this.isVersionNewerThan(latestSchemaVersion, "v1.0.6")) {
+                // fromJSON should handle everything within this migration
+                
+                playerData.setSchemaVersion("v1.0.6");
             }
         }
 
