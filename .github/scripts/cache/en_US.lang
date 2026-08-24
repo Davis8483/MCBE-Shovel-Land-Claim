@@ -166,6 +166,8 @@ ui.op_panel.addon_settings.textbox:default_entrance_sound_placeholder=Ex: random
 ui.op_panel.addon_settings.textbox:default_exit_sound=Default Exit Sound
 ui.op_panel.addon_settings.textbox:default_exit_sound_placeholder=Ex: random.door_close
 ui.op_panel.addon_settings.tooltip:custom_entrance_exit_sound=Leave blank to disable!
+ui.op_panel.addon_settings.toggle:op_access=Operator Access
+ui.op_panel.addon_settings.tooltip:op_access=Gives operators full access to all claims.
 ui.op_panel.addon_settings.header:world_protections_section=§bWorld Protections
 ui.op_panel.addon_settings.toggle:allow_wither=Allow Wither Spawning in Overworld
 ui.op_panel.addon_settings.error:must_be_positive_number=§cYou must provide a positive number!§r
@@ -241,6 +243,11 @@ ui.manage.permissions.player.selection:body=The following overides public permis
 ui.manage.permissions.player.selection:add_player=§2Add Player§r
 ui.manage.permissions.player.selection:remove_player=§cRemove Player§r
 ui.manage.permissions.player.selection:global_badge=§l[§9Global§r§l]§r 
+ui.manage.permissions.player.selection:op_access=Operators\n§l[Group]§r
+
+ui.op_access.title=Operator Permissions
+ui.op_access.header:world_operators=§9World Operators
+ui.op_access.label:access_notice=The following operators have full access to this claim...
 
 ui.manage.view:loading=Loading...
 ui.manage.view:loading_subtitle=§dcrouch to cancel

@@ -166,6 +166,8 @@ ui.op_panel.addon_settings.textbox:default_entrance_sound_placeholder=##TODO: Tr
 ui.op_panel.addon_settings.textbox:default_exit_sound=##TODO: Translate the following "Default Exit Sound"
 ui.op_panel.addon_settings.textbox:default_exit_sound_placeholder=##TODO: Translate the following "Ex: random.door_close"
 ui.op_panel.addon_settings.tooltip:custom_entrance_exit_sound=##TODO: Translate the following "Leave blank to disable!"
+ui.op_panel.addon_settings.toggle:op_access=##TODO: Translate the following "Operator Access"
+ui.op_panel.addon_settings.tooltip:op_access=##TODO: Translate the following "Gives operators full access to all claims."
 ui.op_panel.addon_settings.header:world_protections_section=##TODO: Translate the following "§bWorld Protections"
 ui.op_panel.addon_settings.toggle:allow_wither=##TODO: Translate the following "Allow Wither Spawning in Overworld"
 ui.op_panel.addon_settings.error:must_be_positive_number=§cVous devez fournir un nombre positif !§r
@@ -241,6 +243,11 @@ ui.manage.permissions.player.selection:body=Les permissions suivantes remplacent
 ui.manage.permissions.player.selection:add_player=§2Ajouter un joueur§r
 ui.manage.permissions.player.selection:remove_player=§cRetirer le joueur§r
 ui.manage.permissions.player.selection:global_badge=§l[§9Global§r§l]§r
+ui.manage.permissions.player.selection:op_access=##TODO: Translate the following "Operators\n§l[Group]§r"
+
+ui.op_access.title=##TODO: Translate the following "Operator Permissions"
+ui.op_access.header:world_operators=##TODO: Translate the following "§9World Operators"
+ui.op_access.label:access_notice=##TODO: Translate the following "The following operators have full access to this claim..."
 
 ui.manage.view:loading=Chargement...
 ui.manage.view:loading_subtitle=§dAccroupissez-vous pour annuler
