@@ -1457,9 +1457,16 @@ export class ShovelUI {
             .label({"translate": "ui.changelog.label:2"})
             .label({"translate": "ui.changelog.label:3"})
             .label({"translate": "ui.changelog.label:4"})
+            .label({"translate": "ui.changelog.label:5"})
+            .label({"translate": "ui.changelog.label:6"})
+            .label({"translate": "ui.changelog.label:7"})
+            .label({"translate": "ui.changelog.label:8"})
             .header({"translate": "ui.changelog.header:bug_fixes"})
             .divider()
-            .label({"translate": "ui.changelog.label:5"})
+            .label({"translate": "ui.changelog.label:9"})
+            .label({"translate": "ui.changelog.label:10"})
+            .label({"translate": "ui.changelog.label:11"})
+            .label({"translate": "ui.changelog.label:12"})
             .button({"translate": "ui.changelog.button:back"}, undefined, () => {this.main();});
 
         form.show(this.player);
