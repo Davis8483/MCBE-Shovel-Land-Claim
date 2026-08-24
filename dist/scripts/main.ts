@@ -107,6 +107,8 @@ world.afterEvents.playerHotbarSelectedSlotChange.subscribe((data) => {
         // if new item is not a claim shovel and the previous item was a claim shovel, reset first point and resizing claim name
         if ((!data.itemStack || data.itemStack.typeId != SHOVEL_ID) && (inventory.getSlot(data.previousSlotSelected).typeId == SHOVEL_ID)) {
             if (playerData.resizingClaimName.length > 0) {
+                playerData.setResizingClaimName("");
+
                 // send notif that claim creation has been canceled
                 notifManager.send(data.player, AddonSounds.Global.WARN_EVENT, undefined, "chat.claim:claim_resize_canceled");
             }
@@ -164,9 +166,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
             var isResize = false;
 
             if (!data.player.isSneaking) {
-                playerData.setResizingClaimName("");
-                playerData.setFirstPoint(data.block.location);
-
+                // figure out if the player is trying to resize a claim by selecting its corner
                 runInAllClaims((claim) => {
 
                     // user defined start and end points of the claim
@@ -208,6 +208,9 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                 });
 
                 if (!isResize) {
+                    playerData.setResizingClaimName("");
+                    playerData.setFirstPoint(data.block.location);
+
                     notifManager.send(data.player, AddonSounds.Shovel.SELECT, undefined, "chat.point.new:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
                 }
             }
@@ -217,13 +220,8 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                 var claimIntersectingClaim = false;
                 var playerIntersectingClaim = false;
 
-                // if player has not set the first point yet
-                if (playerData.firstPoint == null) {
-                    // notify and don't continue with claim creation
-                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:point_not_set");
-                }
                 // if claim is resized
-                else if (playerData.resizingClaimName.length > 0) {
+                if (playerData.resizingClaimName.length > 0) {
 
                     // get the claim object that is being resized
                     var resizingClaim = playerData.getClaim(playerData.resizingClaimName);
@@ -269,13 +267,21 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                     }
                     // all requirements met, open the claim resizing ui
                     else {
+                        // reset resizingClaimName var
+                        playerData.setResizingClaimName("");
+
                         system.run(() => {
                             playSound(data.player, AddonSounds.Shovel.SELECT);
                             new ShovelUI(data.player, notifManager).resizeClaim(resizingClaim, playerData.oppositeCorner, secondPoint);
                         });
                     }
                 }
-                // not resizing, create a new claim
+                // if player has not set the first point yet
+                else if (playerData.firstPoint == null) {
+                    // notify and don't continue with claim creation
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:point_not_set");
+                }
+                // create a new claim
                 else {
 
                     const claimWidth = Math.abs(playerData.firstPoint.x - secondPoint.x) + 1;
