@@ -1,4 +1,4 @@
-pack.name=Pala Reclamadora de Tierras v1.0.5
+pack.name=##TODO: Translate the following "Shovel Land Claim v1.0.6"
 pack.description=¡Bienvenido a Shovel Land Claim! Este addon le permite proteger sus construcciones del grifeo y saqueo. Funciona de manera similar al Mod de Java Golden Shovel.
 
 item.slc:claim_shovel=§dPala Reclamadora
@@ -280,13 +280,20 @@ ui.claim.icons:weapons=Armas
 ui.claim.icons:flowers=Flores
 
 ui.changelog:title=%sHistorial de Cambios
-ui.changelog.label:1=§9Bienvenido a la v1.0.5! Esta actualización agrega protección para los nuevos estantes agregados en la actualización de la Era del Cobre, ¡junto con una traducción manual al español!§r
+ui.changelog.label:1=##TODO: Translate the following "§9Welcome to v1.0.6! This update adds the Player Picker and reworks entity protection.§r"
 ui.changelog.header:changes=§eCaracterísticas/Cambios§r
-ui.changelog.label:2=- Añadida traducción manual al español, ¡gracias a JakeJuegaMC! (Si deseas ayudar a traducir este addon a otros idiomas, comunícate en Discord!)
-ui.changelog.label:3=- Actualizados los textos en la creación/redimensión de reclamos para que sean más claros en dispositivos móviles.
-ui.changelog.label:4=- Añadido el permiso "Interactuar con Exhibidores de Items" para habilitar/deshabilitar la interacción con estantes, estanterías cinceladas y soportes para armaduras. Los marcos de ítems aún no son compatibles debido a limitaciones técnicas.
+ui.changelog.label:2=##TODO: Translate the following "- Added the Player Picker."
+ui.changelog.label:3=##TODO: Translate the following "- Reworked the entity protection system."
+ui.changelog.label:4=##TODO: Translate the following "- Xbox achievements now stay enabled when using this addon!"
+ui.changelog.label:5=##TODO: Translate the following "- Added a user config option to reduce claim particles."
+ui.changelog.label:6=##TODO: Translate the following "- Added a user config option to change/disable claim entrance and exit sounds."
+ui.changelog.label:7=##TODO: Translate the following "- Added an option for operators to disable Wither protection."
+ui.changelog.label:8=##TODO: Translate the following "- Added an option for operators to receive full permissions to claims."
 ui.changelog.header:bug_fixes=§bCorrecciones de Errores§r
-ui.changelog.label:5=- Arreglado un problema que permitía romper bloques cuando se estaba en el modo de apertura de menú en dispositivos móviles.
+ui.changelog.label:9=##TODO: Translate the following "- Resolved several console errors."
+ui.changelog.label:10=##TODO: Translate the following "- Fixed the "Use TNT" permission not loading properly."
+ui.changelog.label:11=##TODO: Translate the following "- Fixed the disallowed items list only applying when interacting with a block."
+ui.changelog.label:12=##TODO: Translate the following "- First point particles are no longer shown when resizing a claim."
 ui.changelog.button:back=<< Menú Principal
 
 ui.addon_setup:title=§dPala Reclamadora§r de Tierras - Configuración (%s/%s)

@@ -1,4 +1,4 @@
-pack.name=Shovel Land Claim v1.0.5
+pack.name=##TODO: Translate the following "Shovel Land Claim v1.0.6"
 pack.description=Bienvenue dans Shovel Land Claim ! Cet addon vous permet de protéger vos constructions contre le pillage et le vandalisme. Il fonctionne de manière similaire au mod Golden Shovel sur Java.
 
 item.slc:claim_shovel=Pelle de Claim
@@ -280,13 +280,20 @@ ui.claim.icons:weapons=Armes
 ui.claim.icons:flowers=Fleurs
 
 ui.changelog:title=Journal des modifications %s
-ui.changelog.label:1=§9 Bienvenue à v1.0.5! Cette mise à jour a un protection pour les nouvelles étagères dans la mise à jour pour le jeu du nom de “Copper Age”, avec une traduction manuelle en espagnol!§r
+ui.changelog.label:1=##TODO: Translate the following "§9Welcome to v1.0.6! This update adds the Player Picker and reworks entity protection.§r"
 ui.changelog.header:changes=§eFonctionnalités/Modifications§r
-ui.changelog.label:2=- La mise à jour a une traduction manuelle en espagnol, grâce à JakeJuegaMC! (Si vous savez une autre langue et vous voulez à traduire la add-on, contactez moi dans Discord si vous plait!)
-ui.changelog.label:3=- Après la mise à jour, les textes pour créer ou redimensionner les déclarations sont plus clairs pour les joueurs sur les portables.
-ui.changelog.label:4=- La mise à jour a le droit d'accès de s’appelle “Interagir avec les étalages des objets.” Avec le droit d'accès, les joueurs peuvent interagir avec les étagères, les bibliothèques sculptées, et les porte-armures. Les cadres ne sont pas supportés parce que les limitations techniques.
+ui.changelog.label:2=##TODO: Translate the following "- Added the Player Picker."
+ui.changelog.label:3=##TODO: Translate the following "- Reworked the entity protection system."
+ui.changelog.label:4=##TODO: Translate the following "- Xbox achievements now stay enabled when using this addon!"
+ui.changelog.label:5=##TODO: Translate the following "- Added a user config option to reduce claim particles."
+ui.changelog.label:6=##TODO: Translate the following "- Added a user config option to change/disable claim entrance and exit sounds."
+ui.changelog.label:7=##TODO: Translate the following "- Added an option for operators to disable Wither protection."
+ui.changelog.label:8=##TODO: Translate the following "- Added an option for operators to receive full permissions to claims."
 ui.changelog.header:bug_fixes=§bCorrections de bugs§r
-ui.changelog.label:5=- La mise à jour a réparé une problème avec les joueurs cassent les blocs quand sur le menu sur les portables.
+ui.changelog.label:9=##TODO: Translate the following "- Resolved several console errors."
+ui.changelog.label:10=##TODO: Translate the following "- Fixed the "Use TNT" permission not loading properly."
+ui.changelog.label:11=##TODO: Translate the following "- Fixed the disallowed items list only applying when interacting with a block."
+ui.changelog.label:12=##TODO: Translate the following "- First point particles are no longer shown when resizing a claim."
 ui.changelog.button:back=<< Menu principal
 
 ui.addon_setup:title=§5Shovel§r Land Claim - Configuration (%s/%s)
