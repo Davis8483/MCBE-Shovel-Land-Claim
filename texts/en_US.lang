@@ -280,13 +280,20 @@ ui.claim.icons:weapons=Weapons
 ui.claim.icons:flowers=Flowers
 
 ui.changelog:title=%s Changelog
-ui.changelog.label:1=§9Welcome to v1.0.5! This update adds protection for the new shelves added in the Copper Age update, along with a manual Spanish translation!§r
+ui.changelog.label:1=§9Welcome to v1.0.6! This update adds the Player Picker and reworks entity protection.§r
 ui.changelog.header:changes=§eFeatures/Changes§r
-ui.changelog.label:2=- Manual Spanish translation added, thanks to JakeJuegaMC! (If you would like to help translate this addon to other languages, please reach out on discord!)
-ui.changelog.label:3=- Updated texts on claim creation/resizing to be more clear on mobile.
-ui.changelog.label:4=- Added the "Interact With Item Displays" permission to allow/disallow interaction with shelves, chiseled bookshelves, and armor stands. Item frames are still not supported due to techinical limitations.
+ui.changelog.label:2=- Added the Player Picker.
+ui.changelog.label:3=- Reworked the entity protection system.
+ui.changelog.label:4=- Xbox achievements now stay enabled when using this addon!
+ui.changelog.label:5=- Added a user config option to reduce claim particles.
+ui.changelog.label:6=- Added a user config option to change/disable claim entrance and exit sounds.
+ui.changelog.label:7=- Added an option for operators to disable Wither protection.
+ui.changelog.label:8=- Added an option for operators to receive full permissions to claims.
 ui.changelog.header:bug_fixes=§bBug Fixes§r
-ui.changelog.label:5=- Fixed an issue allowing blocks to be broken when in menu opening mode on mobile.
+ui.changelog.label:9=- Resolved several console errors.
+ui.changelog.label:10=- Fixed the "Use TNT" permission not loading properly.
+ui.changelog.label:11=- Fixed the disallowed items list only applying when interacting with a block.
+ui.changelog.label:12=- First point particles are no longer shown when resizing a claim.
 ui.changelog.button:back=<< Main Menu
 
 ui.addon_setup:title=§5Shovel§r Land Claim - Setup (%s/%s)
