@@ -186,7 +186,7 @@ export class Settings{
         settings._maxClaimAmount = data._maxClaimAmount || defaultSettings._maxClaimAmount;
         settings._claimShovelItemBehavior = data._claimShovelItemBehavior || defaultSettings._claimShovelItemBehavior;
         settings._claimNameDisplayBehavior = data._claimNameDisplayBehavior || defaultSettings._claimNameDisplayBehavior;
-        settings._allowWitherSpawningInOverworld = data._allowWitherSpawningInOverworld || defaultSettings._allowWitherSpawningInOverworld;
+        settings._allowWitherSpawningInOverworld = data._allowWitherSpawningInOverworld !== undefined ? data._allowWitherSpawningInOverworld : defaultSettings._allowWitherSpawningInOverworld;
         return settings;
     }
 }
