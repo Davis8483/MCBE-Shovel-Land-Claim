@@ -1386,7 +1386,7 @@ export class ShovelUI {
 
         // remove pages that are not needed (only filter on the first call when completedPages is 0)
         if (completedPages === 0) {
-            pageQueue = pageQueue.filter(p => !(p == "showTagsGamerule" && !world.gameRules.showTags && (settings.claimShovelItemBehavior == ShovelBehavior.LOCK_TO_INVENTORY)));
+            pageQueue = pageQueue.filter(p => !(p == "showTagsGamerule" && (!world.gameRules.showTags || settings.claimShovelItemBehavior != ShovelBehavior.LOCK_TO_INVENTORY)));
 
             pageQueue = pageQueue.filter(p => !(p == "doFireTickGamerule" && !world.gameRules.doFireTick));
         }

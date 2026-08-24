@@ -82,7 +82,9 @@ world.afterEvents.itemUse.subscribe((data) => {
     if ((data.itemStack.typeId == SHOVEL_ID) && ((playerData.mobileMode == null) || (playerData.mobileMode == ShovelMobileMode.MENU))) {
 
         // if player is an admin, show the setup ui if not seen yet
-        if ((data.source.playerPermissionLevel == PlayerPermissionLevel.Operator) && !playerData.shownSetupScreen) {
+        const setupNeeded = (world.gameRules.showTags && (settings.claimShovelItemBehavior == ShovelBehavior.LOCK_TO_INVENTORY)) || world.gameRules.doFireTick;
+
+        if ((data.source.playerPermissionLevel == PlayerPermissionLevel.Operator) && !playerData.shownSetupScreen && setupNeeded) {
             new ShovelUI(data.source, notifManager).opAddonSetup();
         }
         // if the player hasn't seen the changelog yet
