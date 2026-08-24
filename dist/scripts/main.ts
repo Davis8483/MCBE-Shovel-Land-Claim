@@ -754,6 +754,9 @@ system.runInterval(() => {
         const playerData = PlayerData.fromId(p.id);
         const notifManager = NotificationManagerStack.getById(p.id);
 
+        // update the players operator status
+        playerData.setIsOp(p.playerPermissionLevel == PlayerPermissionLevel.Operator);
+
         // only run if player is in overworld
         if (p.dimension == world.getDimension("overworld")) {
 

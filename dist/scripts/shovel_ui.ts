@@ -234,6 +234,13 @@ export class ShovelUI {
             .label({"text": ""})
             .header({"translate": "ui.op_panel.addon_settings.header:claim_section"})
             .divider()
+            .toggle({"translate": "ui.op_panel.addon_settings.toggle:op_access"},
+                {"tooltip": "ui.op_panel.addon_settings.tooltip:op_access", "defaultValue": settings.opAccess},
+                (value) => {
+                    settings.setOpAccess(value);
+
+                    return new ModalDataCorrect();
+                })
             .textField({"translate": "ui.op_panel.addon_settings.textbox:claim_min_width"}, {"translate": "ui.op_panel.addon_settings.textbox:claim_min_width_placeholder"}, {"defaultValue": settings.claimMinimumWidth.toString()}, (value) => {
                 var newClaimMinimumWidth = parseInt(value as string);
 
@@ -695,6 +702,24 @@ export class ShovelUI {
         form.show(this.player);
     }
 
+    private opAcess(){
+        const form = new CallbackActionFormData(this.navigationStack, () => this.opAcess())
+            .title({"translate": "ui.op_access.title"})
+            .header({"translate": "ui.op_access.header:world_operators"})
+            .label({"translate": "ui.op_access.label:access_notice"})
+            .divider();
+
+            for (const playerData of database.filter((pD) => pD.isOp)) {
+                form.label({"text": playerData.name});
+            }
+
+            form.label({"text": ""})
+            .button({"translate": "ui.global.button:back"}, undefined, () => {
+                this.navigationStack.back();
+            })
+            .show(this.player);
+    }
+
     /**
      * Shows a message form asking if the player would like to either edit the global permissions or overwrite them with a local claim player permission.
      * 
@@ -728,6 +753,13 @@ export class ShovelUI {
                 ]
             })
             .body({"translate": listParent instanceof Claim ? "ui.manage.permissions.player.selection:body" : "ui.manage.global_permissions.player.selection:body"});
+
+        // if Operator Acess setting is enabled, show the player an additional entry
+        if (settings.opAccess) {
+            form.button({"translate": "ui.manage.permissions.player.selection:op_access"}, "textures/ui/permissions_op_crown_hover.png", () => {
+                this.opAcess();
+            })
+        }
 
         // show all global player permissions; include an extra Global badge next to the player name
         if (listParent instanceof Claim) {

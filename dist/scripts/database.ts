@@ -1,4 +1,4 @@
-import { world, Vector3, Player, system, RawMessage } from "@minecraft/server";
+import { world, Vector3, Player, system, RawMessage, PlayerPermissionLevel } from "@minecraft/server";
 
 export enum ShovelBehavior {
     LOCK_TO_INVENTORY = 0,
@@ -19,6 +19,7 @@ export enum NameDisplayBehavior {
 export class Settings{
     private _defaultEntranceSound: string;
     private _defaultExitSound: string;
+    private _opAccess: boolean;
     private _claimBlockHourlyPayment: number;
     private _startingClaimBlocks: number;
     private _claimMinimumWidth: number;
@@ -34,6 +35,7 @@ export class Settings{
     constructor(){
         this._defaultEntranceSound = "random.door_open";
         this._defaultExitSound = "random.door_close";
+        this._opAccess = false;
         this._claimBlockHourlyPayment = 100;
         this._startingClaimBlocks = 200;
         this._claimMinimumWidth = 8;
@@ -61,6 +63,13 @@ export class Settings{
 
     get defaultExitSound(): string {
         return this._defaultExitSound;
+    }
+
+    /**
+     * If enabled operators will have full unrestricted access to all claims.
+     */
+    get opAccess(): boolean {
+        return this._opAccess;
     }
 
     get claimBlockHourlyPayment(): number {
@@ -100,6 +109,15 @@ export class Settings{
 
     setDefaultExitSound(value: string) {
         this._defaultExitSound = value;
+    }
+
+    /**
+     * If enabled operators will have full unrestricted access to all claims.
+     * 
+     * @param value Enable/disable operator access.
+     */
+    setOpAccess(value: boolean) {
+        this._opAccess = value;
     }
 
     setClaimBlockHourlyPayment(value: number) {
@@ -179,6 +197,7 @@ export class Settings{
         var settings = new Settings();
         settings._defaultEntranceSound = data._defaultEntranceSound || defaultSettings._defaultEntranceSound;
         settings._defaultExitSound = data._defaultExitSound || defaultSettings._defaultExitSound;
+        settings._opAccess = data._opAccess !== undefined ? data._opAccess : defaultSettings._opAccess;
         settings._claimBlockHourlyPayment = data._claimBlockHourlyPayment || defaultSettings._claimBlockHourlyPayment;
         settings._startingClaimBlocks = data._startingClaimBlocks || defaultSettings._startingClaimBlocks;
         settings._claimMinimumWidth = data._claimMinimumWidth || defaultSettings._claimMinimumWidth;
@@ -485,6 +504,11 @@ export class Claim {
                 return true;
             }
 
+            // if the player is an operator and op access is enabled for the addon, then they have all permissions
+            if ((player.playerPermissionLevel == PlayerPermissionLevel.Operator) && settings.opAccess) {
+                return true;
+            }
+
             var globalSearchResult = this.getOwnerData().playerPermissionsList.filter((p) => p.id == player.id);
             var claimSearchResult = this._playerPermissionsList.filter((p) => p.id == player.id);
 
@@ -700,6 +724,7 @@ export class PlayerData {
     private _schemaVersion: string;
     private _shownChangeLog: boolean;
     private _shownSetupScreen: boolean;
+    private _isOp: boolean;
     private _id: string;
     private _name: string;
     private _lastOnline: string;
@@ -726,6 +751,7 @@ export class PlayerData {
         this._schemaVersion = "v1.0.5";
         this._shownChangeLog = true; // default to true so new players don't see the changelog
         this._shownSetupScreen = false; // default to false so all admins can go through the setup ui
+        this._isOp = false;
         this._id = playerID;
         this._name = playerName;
         this._lastOnline = new Date().toISOString();
@@ -750,6 +776,11 @@ export class PlayerData {
     }
 
     // Getters
+
+    get isOp(): boolean {
+        return this._isOp;
+    }
+
     get id(): string {
         return this._id;
     }
@@ -871,6 +902,10 @@ export class PlayerData {
 
     private setSchemaVersion(version: string): void {
         this._schemaVersion = version;
+    }
+
+    setIsOp(value: boolean): void {
+        this._isOp = value;
     }
 
     setName(newName: string): void {
@@ -1161,6 +1196,7 @@ export class PlayerData {
 
         playerData.setShownChangeLog(data._shownChangeLog !== undefined ? data._shownChangeLog : defaultPlayerData.shownChangeLog);
         playerData.setShownSetupScreen(data._shownSetupScreen !== undefined ? data._shownSetupScreen : defaultPlayerData.shownSetupScreen);
+        playerData.setIsOp(data._isOp !== undefined ? data._isOp : defaultPlayerData.isOp);
         playerData.setInClaim(data._inClaim !== undefined ? data._inClaim : defaultPlayerData.inClaim);
         playerData.setInClaimName(data._inClaimName || defaultPlayerData.inClaimName);
         playerData.setInClaimOwnerName(data._inClaimOwnerName || defaultPlayerData.inClaimOwnerName);
