@@ -702,8 +702,8 @@ export class ShovelUI {
         form.show(this.player);
     }
 
-    private opAcess(){
-        const form = new CallbackActionFormData(this.navigationStack, () => this.opAcess())
+    private opAccess(){
+        const form = new CallbackActionFormData(this.navigationStack, () => this.opAccess())
             .title({"translate": "ui.op_access.title"})
             .header({"translate": "ui.op_access.header:world_operators"})
             .label({"translate": "ui.op_access.label:access_notice"})
@@ -754,10 +754,10 @@ export class ShovelUI {
             })
             .body({"translate": listParent instanceof Claim ? "ui.manage.permissions.player.selection:body" : "ui.manage.global_permissions.player.selection:body"});
 
-        // if Operator Acess setting is enabled, show the player an additional entry
+        // if Operator Access setting is enabled, show the player an additional entry
         if (settings.opAccess) {
             form.button({"translate": "ui.manage.permissions.player.selection:op_access"}, "textures/ui/permissions_op_crown_hover.png", () => {
-                this.opAcess();
+                this.opAccess();
             })
         }
 
