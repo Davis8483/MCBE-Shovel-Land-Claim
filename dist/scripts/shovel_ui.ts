@@ -710,7 +710,7 @@ export class ShovelUI {
             .divider();
 
             for (const playerData of database.filter((pD) => pD.isOp)) {
-                form.label({"text": playerData.name});
+                form.label({"text": "- " + playerData.name});
             }
 
             form.label({"text": ""})
