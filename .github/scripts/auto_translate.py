@@ -98,13 +98,14 @@ def insert_translator_credit(lines, lang_name):
     if not key or not value_format:
         return lines
     credit_value = value_format.replace('{lang}', lang_name)
-    # Check if credit already exists
+
     for item in lines:
         if item['type'] == 'entry' and item['key'] == key:
-            item['value'] = credit_value  # Update existing credit
+            if not item['value'].strip():
+                item['value'] = credit_value
+                item['original'] = f"{key}={credit_value} ## Auto-generated translator credit"
             return lines
 
-    # If not found, append new credit entry
     lines.append({
         'type': 'entry',
         'key': key,
