@@ -175,9 +175,6 @@ async def main():
         write_lang_file(out_path, out_lines)
         print(f"Prepared manual translation for {lang}: {out_path}")
 
-    # update the cached file to the latest source
-    write_lang_file(CACHED_FILE, parse_lang_file(SOURCE_FILE))
-
     # MARK: Auto Translate
     for lang in TARGET_LANGS_AUTO:
         in_lines = parse_lang_file(SOURCE_FILE)
