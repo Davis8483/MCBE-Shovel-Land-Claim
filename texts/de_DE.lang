@@ -182,7 +182,7 @@ ui.edit_global_permissions_intent.button:edit=Bearbeiten§l§9Global§rBerechtig
 ui.addon_info:title=Addon-Info
 ui.addon_info:body.paragraph:1=§l§5Schaufel§7Landanspruch§r\n§oErstellt von nDavis§r
 ## if your translating this file, this is where you can credit yourself. Ex: \n§oTranslated to Spanish by John Doe§r
-ui.addon_info:translator_credit=\n§oMit Google Services automatisch ins Deutsche übersetzt§r
+ui.addon_info:translator_credit=\n§oAuto Translated to German using Google Services§r
 ui.addon_info:body.paragraph:2=Dieses Add-on wurde als Leidenschaftsprojekt in meiner Freizeit erstellt. Ich hoffe wirklich, dass es Ihnen gefällt! ^_^
 ui.addon_info:body.paragraph:3=Wenn Sie Fragen, Vorschläge oder Probleme haben, wenden Sie sich bitte an Github oder Discord.
 ui.addon_info:body.paragraph:4=§l§9GitHub§r: https://github.com/Davis8483/MCBE-Shovel-Land-Claim
