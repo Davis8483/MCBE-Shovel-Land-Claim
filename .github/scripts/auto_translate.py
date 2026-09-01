@@ -181,8 +181,6 @@ async def main():
     # MARK: Auto Translate
     for lang in TARGET_LANGS_AUTO:
         in_lines = parse_lang_file(SOURCE_FILE)
-        in_lines = insert_translator_credit(in_lines, LANGUAGES[lang.split('_')[0]].capitalize())
-
         cached_lines = parse_lang_file(CACHED_FILE)
         existing_file_path = os.path.join(DESTINATION_FOLDER, f'{lang}.lang')
         existing_lines = parse_lang_file(existing_file_path) if os.path.exists(existing_file_path) else []
@@ -257,6 +255,8 @@ async def main():
                     'comment': out_lines[out_idx]['comment'],
                     'original': out_lines[out_idx]['original']
                 }
+
+        out_lines = insert_translator_credit(out_lines, LANGUAGES[lang.split('_')[0]].capitalize())
 
         out_path = f"{DESTINATION_FOLDER}{f'{lang}'}.lang"
         write_lang_file(out_path, out_lines)
