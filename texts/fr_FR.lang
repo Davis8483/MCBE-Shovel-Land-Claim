@@ -27,8 +27,6 @@ chat.claim:public_permissions_updated_notif=%s §a a mis à jour les permissions
 chat.claim:global_permissions_updated_notif=%s §a a mis à jour vos permissions globales !§r
 chat.claim:player_permissions_reset_notif=%s §b a réinitialisé vos permissions pour§r §5%s§r
 chat.claim:global_player_permissions_reset_notif=%s §b a réinitialisé vos permissions globales
-chat.claim:entered=
-chat.claim:exited=
 
 chat.point.new:selected=Premier bloc sélectionné : [§c%s§r, §a%s§r, §9%s§r]\n§bClique accroupi pour définir le coin opposé du claim !§r
 chat.point.resize:selected=Coin du claim sélectionné : [§c%s§r, §a%s§r, §9%s§r]\n§dClique accroupi sur un autre bloc pour redimensionner le claim !§r
@@ -57,11 +55,6 @@ chat.shovel:how_to_craft=Fabriquez une §5Pelle de Claim§r en entourant une pel
 
 ui.global.button:back=<< Retour
 ui.global.button:save=Sauvegarder
-ui.global.button:online=
-ui.global.button:offline=
-ui.global:last_online_days=
-ui.global:last_online_yesterday=
-ui.global:last_online_today=
 
 ui.main:title=§5Shovel§r Land Claim %s
 ui.main.op_mode:title=Gérer le joueur : %s
@@ -73,7 +66,6 @@ ui.main:body.paragraph:5=§oVous recevrez §a%s§r de plus dans §9%s§r minutes
 ui.main.button:manage=Gérer les Claims
 ui.main.button:op_panel=Panneau d’Opérateur
 ui.main.button:global_player_permissions=§l§9Permissions Globales§r des Joueurs
-ui.main.button:player_config=
 ui.main.button:addon_info=Infos de l’Addon
 ui.main.button:close=Fermer
 
@@ -98,39 +90,12 @@ ui.op_edit_disallowed_blocks.dropdown:block_id=ID du Type
 ui.op_edit_disallowed_blocks.error:must_not_be_empty=§cVous devez fournir un ID de type !§r
 ui.op_edit_disallowed_blocks.error:block_already_disallowed=§cCe bloc/objet est déjà interdit !§r
 
-ui.player_search:title=
-ui.player_search.textbox:query=
-ui.player_search.textbox:query_placeholder=
-ui.player_search.button:search=
 
-ui.player_picker:title=
-ui.player_picker.button:search=
-ui.player_picker.label:search_results=
-ui.player_picker.label:no_results=
-ui.player_picker.label:no_players=
 
 ui.op_manage_player.button:player_config=Configuration du Joueur
 ui.op_manage_player.button:edit_claim_blocks=Modifier les Blocs de Claim : §l%s§r
 ui.op_manage_player.button:delete_player_data=§cSupprimer les Données du Joueur§r
 
-ui.player_config:title=
-ui.player_config.slider:claim_particle_density=
-ui.player_config.tooltip:claim_particle_density=
-ui.player_config.toggle:enable_custom_entrance_exit_sounds=
-ui.player_config.textbox:custom_entrance_sound=
-ui.player_config.textbox:custom_exit_sound=
-ui.player_config.error:must_enable_toggle=
-ui.player_config.tooltip:custom_entrance_exit_sound=
-ui.player_config.label:user_config=
-ui.player_config.label:op_user_config=
-ui.player_config.dropdown:claim_blocks_behavior=
-ui.player_config.dropdown_option:default=
-ui.player_config.dropdown_option:disable_payment=
-ui.player_config.dropdown_option:unlimited=
-ui.player_config.textbox:claim_blocks=
-ui.player_config.textbox:claim_blocks_placeholder=
-ui.player_config.error:must_be_positive_number=
-ui.player_config.submit=
 
 ui.op_delete_player:title=Supprimer les données du joueur
 ui.op_delete_player:body=Êtes-vous sûr de vouloir supprimer les données de ce joueur ? Cela supprimera tous les claims et permissions.
@@ -150,26 +115,11 @@ ui.op_panel.addon_settings.textbox:claim_min_width=Largeur minimale du claim
 ui.op_panel.addon_settings.textbox:claim_min_width_placeholder=Ex : 10
 ui.op_panel.addon_settings.textbox:max_claim_amount=Nombre max de claims par joueur\n0 = Illimité
 ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder=Ex : 10
-ui.op_panel.addon_settings.dropdown:claim_name_display_behavior=
-ui.op_panel.addon_settings.dropdown_option:action_bar=
-ui.op_panel.addon_settings.dropdown_option:chat_on_enter=
-ui.op_panel.addon_settings.dropdown_option:chat_on_enter_and_exit=
-ui.op_panel.addon_settings.dropdown_option:disabled=
 ui.op_panel.addon_settings.header:claim_shovel_section=§dPelle de claim
 ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior=Comportement de la pelle de claim
-ui.op_panel.addon_settings.tooltip:claim_shovel_item_behavior=
 ui.op_panel.addon_settings.dropdown_option:lock_to_inventory=Verrouiller dans l’inventaire
 ui.op_panel.addon_settings.dropdown_option:give_at_spawn=Donner au spawn
 ui.op_panel.addon_settings.dropdown_option:must_be_crafted=Doit être fabriquée
-ui.op_panel.addon_settings.textbox:default_entrance_sound=
-ui.op_panel.addon_settings.textbox:default_entrance_sound_placeholder=
-ui.op_panel.addon_settings.textbox:default_exit_sound=
-ui.op_panel.addon_settings.textbox:default_exit_sound_placeholder=
-ui.op_panel.addon_settings.tooltip:custom_entrance_exit_sound=
-ui.op_panel.addon_settings.toggle:op_access=
-ui.op_panel.addon_settings.tooltip:op_access=
-ui.op_panel.addon_settings.header:world_protections_section=
-ui.op_panel.addon_settings.toggle:allow_wither=
 ui.op_panel.addon_settings.error:must_be_positive_number=§cVous devez fournir un nombre positif !§r
 ui.op_panel.addon_settings.error:must_change_starting_claim_blocks=§cVous devez modifier la valeur du "Solde initial" pour activer cette option !§r
 ui.op_panel.addon_settings.button:save=Sauvegarder la config
@@ -243,11 +193,7 @@ ui.manage.permissions.player.selection:body=Les permissions suivantes remplacent
 ui.manage.permissions.player.selection:add_player=§2Ajouter un joueur§r
 ui.manage.permissions.player.selection:remove_player=§cRetirer le joueur§r
 ui.manage.permissions.player.selection:global_badge=§l[§9Global§r§l]§r
-ui.manage.permissions.player.selection:op_access=
 
-ui.op_access.title=
-ui.op_access.header:world_operators=
-ui.op_access.label:access_notice=
 
 ui.manage.view:loading=Chargement...
 ui.manage.view:loading_subtitle=§dAccroupissez-vous pour annuler
@@ -280,20 +226,8 @@ ui.claim.icons:weapons=Armes
 ui.claim.icons:flowers=Fleurs
 
 ui.changelog:title=Journal des modifications %s
-ui.changelog.label:1=
 ui.changelog.header:changes=§eFonctionnalités/Modifications§r
-ui.changelog.label:2=
-ui.changelog.label:3=
-ui.changelog.label:4=
-ui.changelog.label:5=
-ui.changelog.label:6=
-ui.changelog.label:7=
-ui.changelog.label:8=
 ui.changelog.header:bug_fixes=§bCorrections de bugs§r
-ui.changelog.label:9=
-ui.changelog.label:10=
-ui.changelog.label:11=
-ui.changelog.label:12=
 ui.changelog.button:back=<< Menu principal
 
 ui.addon_setup:title=§5Shovel§r Land Claim - Configuration (%s/%s)
