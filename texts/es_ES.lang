@@ -27,8 +27,6 @@ chat.claim:public_permissions_updated_notif=%s §aha actualizado los permisos p�
 chat.claim:global_permissions_updated_notif=%s §a¡ha actualizado tus permisos globales!§r
 chat.claim:player_permissions_reset_notif=%s §bha restablecido tus permisos para §r§5%s§r
 chat.claim:global_player_permissions_reset_notif=%s§bha restablecido tus permisos globales
-chat.claim:entered=§6You have entered a claim...§r\nClaim Name: §5%s§r\nClaim Owner: §9%s§r
-chat.claim:exited=§6You have left a claim...§r\nClaim Name: §5%s§r\nClaim Owner: §9%s§r
 
 chat.point.new:selected=Primer bloque seleccionado: [§c%s§r,§a%s§r,§9%s§r]\n§b¡Agachate y usa la §dPala Reclamadora§b en otro bloque para establecer la esquina opuesta del reclamo!§r
 chat.point.resize:selected=Esquina de Reclamo Seleccionado: [§c%s§r,§a%s§r,§9%s§r]\n§d¡Agachate y usa la §bPala Reclamadora§d en otro bloque para redimensionar el reclamo!§r
@@ -57,11 +55,6 @@ chat.shovel:how_to_craft=Craftea una §dPala Reclamadora§r Al rodear cualquier 
 
 ui.global.button:back=<< Atras
 ui.global.button:save=\/ Guardar
-ui.global.button:online=§2Online§r
-ui.global.button:offline=§cOffline: 
-ui.global:last_online_days=%s days ago
-ui.global:last_online_yesterday=Yesterday
-ui.global:last_online_today=Today
 
 ui.main:title=§dPala Reclamadora §rde Tierras %s
 ui.main.op_mode:title=Gestionar Jugador: %s
@@ -73,7 +66,6 @@ ui.main:body.paragraph:5=§oRecibirás§a %s §rmás en§9 %s §rminutos.
 ui.main.button:manage=Gestionar Reclamos
 ui.main.button:op_panel=Panel de Operador
 ui.main.button:global_player_permissions=§l§9Permisos Globales§r del Jugador
-ui.main.button:player_config=Player Config
 ui.main.button:addon_info=Información del Addon
 ui.main.button:close=Cerrar
 
@@ -98,39 +90,12 @@ ui.op_edit_disallowed_blocks.dropdown:block_id=Tipo de ID
 ui.op_edit_disallowed_blocks.error:must_not_be_empty=§c¡Debe proporcionar un tipo de id!§r
 ui.op_edit_disallowed_blocks.error:block_already_disallowed=§c¡Este bloque/item ya esta deshabilitado!§r
 
-ui.player_search:title=Search Players
-ui.player_search.textbox:query=Search Query
-ui.player_search.textbox:query_placeholder=Ex: %s
-ui.player_search.button:search=Search
 
-ui.player_picker:title=Player Picker
-ui.player_picker.button:search=Search Players
-ui.player_picker.label:search_results=§oFiltered %s/%s players...§r
-ui.player_picker.label:no_results=§o§cNo players found...§r
-ui.player_picker.label:no_players=§o§cNo players to pick...§r
 
 ui.op_manage_player.button:player_config=Configuración del Jugador
 ui.op_manage_player.button:edit_claim_blocks=Editar Bloques de Reclamo:§l%s§r
 ui.op_manage_player.button:delete_player_data=§cEliminar Datos del Jugador§r
 
-ui.player_config:title=Player Config: %s
-ui.player_config.slider:claim_particle_density=Claim Particle Density
-ui.player_config.tooltip:claim_particle_density=5 = Highest Density\n1 = Lowest Density
-ui.player_config.toggle:enable_custom_entrance_exit_sounds=Enable Custom Entrance/Exit Sounds
-ui.player_config.textbox:custom_entrance_sound=Custom Entrance Sound
-ui.player_config.textbox:custom_exit_sound=Custom Exit Sound
-ui.player_config.error:must_enable_toggle=§cToggle must be enabled to use this feature!
-ui.player_config.tooltip:custom_entrance_exit_sound=Leave blank to disable!
-ui.player_config.label:user_config=§l§5Player Config
-ui.player_config.label:op_user_config=§l§9Operator Player Config§r
-ui.player_config.dropdown:claim_blocks_behavior=Claim Blocks Behavior
-ui.player_config.dropdown_option:default=Default
-ui.player_config.dropdown_option:disable_payment=Disable Hourly Payment
-ui.player_config.dropdown_option:unlimited=Unlimited
-ui.player_config.textbox:claim_blocks=Edit Claim Block Balance
-ui.player_config.textbox:claim_blocks_placeholder=Ex: 500
-ui.player_config.error:must_be_positive_number=§cYou must provide a positive number!§r
-ui.player_config.submit=Save Config
 
 ui.op_delete_player:title=Eliminar datos del Jugadores
 ui.op_delete_player:body=¿Estás seguro de querer eliminar los datos de este jugador? Esto eliminará todas los reclamos y permisos.
@@ -150,26 +115,11 @@ ui.op_panel.addon_settings.textbox:claim_min_width=Ancho y Largo Minimo de Recla
 ui.op_panel.addon_settings.textbox:claim_min_width_placeholder=Ej: 10
 ui.op_panel.addon_settings.textbox:max_claim_amount=Maxima Cantidad de Reclamos por Jugador\n0 = ilimitado
 ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder=Ej: 10
-ui.op_panel.addon_settings.dropdown:claim_name_display_behavior=Claim Name Display
-ui.op_panel.addon_settings.dropdown_option:action_bar=Action Bar
-ui.op_panel.addon_settings.dropdown_option:chat_on_enter=Send in Chat on Enter
-ui.op_panel.addon_settings.dropdown_option:chat_on_enter_and_exit=Send in Chat on Enter & Exit
-ui.op_panel.addon_settings.dropdown_option:disabled=Disabled
 ui.op_panel.addon_settings.header:claim_shovel_section=§dPala Reclamadora
 ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior=Comportamiento del Item §dPala Reclamadora
-ui.op_panel.addon_settings.tooltip:claim_shovel_item_behavior=The Claim Shovel is manually crafted by surrounding any regular shovel with Amethyst Shards.
 ui.op_panel.addon_settings.dropdown_option:lock_to_inventory=Bloquear en el inventario
 ui.op_panel.addon_settings.dropdown_option:give_at_spawn=Dar al spawnear
 ui.op_panel.addon_settings.dropdown_option:must_be_crafted=Debe ser crafteado
-ui.op_panel.addon_settings.textbox:default_entrance_sound=Default Entrance Sound
-ui.op_panel.addon_settings.textbox:default_entrance_sound_placeholder=Ex: random.door_open
-ui.op_panel.addon_settings.textbox:default_exit_sound=Default Exit Sound
-ui.op_panel.addon_settings.textbox:default_exit_sound_placeholder=Ex: random.door_close
-ui.op_panel.addon_settings.tooltip:custom_entrance_exit_sound=Leave blank to disable!
-ui.op_panel.addon_settings.toggle:op_access=Operator Access
-ui.op_panel.addon_settings.tooltip:op_access=Gives operators full access to all claims.
-ui.op_panel.addon_settings.header:world_protections_section=§bWorld Protections
-ui.op_panel.addon_settings.toggle:allow_wither=Allow Wither Spawning in Overworld
 ui.op_panel.addon_settings.error:must_be_positive_number=§c¡Debes proporcionar un número positivo!§r
 ui.op_panel.addon_settings.error:must_change_starting_claim_blocks=§c¡Debes cambiar el valor de "Saldo Inicial" para habilitar este cambio!§r
 ui.op_panel.addon_settings.button:save=Guardar Configuracion
@@ -243,11 +193,7 @@ ui.manage.permissions.player.selection:body=Lo siguiente sobrescribira los Permi
 ui.manage.permissions.player.selection:add_player=§2Agregar Jugador§r
 ui.manage.permissions.player.selection:remove_player=§cEliminar Jugador§r
 ui.manage.permissions.player.selection:global_badge=§l[§9Global§r§l]§r
-ui.manage.permissions.player.selection:op_access=Operators\n§l[Group]§r
 
-ui.op_access.title=Operator Permissions
-ui.op_access.header:world_operators=§9World Operators
-ui.op_access.label:access_notice=The following operators have full access to this claim...
 
 ui.manage.view:loading=Cargando...
 ui.manage.view:loading_subtitle=§dAgachate para cancelar
@@ -280,20 +226,8 @@ ui.claim.icons:weapons=Armas
 ui.claim.icons:flowers=Flores
 
 ui.changelog:title=%sHistorial de Cambios
-ui.changelog.label:1=§9Welcome to v1.0.6! This update adds the Player Picker and reworks entity protection.§r
 ui.changelog.header:changes=§eCaracterísticas/Cambios§r
-ui.changelog.label:2=- Added the Player Picker.
-ui.changelog.label:3=- Reworked the entity protection system.
-ui.changelog.label:4=- Xbox achievements now stay enabled when using this addon!
-ui.changelog.label:5=- Added a user config option to reduce claim particles.
-ui.changelog.label:6=- Added a user config option to change/disable claim entrance and exit sounds.
-ui.changelog.label:7=- Added an option for operators to disable Wither protection.
-ui.changelog.label:8=- Added an option for operators to receive full permissions to claims.
 ui.changelog.header:bug_fixes=§bCorrecciones de Errores§r
-ui.changelog.label:9=- Resolved several console errors.
-ui.changelog.label:10=- Fixed the "Use TNT" permission not loading properly.
-ui.changelog.label:11=- Fixed the disallowed items list only applying when interacting with a block.
-ui.changelog.label:12=- First point particles are no longer shown when resizing a claim.
 ui.changelog.button:back=<< Menú Principal
 
 ui.addon_setup:title=§dPala Reclamadora§r de Tierras - Configuración (%s/%s)
