@@ -182,7 +182,7 @@ ui.edit_global_permissions_intent.button:edit=Editar§l§9 Permisos Globales§r
 ui.addon_info:title=Información del Addon
 ui.addon_info:body.paragraph:1=§l§dPala Reclamadora§7 de Tierras§r\n§oCreado por §bnDAVIS§r
 ## if your translating this file, this is where you can credit yourself. Ex: \n§oTranslated to Spanish by John Doe§r
-ui.addon_info:translator_credit=\n§oTraducido al español por §eJakeJuegaMC§r
+ui.addon_info:translator_credit=\n§oAuto Translated to Spanish using Google Services§r
 ui.addon_info:body.paragraph:2=Este complemento fue creado como un proyecto de pasión en mi tiempo libre, ¡realmente espero que lo disfrutes! ^_^
 ui.addon_info:body.paragraph:3=Si tiene alguna pregunta, sugerencia o problemas, no dudes en comunicarte en GitHub o Discord.
 ui.addon_info:body.paragraph:4=§l§9Github§r: https://github.com/Davis8483/MCBE-Shovel-Land-Claim
