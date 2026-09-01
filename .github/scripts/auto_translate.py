@@ -236,13 +236,9 @@ async def main():
 
             translated_texts = []
             if all_texts:
-                translator = Translator()
-                translations = await asyncio.to_thread(
-                    translator.translate,
-                    all_texts,
-                    dest=lang.split('_')[0]
-                )
-                translated_texts = [t.text if hasattr(t, 'text') else str(t) for t in translations]
+                async with Translator() as translator:
+                    translations = await translator.translate(all_texts, dest=lang.split('_')[0])
+                translated_texts = [t.text for t in translations]
 
             text_cursor = 0
             for out_idx, chunks in batch_specs:
