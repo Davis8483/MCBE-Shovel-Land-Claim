@@ -229,7 +229,7 @@ async def main():
                     out_lines[out_idx] = {
                         'type': 'entry',
                         'key': item['key'],
-                        'value': item['value'],
+                        'value': '',
                         'comment': item['comment'],
                         'original': item['original']
                     }
