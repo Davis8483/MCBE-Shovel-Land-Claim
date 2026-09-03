@@ -240,11 +240,16 @@ async def main():
             translated_texts = []
             if all_texts:
                 target_lang = lang.split('_')[0]
-                async with Translator() as translator:
-                    translations = []
-                    for text in all_texts:
-                        result = await translator.translate(text, src=settings['source'].split('/')[-1].split('_')[0], dest=target_lang)
-                        translations.append(getattr(result, 'text', str(result)))
+                translator = Translator()
+                translations = []
+                for text in all_texts:
+                    result = await asyncio.to_thread(
+                        translator.translate,
+                        text,
+                        src=settings['source'].split('/')[-1].split('_')[0],
+                        dest=target_lang,
+                    )
+                    translations.append(getattr(result, 'text', str(result)))
                 translated_texts = translations
 
             text_cursor = 0
