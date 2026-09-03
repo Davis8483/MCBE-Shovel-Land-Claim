@@ -53,8 +53,10 @@ async def translate_text(text, source_lang, target_lang):
         try:
             translator = GoogleTranslator(source=source_lang, target=target_lang)
             translated = await asyncio.to_thread(translator.translate, text)
-            if not translated or translated.strip() == text.strip():
-                raise RuntimeError('Google Translate returned the source text unchanged')
+            if not translated:
+                raise RuntimeError('Google Translate returned no translated text')
+            if translated.strip() == text.strip():
+                print(f'Google Translate left text unchanged: {text!r}')
             return translated
         except Exception as error:
             last_error = error
