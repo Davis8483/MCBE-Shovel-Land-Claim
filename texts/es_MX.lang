@@ -27,6 +27,8 @@ chat.claim:public_permissions_updated_notif=%s §aha actualizado los permisos p�
 chat.claim:global_permissions_updated_notif=%s §a¡ha actualizado tus permisos globales!§r
 chat.claim:player_permissions_reset_notif=%s §bha restablecido tus permisos para §r§5%s§r
 chat.claim:global_player_permissions_reset_notif=%s§bha restablecido tus permisos globales
+chat.claim:entered=§6Has ingresado un reclamo...§r\nNombre del reclamo:§5%s§r\nPropietario del reclamo:§9%s§r
+chat.claim:exited=§6Has dejado un reclamo...§r\nNombre del reclamo:§5%s§r\nPropietario del reclamo:§9%s§r
 
 chat.point.new:selected=Primer bloque seleccionado: [§c%s§r,§a%s§r,§9%s§r]\n§b¡Agachate y usa la §dPala Reclamadora§b en otro bloque para establecer la esquina opuesta del reclamo!§r
 chat.point.resize:selected=Esquina de Reclamo Seleccionado: [§c%s§r,§a%s§r,§9%s§r]\n§d¡Agachate y usa la §bPala Reclamadora§d en otro bloque para redimensionar el reclamo!§r
@@ -55,6 +57,11 @@ chat.shovel:how_to_craft=Craftea una §dPala Reclamadora§r Al rodear cualquier 
 
 ui.global.button:back=<< Atras
 ui.global.button:save=\/ Guardar
+ui.global.button:online=§2En línea§r
+ui.global.button:offline=§cDesconectado:
+ui.global:last_online_days=%shace dias
+ui.global:last_online_yesterday=Ayer
+ui.global:last_online_today=Hoy
 
 ui.main:title=§dPala Reclamadora §rde Tierras %s
 ui.main.op_mode:title=Gestionar Jugador: %s
@@ -66,6 +73,7 @@ ui.main:body.paragraph:5=§oRecibirás§a %s §rmás en§9 %s §rminutos.
 ui.main.button:manage=Gestionar Reclamos
 ui.main.button:op_panel=Panel de Operador
 ui.main.button:global_player_permissions=§l§9Permisos Globales§r del Jugador
+ui.main.button:player_config=Configuración del reproductor
 ui.main.button:addon_info=Información del Addon
 ui.main.button:close=Cerrar
 
@@ -90,12 +98,39 @@ ui.op_edit_disallowed_blocks.dropdown:block_id=Tipo de ID
 ui.op_edit_disallowed_blocks.error:must_not_be_empty=§c¡Debe proporcionar un tipo de id!§r
 ui.op_edit_disallowed_blocks.error:block_already_disallowed=§c¡Este bloque/item ya esta deshabilitado!§r
 
+ui.player_search:title=Search Players
+ui.player_search.textbox:query=Consulta de búsqueda
+ui.player_search.textbox:query_placeholder=Ex:%s
+ui.player_search.button:search=Buscar
 
+ui.player_picker:title=Selector de jugadores
+ui.player_picker.button:search=Buscar jugadores
+ui.player_picker.label:search_results=§oFiltrado%s/%sjugadores...§r
+ui.player_picker.label:no_results=§o§cNo se encontraron jugadores...§r
+ui.player_picker.label:no_players=§o§cNo hay jugadores para elegir...§r
 
 ui.op_manage_player.button:player_config=Configuración del Jugador
 ui.op_manage_player.button:edit_claim_blocks=Editar Bloques de Reclamo:§l%s§r
 ui.op_manage_player.button:delete_player_data=§cEliminar Datos del Jugador§r
 
+ui.player_config:title=Configuración del reproductor:%s
+ui.player_config.slider:claim_particle_density=Reclamar densidad de partículas
+ui.player_config.tooltip:claim_particle_density=5 = densidad más alta\n1 = densidad más baja
+ui.player_config.toggle:enable_custom_entrance_exit_sounds=Habilitar sonidos de entrada/salida personalizados
+ui.player_config.textbox:custom_entrance_sound=Sonido de entrada personalizado
+ui.player_config.textbox:custom_exit_sound=Sonido de salida personalizado
+ui.player_config.error:must_enable_toggle=§c¡La alternancia debe estar habilitada para usar esta función!
+ui.player_config.tooltip:custom_entrance_exit_sound=¡Déjelo en blanco para desactivarlo!
+ui.player_config.label:user_config=§l§5Configuración del reproductor
+ui.player_config.label:op_user_config=§l§9Configuración del jugador del operador§r
+ui.player_config.dropdown:claim_blocks_behavior=Comportamiento de bloqueos de reclamaciones
+ui.player_config.dropdown_option:default=Por defecto
+ui.player_config.dropdown_option:disable_payment=Desactivar pago por hora
+ui.player_config.dropdown_option:unlimited=Ilimitado
+ui.player_config.textbox:claim_blocks=Editar saldo del bloqueo de reclamos
+ui.player_config.textbox:claim_blocks_placeholder=Ej: 500
+ui.player_config.error:must_be_positive_number=§c¡Debes proporcionar un número positivo!§r
+ui.player_config.submit=Guardar configuración
 
 ui.op_delete_player:title=Eliminar datos del Jugadores
 ui.op_delete_player:body=¿Estás seguro de querer eliminar los datos de este jugador? Esto eliminará todas los reclamos y permisos.
@@ -115,11 +150,26 @@ ui.op_panel.addon_settings.textbox:claim_min_width=Ancho y Largo Minimo de Recla
 ui.op_panel.addon_settings.textbox:claim_min_width_placeholder=Ej: 10
 ui.op_panel.addon_settings.textbox:max_claim_amount=Maxima Cantidad de Reclamos por Jugador\n0 = ilimitado
 ui.op_panel.addon_settings.textbox:max_claim_amount_placeholder=Ej: 10
+ui.op_panel.addon_settings.dropdown:claim_name_display_behavior=Visualización del nombre del reclamo
+ui.op_panel.addon_settings.dropdown_option:action_bar=Barra de acción
+ui.op_panel.addon_settings.dropdown_option:chat_on_enter=Enviar en Chat al entrar
+ui.op_panel.addon_settings.dropdown_option:chat_on_enter_and_exit=Enviar chat al entrar y salir
+ui.op_panel.addon_settings.dropdown_option:disabled=Desactivado
 ui.op_panel.addon_settings.header:claim_shovel_section=§dPala Reclamadora
 ui.op_panel.addon_settings.dropdown:claim_shovel_item_behavior=Comportamiento del Item §dPala Reclamadora
+ui.op_panel.addon_settings.tooltip:claim_shovel_item_behavior=La pala de reclamo se elabora manualmente rodeando cualquier pala normal con fragmentos de amatista.
 ui.op_panel.addon_settings.dropdown_option:lock_to_inventory=Bloquear en el inventario
 ui.op_panel.addon_settings.dropdown_option:give_at_spawn=Dar al spawnear
 ui.op_panel.addon_settings.dropdown_option:must_be_crafted=Debe ser crafteado
+ui.op_panel.addon_settings.textbox:default_entrance_sound=Sonido de entrada predeterminado
+ui.op_panel.addon_settings.textbox:default_entrance_sound_placeholder=Ej: aleatorio.puerta_abierta
+ui.op_panel.addon_settings.textbox:default_exit_sound=Sonido de salida predeterminado
+ui.op_panel.addon_settings.textbox:default_exit_sound_placeholder=Ej: aleatorio.door_close
+ui.op_panel.addon_settings.tooltip:custom_entrance_exit_sound=¡Déjelo en blanco para desactivarlo!
+ui.op_panel.addon_settings.toggle:op_access=Acceso del operador
+ui.op_panel.addon_settings.tooltip:op_access=Brinda a los operadores acceso completo a todos los reclamos.
+ui.op_panel.addon_settings.header:world_protections_section=§bProtecciones Mundiales
+ui.op_panel.addon_settings.toggle:allow_wither=Permitir el desove de Wither en Overworld
 ui.op_panel.addon_settings.error:must_be_positive_number=§c¡Debes proporcionar un número positivo!§r
 ui.op_panel.addon_settings.error:must_change_starting_claim_blocks=§c¡Debes cambiar el valor de "Saldo Inicial" para habilitar este cambio!§r
 ui.op_panel.addon_settings.button:save=Guardar Configuracion
@@ -193,7 +243,11 @@ ui.manage.permissions.player.selection:body=Lo siguiente sobrescribira los Permi
 ui.manage.permissions.player.selection:add_player=§2Agregar Jugador§r
 ui.manage.permissions.player.selection:remove_player=§cEliminar Jugador§r
 ui.manage.permissions.player.selection:global_badge=§l[§9Global§r§l]§r
+ui.manage.permissions.player.selection:op_access=Operadores\n§l[Grupo]§r
 
+ui.op_access.title=Permisos de operador
+ui.op_access.header:world_operators=§9Operadores mundiales
+ui.op_access.label:access_notice=Los siguientes operadores tienen acceso completo a este reclamo...
 
 ui.manage.view:loading=Cargando...
 ui.manage.view:loading_subtitle=§dAgachate para cancelar
@@ -226,8 +280,20 @@ ui.claim.icons:weapons=Armas
 ui.claim.icons:flowers=Flores
 
 ui.changelog:title=%sHistorial de Cambios
+ui.changelog.label:1=§9¡Bienvenido a v1.0.6! Esta actualización agrega el Selector de jugadores y modifica la protección de entidades.§r
 ui.changelog.header:changes=§eCaracterísticas/Cambios§r
+ui.changelog.label:2=- Se agregó el Selector de jugadores.
+ui.changelog.label:3=- Reelaborado el sistema de protección de entidades.
+ui.changelog.label:4=- ¡Los logros de Xbox ahora permanecen habilitados al usar este complemento!
+ui.changelog.label:5=- Se agregó una opción de configuración de usuario para reducir las partículas de reclamo.
+ui.changelog.label:6=- Se agregó una opción de configuración de usuario para cambiar/deshabilitar los sonidos de entrada y salida de reclamos.
+ui.changelog.label:7=- Se agregó una opción para que los operadores deshabiliten la protección Wither.
+ui.changelog.label:8=- Se agregó una opción para que los operadores reciban permisos completos para reclamos.
 ui.changelog.header:bug_fixes=§bCorrecciones de Errores§r
+ui.changelog.label:9=- Resueltos varios errores de la consola.
+ui.changelog.label:10=- Se corrigió que el permiso "Usar TNT" no se cargara correctamente.
+ui.changelog.label:11=- Se corrigió la lista de elementos no permitidos que solo se aplicaba al interactuar con un bloque.
+ui.changelog.label:12=- Las partículas del primer punto ya no se muestran al cambiar el tamaño de un reclamo.
 ui.changelog.button:back=<< Menú Principal
 
 ui.addon_setup:title=§dPala Reclamadora§r de Tierras - Configuración (%s/%s)
