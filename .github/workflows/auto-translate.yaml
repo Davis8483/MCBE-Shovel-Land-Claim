@@ -23,12 +23,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r .github/scripts/requirements.txt || true
+          pip install -r .github/scripts/requirements.txt
 
       - name: Run auto_translate.py
         run: python .github/scripts/auto_translate.py
