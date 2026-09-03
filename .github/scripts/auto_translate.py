@@ -47,6 +47,27 @@ def reassemble_chunks(chunks, translated_texts):
             out.append(chunk['value'])
     return ''.join(out)
 
+async def translate_text(text, source_lang, target_lang):
+    last_error = None
+    for attempt in range(3):
+        try:
+            translator = Translator(service_urls=['translate.google.com'])
+            result = await asyncio.to_thread(
+                translator.translate,
+                text,
+                src=source_lang,
+                dest=target_lang,
+            )
+            translated = getattr(result, 'text', None)
+            if translated is None:
+                raise RuntimeError('Google Translate returned no translated text')
+            return translated
+        except Exception as error:
+            last_error = error
+            if attempt < 2:
+                await asyncio.sleep(2 ** attempt)
+    raise RuntimeError(f'Unable to translate text after 3 attempts: {last_error}') from last_error
+
 # Improved parser: preserves original lines, keys, values, comments, and newlines
 def parse_lang_file(file_path):
     parsed = []
@@ -240,16 +261,14 @@ async def main():
             translated_texts = []
             if all_texts:
                 target_lang = lang.split('_')[0]
-                translator = Translator()
+                source_lang = settings['source'].split('/')[-1].split('_')[0]
                 translations = []
                 for text in all_texts:
-                    result = await asyncio.to_thread(
-                        translator.translate,
+                    translations.append(await translate_text(
                         text,
-                        src=settings['source'].split('/')[-1].split('_')[0],
-                        dest=target_lang,
-                    )
-                    translations.append(getattr(result, 'text', str(result)))
+                        source_lang,
+                        target_lang,
+                    ))
                 translated_texts = translations
 
             text_cursor = 0
