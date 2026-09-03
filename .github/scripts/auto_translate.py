@@ -229,7 +229,7 @@ async def main():
                     out_lines[out_idx] = {
                         'type': 'entry',
                         'key': item['key'],
-                        'value': item['value'],
+                        'value': '',
                         'comment': item['comment'],
                         'original': item['original']
                     }
@@ -239,9 +239,13 @@ async def main():
 
             translated_texts = []
             if all_texts:
+                target_lang = lang.split('_')[0]
                 async with Translator() as translator:
-                    translations = await translator.translate(all_texts, dest=lang.split('_')[0])
-                translated_texts = [t.text for t in translations]
+                    translations = []
+                    for text in all_texts:
+                        result = await translator.translate(text, src=settings['source'].split('/')[-1].split('_')[0], dest=target_lang)
+                        translations.append(getattr(result, 'text', str(result)))
+                translated_texts = translations
 
             text_cursor = 0
             for out_idx, chunks in batch_specs:
