@@ -175,6 +175,9 @@ async def main():
         write_lang_file(out_path, out_lines)
         print(f"Prepared manual translation for {lang}: {out_path}")
 
+    # update the cached file to the latest source
+    write_lang_file(CACHED_FILE, parse_lang_file(SOURCE_FILE))
+
     # MARK: Auto Translate
     for lang in TARGET_LANGS_AUTO:
         in_lines = parse_lang_file(SOURCE_FILE)
@@ -236,9 +239,13 @@ async def main():
 
             translated_texts = []
             if all_texts:
+                target_lang = lang.split('_')[0]
                 async with Translator() as translator:
-                    translations = await translator.translate(all_texts, dest=lang.split('_')[0])
-                translated_texts = [t.text for t in translations]
+                    translations = []
+                    for text in all_texts:
+                        result = await translator.translate(text, src=settings['source'].split('/')[-1].split('_')[0], dest=target_lang)
+                        translations.append(getattr(result, 'text', str(result)))
+                translated_texts = translations
 
             text_cursor = 0
             for out_idx, chunks in batch_specs:
