@@ -108,23 +108,17 @@ While holding the Claim Shovel, break any corner of your claim, then break anoth
   </tr>
   <tr>
     <td>Hurt Players</td>
-    <td>Due to how the entity protection system is implemented, Player protection is a bit limited. When a player is hit, that damage taken will be restored. Although if the hit brings them to 0 health, nothing can be done. Typically when this happens with non-player entities, a previous copy of the entity will be loaded back into the world; this cannot be done with players sadly.</td>
+    <td>Any player in your claim; this includes you, the owner.</td>
     <td>False</td>
   </tr>
 </table>
 
-> <details>
-> <summary>Entity Protection Technical Details (dropdown)</summary>
-> <be>
-> For most protections Before Events are used to prevent an action before it happens. There's unfortunately not an Entity Hurt Before Event, only an After Event. Now with this we can still reset an entities health to what it was. Although, if its health reaches 0, the game will count the entity as dead, which cannot be undone. To get around this, the Structure Manager is used to proactively create entity saves that can be loaded back upon death. This method has proved to be very reliable, although it can occasionaly result in unexpected behavior.
-> </details>
-
 ---
 
-The following protections are also included by default, although cannot be toggled...
-- Protection against pistons moving blocks in/out of claim borders.
-- Fireballs being launched into claims.
-- Spawning Withers in the overworld.
+The following protections are also included by default...
+- Protection against pistons moving blocks in/out of claim borders. Can't be disabled.
+- Fireballs being launched into claims. Can't be disabled.
+- Spawning Withers in the overworld. Can be disabled in the Operator Panel.
 
 ## Claim blocks
 
