@@ -1,7 +1,7 @@
 import re
 import os
 import asyncio
-from googletrans import Translator, LANGUAGES
+from deep_translator import GoogleTranslator
 import yaml
 
 # Determine project folder (two levels up from this script)
@@ -46,6 +46,21 @@ def reassemble_chunks(chunks, translated_texts):
         else:
             out.append(chunk['value'])
     return ''.join(out)
+
+async def translate_text(text, source_lang, target_lang):
+    last_error = None
+    for attempt in range(3):
+        try:
+            translator = GoogleTranslator(source=source_lang, target=target_lang)
+            translated = await asyncio.to_thread(translator.translate, text)
+            if not translated or translated.strip() == text.strip():
+                raise RuntimeError('Google Translate returned the source text unchanged')
+            return translated
+        except Exception as error:
+            last_error = error
+            if attempt < 2:
+                await asyncio.sleep(2 ** attempt)
+    raise RuntimeError(f'Unable to translate text after 3 attempts: {last_error}') from last_error
 
 # Improved parser: preserves original lines, keys, values, comments, and newlines
 def parse_lang_file(file_path):
@@ -240,16 +255,15 @@ async def main():
             translated_texts = []
             if all_texts:
                 target_lang = lang.split('_')[0]
-                translator = Translator()
+                source_lang = settings['source'].split('/')[-1].split('_')[0]
                 translations = []
                 for text in all_texts:
-                    result = await asyncio.to_thread(
-                        translator.translate,
+                    translations.append(await translate_text(
                         text,
-                        src=settings['source'].split('/')[-1].split('_')[0],
-                        dest=target_lang,
-                    )
-                    translations.append(getattr(result, 'text', str(result)))
+                        source_lang,
+                        target_lang,
+                    ))
+                    await asyncio.sleep(1)
                 translated_texts = translations
 
             text_cursor = 0
@@ -265,7 +279,7 @@ async def main():
                     'original': out_lines[out_idx]['original']
                 }
 
-        out_lines = insert_translator_credit(out_lines, LANGUAGES[lang.split('_')[0]].capitalize())
+        out_lines = insert_translator_credit(out_lines, lang.split('_')[0].capitalize())
 
         out_path = f"{DESTINATION_FOLDER}{f'{lang}'}.lang"
         write_lang_file(out_path, out_lines)
