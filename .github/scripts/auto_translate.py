@@ -2,6 +2,7 @@ import re
 import os
 import asyncio
 from deep_translator import GoogleTranslator
+from deep_translator.exceptions import TranslationNotFound
 import yaml
 
 # Determine project folder (two levels up from this script)
@@ -49,20 +50,24 @@ def reassemble_chunks(chunks, translated_texts):
 
 async def translate_text(text, source_lang, target_lang):
     last_error = None
-    for attempt in range(3):
+    for attempt in range(5):
         try:
             translator = GoogleTranslator(source=source_lang, target=target_lang)
             translated = await asyncio.to_thread(translator.translate, text)
             if not translated:
-                raise RuntimeError('Google Translate returned no translated text')
+                print(f'Google Translate returned no text; keeping source: {text!r}')
+                return text
             if translated.strip() == text.strip():
                 print(f'Google Translate left text unchanged: {text!r}')
             return translated
+        except TranslationNotFound as error:
+            last_error = error
         except Exception as error:
             last_error = error
-            if attempt < 2:
-                await asyncio.sleep(2 ** attempt)
-    raise RuntimeError(f'Unable to translate text after 3 attempts: {last_error}') from last_error
+        if attempt < 4:
+            await asyncio.sleep(2 ** (attempt + 1))
+    print(f'Google Translate found no translation; keeping source: {text!r}')
+    return text
 
 # Improved parser: preserves original lines, keys, values, comments, and newlines
 def parse_lang_file(file_path):
