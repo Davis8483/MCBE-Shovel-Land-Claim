@@ -1,5 +1,5 @@
 import { Entity, EntityComponentTypes, EntityInventoryComponent, ItemLockMode, ItemStack, Player, system, Vector3, world } from "@minecraft/server";
-import { Claim, database, ShovelBehavior } from "./database";
+import { Claim, database, ShovelBehavior } from "./database.js";
 
 export const SHOVEL_ID = "slc:claim_shovel"
 
@@ -19,7 +19,7 @@ export function giveClaimShovel(player: Player, isLocked: boolean) {
     for (var i = 0; i < inventory.inventorySize; i++) {
         var item = inventory.container.getItem(i);
 
-        if (item && item.matches(SHOVEL_ID)) {
+        if (item && item.typeId === SHOVEL_ID) {
             hasShovel = true;
 
             // if the player already has a locked shovel, break
@@ -65,7 +65,7 @@ export function unlockClaimShovel(player: Player) {
     // find and edit any claim shovels that are locked to inventory
     for (var i = 0; i < inventory.inventorySize; i++) {
         var item = inventory.container.getItem(i);
-        if (item && item.matches(SHOVEL_ID) && (item.lockMode == ItemLockMode.inventory)) {
+        if (item && item.typeId === SHOVEL_ID && (item.lockMode == ItemLockMode.inventory)) {
 
             item.lockMode = ItemLockMode.none
             item.keepOnDeath = false;

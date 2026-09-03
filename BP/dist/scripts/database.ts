@@ -1,4 +1,4 @@
-import { world, Vector3, Player, system } from "@minecraft/server";
+import { world, Vector3, Player, system, RawMessage, PlayerPermissionLevel } from "@minecraft/server";
 
 export enum ShovelBehavior {
     LOCK_TO_INVENTORY = 0,
@@ -6,21 +6,36 @@ export enum ShovelBehavior {
     MUST_BE_CRAFTED = 2
 }
 
+export enum NameDisplayBehavior {
+    ACTION_BAR = 0,
+    CHAT_ON_ENTER = 1,
+    CHAT_ON_ENTER_AND_EXIT = 2,
+    DISABLED = 3
+}
+
 /**
  * An object containing global settings for the addon
  */
 export class Settings{
+    private _defaultEntranceSound: string;
+    private _defaultExitSound: string;
+    private _opAccess: boolean;
     private _claimBlockHourlyPayment: number;
     private _startingClaimBlocks: number;
     private _claimMinimumWidth: number;
     private _disallowedBlocks: string[];
     private _maxClaimAmount: number;
     private _claimShovelItemBehavior: ShovelBehavior;
+    private _claimNameDisplayBehavior: NameDisplayBehavior;
+    private _allowWitherSpawningInOverworld: boolean;
 
     /**
      * Creates a new Settings object with default values
      */
     constructor(){
+        this._defaultEntranceSound = "random.door_open";
+        this._defaultExitSound = "random.door_close";
+        this._opAccess = false;
         this._claimBlockHourlyPayment = 100;
         this._startingClaimBlocks = 200;
         this._claimMinimumWidth = 8;
@@ -38,6 +53,23 @@ export class Settings{
         ];
         this._maxClaimAmount = 0;
         this._claimShovelItemBehavior = ShovelBehavior.LOCK_TO_INVENTORY;
+        this._claimNameDisplayBehavior = NameDisplayBehavior.ACTION_BAR;
+        this._allowWitherSpawningInOverworld = false;
+    }
+
+    get defaultEntranceSound(): string {
+        return this._defaultEntranceSound;
+    }
+
+    get defaultExitSound(): string {
+        return this._defaultExitSound;
+    }
+
+    /**
+     * If enabled operators will have full unrestricted access to all claims.
+     */
+    get opAccess(): boolean {
+        return this._opAccess;
     }
 
     get claimBlockHourlyPayment(): number {
@@ -61,6 +93,31 @@ export class Settings{
 
     get claimShovelItemBehavior(): ShovelBehavior {
         return this._claimShovelItemBehavior;
+    }
+
+    get claimNameDisplayBehavior(): NameDisplayBehavior {
+        return this._claimNameDisplayBehavior;
+    }
+
+    get allowWitherSpawningInOverworld(): boolean {
+        return this._allowWitherSpawningInOverworld;
+    }
+
+    setDefaultEntranceSound(value: string) {
+        this._defaultEntranceSound = value;
+    }
+
+    setDefaultExitSound(value: string) {
+        this._defaultExitSound = value;
+    }
+
+    /**
+     * If enabled operators will have full unrestricted access to all claims.
+     * 
+     * @param value Enable/disable operator access.
+     */
+    setOpAccess(value: boolean) {
+        this._opAccess = value;
     }
 
     setClaimBlockHourlyPayment(value: number) {
@@ -105,7 +162,29 @@ export class Settings{
     setClaimShovelItemBehavior(value: ShovelBehavior) {
         this._claimShovelItemBehavior = value;
     }
-    
+
+    /**
+     * Sets the behavior for displaying the claim name.
+     * 
+     * Action bar: Displays the claim name in the action bar (directly above the hotbar; may conflict with other addons).
+     * Chat: Sends the claim name as a chat message directly when entering a claim.
+     * Disabled: Disables claim name display entirely.
+     * 
+     * @param value - Action bar; chat; disabled
+     */
+    setClaimNameDisplayBehavior(value: NameDisplayBehavior) {
+        this._claimNameDisplayBehavior = value;
+    }
+
+    /**
+     * Should players be allowed to spawn Withers in the overworld? This is a global setting that applies to all players.
+     * 
+     * @param value - True to allow, False to disallow
+     */
+    setAllowWitherSpawningInOverworld(value: boolean) {
+        this._allowWitherSpawningInOverworld = value;
+    }
+
     /**
      * Returns a Settings object loaded from JSON, if a key is missing it will be replaced with the default value.
      * 
@@ -116,12 +195,17 @@ export class Settings{
     static fromJSON(data: any): Settings {
         const defaultSettings = new Settings();
         var settings = new Settings();
+        settings._defaultEntranceSound = data._defaultEntranceSound || defaultSettings._defaultEntranceSound;
+        settings._defaultExitSound = data._defaultExitSound || defaultSettings._defaultExitSound;
+        settings._opAccess = data._opAccess !== undefined ? data._opAccess : defaultSettings._opAccess;
         settings._claimBlockHourlyPayment = data._claimBlockHourlyPayment || defaultSettings._claimBlockHourlyPayment;
         settings._startingClaimBlocks = data._startingClaimBlocks || defaultSettings._startingClaimBlocks;
         settings._claimMinimumWidth = data._claimMinimumWidth || defaultSettings._claimMinimumWidth;
         settings._disallowedBlocks = data._disallowedBlocks || defaultSettings._disallowedBlocks;
         settings._maxClaimAmount = data._maxClaimAmount || defaultSettings._maxClaimAmount;
         settings._claimShovelItemBehavior = data._claimShovelItemBehavior || defaultSettings._claimShovelItemBehavior;
+        settings._claimNameDisplayBehavior = data._claimNameDisplayBehavior || defaultSettings._claimNameDisplayBehavior;
+        settings._allowWitherSpawningInOverworld = data._allowWitherSpawningInOverworld !== undefined ? data._allowWitherSpawningInOverworld : defaultSettings._allowWitherSpawningInOverworld;
         return settings;
     }
 }
@@ -144,7 +228,23 @@ export enum PermissionTypes {
 }
 
 /**
- * Represents global player permissions, claim public, and claim global permissisons
+ * Applies permissions from a JSON object to a Permissions or PlayerPermissions object, using default permissions for any missing keys.
+ * 
+ * @param target - Either a Permissions or PlayerPermissions object
+ * @param data - The JSON object to load the permissions from
+ * @param defaultPermissions - The default permissions to use if a key is missing
+ */
+function applyPermissionsFromJSON(target: Permissions, data: any, defaultPermissions: Permissions): void {
+    const permissionData = data?._permissions ?? {};
+
+    for (const permission of Object.values(PermissionTypes) as PermissionTypes[]) {
+        const hasSavedValue = permissionData[permission] !== undefined;
+        target.setPermission(permission, hasSavedValue ? permissionData[permission] : defaultPermissions.getPermission(permission));
+    }
+}
+
+/**
+ * Represents a claims public player permissions
  */
 export class Permissions {
     /**
@@ -155,11 +255,7 @@ export class Permissions {
     }
 
     /**
-     * Creates a new PlayerPermissions object
-     * 
-     * @param id - The entity id of the player
-     * 
-     * @param name - The name of the player
+     * Creates a new Permissions object
      */
     constructor() {
         this._permissions = {
@@ -212,23 +308,14 @@ export class Permissions {
     static fromJSON(data: any): Permissions {
         const defaultPermissions = new Permissions();
         const permissions = new Permissions();
-        permissions.setPermission(PermissionTypes.ENTER_CLAIM, data._permissions?.enterClaim !== undefined ? data._permissions.enterClaim : defaultPermissions.getPermission(PermissionTypes.ENTER_CLAIM));
-        permissions.setPermission(PermissionTypes.BREAK_BLOCKS, data._permissions?.breakBlocks !== undefined ? data._permissions.breakBlocks : defaultPermissions.getPermission(PermissionTypes.BREAK_BLOCKS));
-        permissions.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data._permissions?.useItemsOnBlocks !== undefined ? data._permissions.useItemsOnBlocks : defaultPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS));
-        permissions.setPermission(PermissionTypes.HURT_MOBS, data._permissions?.hurtMobs !== undefined ? data._permissions.hurtMobs : defaultPermissions.getPermission(PermissionTypes.HURT_MOBS));
-        permissions.setPermission(PermissionTypes.HURT_MONSTERS, data._permissions?.hurtMonsters !== undefined ? data._permissions.hurtMonsters : defaultPermissions.getPermission(PermissionTypes.HURT_MONSTERS));
-        permissions.setPermission(PermissionTypes.HURT_PLAYERS, data._permissions?.hurtPlayers !== undefined ? data._permissions.hurtPlayers : defaultPermissions.getPermission(PermissionTypes.HURT_PLAYERS));
-        permissions.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data._permissions?.interactWithEntities !== undefined ? data._permissions.interactWithEntities : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES));
-        permissions.setPermission(PermissionTypes.USE_DOORS, data._permissions?.useDoors !== undefined ? data._permissions.useDoors : defaultPermissions.getPermission(PermissionTypes.USE_DOORS));
-        permissions.setPermission(PermissionTypes.USE_SWITCHES, data._permissions?.useSwitches !== undefined ? data._permissions.useSwitches : defaultPermissions.getPermission(PermissionTypes.USE_SWITCHES));
-        permissions.setPermission(PermissionTypes.USE_BEDS, data._permissions?.useBeds !== undefined ? data._permissions.useBeds : defaultPermissions.getPermission(PermissionTypes.USE_BEDS));
-        permissions.setPermission(PermissionTypes.OPEN_CONTAINERS, data._permissions?.openContainers !== undefined ? data._permissions.openContainers : defaultPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS));
-        permissions.setPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS, data._permissions?.interactWithItemDisplays !== undefined ? data._permissions.interactWithItemDisplays : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS));
-        permissions.setPermission(PermissionTypes.EDIT_SIGNS, data._permissions?.editSigns !== undefined ? data._permissions.editSigns : defaultPermissions.getPermission(PermissionTypes.EDIT_SIGNS));
+        applyPermissionsFromJSON(permissions, data, defaultPermissions);
         return permissions;
     }
 }
 
+/**
+ * Represents a list of permissions a player has, can be used on an individual claim or globaly.
+ */
 export class PlayerPermissions extends Permissions {
     /**
     * The entity id of the player
@@ -236,31 +323,19 @@ export class PlayerPermissions extends Permissions {
     private _id: string;
 
     /**
-     * The name of the player; do not use for identification as it can change.
-     */
-    private _name: string;
-
-    /**
      * Creates a new PlayerPermissions object
      * 
      * @param id - The entity id of the player
-     * 
-     * @param name - The name of the player
      */
-    constructor(id: string, name: string) {
+    constructor(id: string) {
         super();
 
         this._id = id;
-        this._name = name;
     }
 
     // Getters
     get id(): string {
         return this._id;
-    }
-
-    get name(): string {
-        return this._name;
     }
 
     /**
@@ -271,21 +346,9 @@ export class PlayerPermissions extends Permissions {
      * @return - The PlayerPermissions object loaded from the JSON object
      */
     static fromJSON(data: any): PlayerPermissions {
-        const defaultPermissions = new PlayerPermissions(data._id, data._name);
-        const permissions = new PlayerPermissions(data._id, data._name);
-        permissions.setPermission(PermissionTypes.ENTER_CLAIM, data._permissions?.enterClaim !== undefined ? data._permissions.enterClaim : defaultPermissions.getPermission(PermissionTypes.ENTER_CLAIM));
-        permissions.setPermission(PermissionTypes.BREAK_BLOCKS, data._permissions?.breakBlocks !== undefined ? data._permissions.breakBlocks : defaultPermissions.getPermission(PermissionTypes.BREAK_BLOCKS));
-        permissions.setPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS, data._permissions?.useItemsOnBlocks !== undefined ? data._permissions.useItemsOnBlocks : defaultPermissions.getPermission(PermissionTypes.USE_ITEMS_ON_BLOCKS));
-        permissions.setPermission(PermissionTypes.HURT_MOBS, data._permissions?.hurtMobs !== undefined ? data._permissions.hurtMobs : defaultPermissions.getPermission(PermissionTypes.HURT_MOBS));
-        permissions.setPermission(PermissionTypes.HURT_MONSTERS, data._permissions?.hurtMonsters !== undefined ? data._permissions.hurtMonsters : defaultPermissions.getPermission(PermissionTypes.HURT_MONSTERS));
-        permissions.setPermission(PermissionTypes.HURT_PLAYERS, data._permissions?.hurtPlayers !== undefined ? data._permissions.hurtPlayers : defaultPermissions.getPermission(PermissionTypes.HURT_PLAYERS));
-        permissions.setPermission(PermissionTypes.INTERACT_WITH_ENTITIES, data._permissions?.interactWithEntities !== undefined ? data._permissions.interactWithEntities : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ENTITIES));
-        permissions.setPermission(PermissionTypes.USE_DOORS, data._permissions?.useDoors !== undefined ? data._permissions.useDoors : defaultPermissions.getPermission(PermissionTypes.USE_DOORS));
-        permissions.setPermission(PermissionTypes.USE_SWITCHES, data._permissions?.useSwitches !== undefined ? data._permissions.useSwitches : defaultPermissions.getPermission(PermissionTypes.USE_SWITCHES));
-        permissions.setPermission(PermissionTypes.USE_BEDS, data._permissions?.useBeds !== undefined ? data._permissions.useBeds : defaultPermissions.getPermission(PermissionTypes.USE_BEDS));
-        permissions.setPermission(PermissionTypes.OPEN_CONTAINERS, data._permissions?.openContainers !== undefined ? data._permissions.openContainers : defaultPermissions.getPermission(PermissionTypes.OPEN_CONTAINERS));
-        permissions.setPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS, data._permissions?.interactWithItemDisplays !== undefined ? data._permissions.interactWithItemDisplays : defaultPermissions.getPermission(PermissionTypes.INTERACT_WITH_ITEM_DISPLAYS));
-        permissions.setPermission(PermissionTypes.EDIT_SIGNS, data._permissions?.editSigns !== undefined ? data._permissions.editSigns : defaultPermissions.getPermission(PermissionTypes.EDIT_SIGNS));
+        const defaultPermissions = new PlayerPermissions(data._id);
+        const permissions = new PlayerPermissions(data._id);
+        applyPermissionsFromJSON(permissions, data, defaultPermissions);
         return permissions;
     }
 }
@@ -417,7 +480,7 @@ export class Claim {
         claim._playerPermissionsList = data._playerPermissionsList 
             ? data._playerPermissionsList
             .map(PlayerPermissions.fromJSON)
-            .filter(permission => permission.id !== undefined && permission.name !== undefined) 
+            .filter(permission => permission.id !== undefined) 
             : defaultClaim.playerPermissionsList;
 
         return claim;
@@ -438,6 +501,11 @@ export class Claim {
 
             // if the player is the owner of the claim then they have all permissions
             if (player.id == this.getOwnerData().id) {
+                return true;
+            }
+
+            // if the player is an operator and op access is enabled for the addon, then they have all permissions
+            if ((player.playerPermissionLevel == PlayerPermissionLevel.Operator) && settings.opAccess) {
                 return true;
             }
 
@@ -505,7 +573,8 @@ export class Claim {
     }
 
     /**
-     * Returns a list of player id's that are not saved in the public permissions list
+     * Returns a list of player id's that are not saved in the claim permissions list.
+     * Players included in the global permissions list will also be excluded from this list.
      */
     getUnsavedPlayers(): string[] {
         // player permissions not found in the claims list
@@ -655,10 +724,18 @@ export class PlayerData {
     private _schemaVersion: string;
     private _shownChangeLog: boolean;
     private _shownSetupScreen: boolean;
+    private _isOp: boolean;
     private _id: string;
     private _name: string;
+    private _lastOnline: string;
     private _mobileMode: ShovelMobileMode | null;
+    private _enableCustomEntranceExitSounds: boolean;
+    private _customEntranceSound: string;
+    private _customExitSound: string;
+    private _claimParticleDensity: number;
     private _inClaim: boolean;
+    private _inClaimName: string;
+    private _inClaimOwnerName: string;
     private _viewingClaim: boolean;
     private _resizingClaimName: string;
     private _firstPoint: Vector3 | null;
@@ -671,13 +748,21 @@ export class PlayerData {
     private _playerPermissionsList: PlayerPermissions[];
 
     constructor(playerID: string, playerName: string) {
-        this._schemaVersion = "v1.0.5";
+        this._schemaVersion = "v1.0.6";
         this._shownChangeLog = true; // default to true so new players don't see the changelog
         this._shownSetupScreen = false; // default to false so all admins can go through the setup ui
+        this._isOp = false;
         this._id = playerID;
         this._name = playerName;
+        this._lastOnline = new Date().toISOString();
+        this._enableCustomEntranceExitSounds = false;
+        this._customEntranceSound = "";
+        this._customExitSound = "";
+        this._claimParticleDensity = 5; // a value between 1 and 5, with 5 being the most dense spawning every second, and 1 being the least dense spawning every 5 seconds
         this._mobileMode = null;
         this._inClaim = false;
+        this._inClaimName = "";
+        this._inClaimOwnerName = "";
         this._viewingClaim = false;
         this._resizingClaimName = "";
         this._firstPoint = null; // null means the player has not set the first point yet
@@ -691,12 +776,37 @@ export class PlayerData {
     }
 
     // Getters
+
+    get isOp(): boolean {
+        return this._isOp;
+    }
+
     get id(): string {
         return this._id;
     }
 
     get name(): string {
         return this._name;
+    }
+
+    get lastOnline(): string {
+        return this._lastOnline;
+    }
+
+    get enableCustomEntranceExitSounds(): boolean {
+        return this._enableCustomEntranceExitSounds;
+    }
+
+    get customEntranceSound(): string {
+        return this._customEntranceSound;
+    }
+
+    get customExitSound(): string {
+        return this._customExitSound;
+    }
+
+    get claimParticleDensity(): number {
+        return this._claimParticleDensity;
     }
 
     /**
@@ -710,6 +820,14 @@ export class PlayerData {
 
     get inClaim(): boolean {
         return this._inClaim;
+    }
+
+    get inClaimName(): string {
+        return this._inClaimName;
+    }
+
+    get inClaimOwnerName(): string {
+        return this._inClaimOwnerName;
     }
 
     get viewingClaim(): boolean {
@@ -786,8 +904,92 @@ export class PlayerData {
         this._schemaVersion = version;
     }
 
+    setIsOp(value: boolean): void {
+        this._isOp = value;
+    }
+
     setName(newName: string): void {
         this._name = newName;
+    }
+
+    private setLastOnline(timestamp: string): void {
+        this._lastOnline = timestamp;
+    }
+
+    /**
+     * Updates the last online timestamp to the current time in ISO format.
+     * Note: time is in UTC, local time is not available in the Bedrock API.
+     */
+    updateLastOnline(): void {
+        this._lastOnline = new Date().toISOString();
+    }
+
+    /**
+     * Returns the last online timestamp in a human-readable format, structured in a RawMessage object
+     * Ex: 3:30pm or 3 days ago
+     */
+    getLastOnlineFormated(): RawMessage {
+        const lastOnline = new Date(this._lastOnline);
+
+        if (isNaN(lastOnline.getTime())) {
+            return {"text": "..."};
+        }
+
+        const diffMs = Date.now() - lastOnline.getTime();
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        // Determine text type based on if player was last online today
+        if (diffDays > 1) {
+            return {"translate": "ui.global:last_online_days", "with": [diffDays.toString()]};
+        }
+        else if (diffDays === 1) {
+            return  {"translate": "ui.global:last_online_yesterday"};
+        }
+        else {
+            return  {"translate": "ui.global:last_online_today"};
+        }
+    }
+
+    setEnableCustomEntranceExitSounds(value: boolean) {
+        this._enableCustomEntranceExitSounds = value;
+    }
+
+    /**
+     * The `enableCustomEntranceExitSounds` flag must be set to true for this to apply
+     * Leaving blank will disable claim entrance sounds.
+     * 
+     * @param value - A minecraft audio id
+     */
+    setCustomEntranceSound(value: string) {
+        this._customEntranceSound = value;
+    }
+
+    /**
+     * The `enableCustomEntranceExitSounds` flag must be set to true for this to apply
+     * Leaving blank will disable claim exit sounds.
+     * 
+     * @param value - A minecraft audio id
+     */
+    setCustomExitSound(value: string) {
+        this._customExitSound = value;
+    }
+
+    /**
+     * Sets the density of claim particles.
+     * A value of 5 spawns particles every second, while a value of 1 spawns particles every 5 seconds.
+     * 
+     * @param value - A value between 1 and 5, with 5 being the most dense.
+     */
+    setClaimParticleDensity(value: number): void {
+        if (value < 1) {
+            this._claimParticleDensity = 1;
+        }
+        else if (value > 5) {
+            this._claimParticleDensity = 5;
+        }
+        else {
+            this._claimParticleDensity = value;
+        }
     }
 
     /**
@@ -801,6 +1003,14 @@ export class PlayerData {
 
     setInClaim(value: boolean): void {
         this._inClaim = value;
+    }
+
+    setInClaimName(value: string): void {
+        this._inClaimName = value;
+    }
+
+    setInClaimOwnerName(value: string): void {
+        this._inClaimOwnerName = value;
     }
 
     setViewingClaim(value: boolean): void {
@@ -986,7 +1196,15 @@ export class PlayerData {
 
         playerData.setShownChangeLog(data._shownChangeLog !== undefined ? data._shownChangeLog : defaultPlayerData.shownChangeLog);
         playerData.setShownSetupScreen(data._shownSetupScreen !== undefined ? data._shownSetupScreen : defaultPlayerData.shownSetupScreen);
+        playerData.setIsOp(data._isOp !== undefined ? data._isOp : defaultPlayerData.isOp);
         playerData.setInClaim(data._inClaim !== undefined ? data._inClaim : defaultPlayerData.inClaim);
+        playerData.setInClaimName(data._inClaimName || defaultPlayerData.inClaimName);
+        playerData.setInClaimOwnerName(data._inClaimOwnerName || defaultPlayerData.inClaimOwnerName);
+        playerData.setLastOnline(data._lastOnline || defaultPlayerData.lastOnline);
+        playerData.setEnableCustomEntranceExitSounds(data._enableCustomEntranceExitSounds !== undefined ? data._enableCustomEntranceExitSounds : defaultPlayerData.enableCustomEntranceExitSounds);
+        playerData.setCustomEntranceSound(data._customEntranceSound || defaultPlayerData.customEntranceSound);
+        playerData.setCustomExitSound(data._customExitSound || defaultPlayerData.customExitSound);
+        playerData.setClaimParticleDensity(data._claimParticleDensity || defaultPlayerData.claimParticleDensity);
         playerData.setMobileMode(data._mobileMode || defaultPlayerData.mobileMode);
         playerData.setViewingClaim(data._viewingClaim !== undefined ? data._viewingClaim : defaultPlayerData.viewingClaim);
         playerData.setResizingClaimName(data._resizingClaimName || defaultPlayerData._resizingClaimName);
@@ -1003,7 +1221,7 @@ export class PlayerData {
         playerData._playerPermissionsList = data._playerPermissionsList 
         ? data._playerPermissionsList
         .map(PlayerPermissions.fromJSON)
-        .filter(permission => permission.id !== undefined && permission.name !== undefined) 
+        .filter(permission => permission.id !== undefined) 
         : defaultPlayerData.playerPermissionsList;
 
         // upgrading from v1.0.2 to v1.0.3, schema version is broken in v1.0.2
@@ -1072,6 +1290,13 @@ export class PlayerData {
                 // only a permission was added which fromJSON already handles
                 
                 playerData.setSchemaVersion("v1.0.5");
+            }
+
+            // v1.0.5 -> v1.0.6 migration logic
+            if (currentSchemaVersion === "v1.0.5" && this.isVersionNewerThan(latestSchemaVersion, "v1.0.6")) {
+                // fromJSON should handle everything within this migration
+                
+                playerData.setSchemaVersion("v1.0.6");
             }
         }
 

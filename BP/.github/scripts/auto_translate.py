@@ -1,7 +1,8 @@
 import re
 import os
 import asyncio
-from googletrans import Translator, LANGUAGES
+from deep_translator import GoogleTranslator
+from deep_translator.exceptions import TranslationNotFound
 import yaml
 
 # Determine project folder (two levels up from this script)
@@ -46,6 +47,27 @@ def reassemble_chunks(chunks, translated_texts):
         else:
             out.append(chunk['value'])
     return ''.join(out)
+
+async def translate_text(text, source_lang, target_lang):
+    last_error = None
+    for attempt in range(5):
+        try:
+            translator = GoogleTranslator(source=source_lang, target=target_lang)
+            translated = await asyncio.to_thread(translator.translate, text)
+            if not translated:
+                print(f'Google Translate returned no text; keeping source: {text!r}')
+                return text
+            if translated.strip() == text.strip():
+                print(f'Google Translate left text unchanged: {text!r}')
+            return translated
+        except TranslationNotFound as error:
+            last_error = error
+        except Exception as error:
+            last_error = error
+        if attempt < 4:
+            await asyncio.sleep(2 ** (attempt + 1))
+    print(f'Google Translate found no translation; keeping source: {text!r}')
+    return text
 
 # Improved parser: preserves original lines, keys, values, comments, and newlines
 def parse_lang_file(file_path):
@@ -98,13 +120,14 @@ def insert_translator_credit(lines, lang_name):
     if not key or not value_format:
         return lines
     credit_value = value_format.replace('{lang}', lang_name)
-    # Check if credit already exists
+
     for item in lines:
         if item['type'] == 'entry' and item['key'] == key:
-            item['value'] = credit_value  # Update existing credit
+            if not item['value'].strip():
+                item['value'] = credit_value
+                item['original'] = f"{key}={credit_value} ## Auto-generated translator credit"
             return lines
 
-    # If not found, append new credit entry
     lines.append({
         'type': 'entry',
         'key': key,
@@ -180,43 +203,90 @@ async def main():
     # MARK: Auto Translate
     for lang in TARGET_LANGS_AUTO:
         in_lines = parse_lang_file(SOURCE_FILE)
-        in_lines = insert_translator_credit(in_lines, LANGUAGES[lang.split('_')[0]].capitalize())
+        cached_lines = parse_lang_file(CACHED_FILE)
+        existing_file_path = os.path.join(DESTINATION_FOLDER, f'{lang}.lang')
+        existing_lines = parse_lang_file(existing_file_path) if os.path.exists(existing_file_path) else []
 
-        # Prepare chunks for translation
-        entry_chunks = []
-        entry_texts = []
-        entry_indices = []
-        for idx, item in enumerate(in_lines):
-            if item['type'] == 'entry':
+        cached_dict = {item['key']: item for item in cached_lines if item['type'] == 'entry'}
+        existing_dict = {item['key']: item for item in existing_lines if item['type'] == 'entry'}
+
+        out_lines = []
+        changed_entries = []
+        source_keys = set()
+
+        for item in in_lines:
+            if item['type'] != 'entry':
+                out_lines.append(item)
+                continue
+
+            key = item['key']
+            source_keys.add(key)
+            cached_item = cached_dict.get(key)
+            existing_item = existing_dict.get(key)
+
+            if existing_item and cached_item and item['value'] == cached_item['value']:
+                out_lines.append(existing_item)
+                continue
+
+            changed_entries.append((len(out_lines), item))
+            out_lines.append({
+                'type': 'entry',
+                'key': item['key'],
+                'value': '',
+                'comment': item['comment'],
+                'original': item['original']
+            })
+
+        for item in existing_lines:
+            if item['type'] == 'entry' and item['key'] not in source_keys:
+                out_lines.append(item)
+
+        if changed_entries:
+            all_texts = []
+            batch_specs = []
+            for out_idx, item in changed_entries:
                 chunks = split_value_chunks(item['value'])
                 texts = [c['value'] for c in chunks if c['type'] == 'text']
-                entry_chunks.append(chunks)
-                entry_texts.append(texts)
-                entry_indices.append(idx)
+                if not texts:
+                    out_lines[out_idx] = {
+                        'type': 'entry',
+                        'key': item['key'],
+                        'value': '',
+                        'comment': item['comment'],
+                        'original': item['original']
+                    }
+                    continue
+                batch_specs.append((out_idx, chunks))
+                all_texts.extend(texts)
 
-        out_lines = list(in_lines)
-        # Flatten all text chunks for translation
-        all_texts = [text for texts in entry_texts for text in texts]
-        if all_texts:
-            async with Translator() as translator:
-                translations = await translator.translate(all_texts, dest=lang.split('_')[0])
-            translated_texts = [t.text for t in translations]
-        else:
             translated_texts = []
+            if all_texts:
+                target_lang = lang.split('_')[0]
+                source_lang = settings['source'].split('/')[-1].split('_')[0]
+                translations = []
+                for text in all_texts:
+                    translations.append(await translate_text(
+                        text,
+                        source_lang,
+                        target_lang,
+                    ))
+                    await asyncio.sleep(1)
+                translated_texts = translations
 
-        # Reassemble translated values
-        idx = 0
-        for entry_idx, chunks in zip(entry_indices, entry_chunks):
-            num_texts = sum(1 for c in chunks if c['type'] == 'text')
-            translated = reassemble_chunks(chunks, translated_texts[idx:idx+num_texts])
-            out_lines[entry_idx] = {
-                'type': 'entry',
-                'key': in_lines[entry_idx]['key'],
-                'value': translated,
-                'comment': in_lines[entry_idx]['comment'],
-                'original': in_lines[entry_idx]['original']
-            }
-            idx += num_texts
+            text_cursor = 0
+            for out_idx, chunks in batch_specs:
+                num_texts = sum(1 for c in chunks if c['type'] == 'text')
+                translated = reassemble_chunks(chunks, translated_texts[text_cursor:text_cursor + num_texts])
+                text_cursor += num_texts
+                out_lines[out_idx] = {
+                    'type': 'entry',
+                    'key': out_lines[out_idx]['key'],
+                    'value': translated,
+                    'comment': out_lines[out_idx]['comment'],
+                    'original': out_lines[out_idx]['original']
+                }
+
+        out_lines = insert_translator_credit(out_lines, lang.split('_')[0].capitalize())
 
         out_path = f"{DESTINATION_FOLDER}{f'{lang}'}.lang"
         write_lang_file(out_path, out_lines)

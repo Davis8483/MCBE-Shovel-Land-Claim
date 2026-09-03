@@ -1,10 +1,9 @@
-import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel, InvalidEntityError, EntityDamageCause, RGB, PlatformType, Entity, WorldLoadAfterEvent } from '@minecraft/server';
-import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior, ShovelMobileMode } from './database.js';
+import { world, system, Player, Vector3, ItemStack, EntityQueryOptions, EntityRidingComponent, BlockComponentTypes, EntityComponentTypes, EntityInventoryComponent, MolangVariableMap, EntityHealthComponent, Dimension, EntityLeashableComponent, Block, BlockVolume, InvalidContainerSlotError, VectorXZ, PlayerPermissionLevel, InvalidEntityError, EntityDamageCause, RGB, PlatformType, Entity, WorldLoadAfterEvent, SetArmorTrimFunction } from '@minecraft/server';
+import { database, PlayerData, Claim, PermissionTypes, settings, ShovelBehavior, ClaimBlocksBehavior, ShovelMobileMode, NameDisplayBehavior } from './database.js';
 import { playSound, AddonSounds } from './sounds.js';
 import { NotificationManagerStack } from './notifications.js';
 import { ShovelUI } from './shovel_ui.js';
 import { runInAllClaims, getClosestPlayer, SHOVEL_ID, updateShovelBehavior, getDistance, waitForEntityLoad } from './utils.js'
-import { EntityLoaderManager } from './entity_protection.js';
 
 world.afterEvents.playerJoin.subscribe((data) => {
 
@@ -59,6 +58,10 @@ world.afterEvents.playerLeave.subscribe((data) => {
     if (playerData.viewingClaim) {
         world.getDimension("overworld").runCommand("tickingarea remove claimView");
     }
+
+    // update last online time
+    playerData.updateLastOnline();
+
 });
 
 world.afterEvents.playerSpawn.subscribe((data) => {
@@ -79,7 +82,9 @@ world.afterEvents.itemUse.subscribe((data) => {
     if ((data.itemStack.typeId == SHOVEL_ID) && ((playerData.mobileMode == null) || (playerData.mobileMode == ShovelMobileMode.MENU))) {
 
         // if player is an admin, show the setup ui if not seen yet
-        if ((data.source.playerPermissionLevel == PlayerPermissionLevel.Operator) && !playerData.shownSetupScreen) {
+        const setupNeeded = (world.gameRules.showTags && (settings.claimShovelItemBehavior == ShovelBehavior.LOCK_TO_INVENTORY)) || world.gameRules.doFireTick;
+
+        if ((data.source.playerPermissionLevel == PlayerPermissionLevel.Operator) && !playerData.shownSetupScreen && setupNeeded) {
             new ShovelUI(data.source, notifManager).opAddonSetup();
         }
         // if the player hasn't seen the changelog yet
@@ -104,6 +109,8 @@ world.afterEvents.playerHotbarSelectedSlotChange.subscribe((data) => {
         // if new item is not a claim shovel and the previous item was a claim shovel, reset first point and resizing claim name
         if ((!data.itemStack || data.itemStack.typeId != SHOVEL_ID) && (inventory.getSlot(data.previousSlotSelected).typeId == SHOVEL_ID)) {
             if (playerData.resizingClaimName.length > 0) {
+                playerData.setResizingClaimName("");
+
                 // send notif that claim creation has been canceled
                 notifManager.send(data.player, AddonSounds.Global.WARN_EVENT, undefined, "chat.claim:claim_resize_canceled");
             }
@@ -161,9 +168,7 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
             var isResize = false;
 
             if (!data.player.isSneaking) {
-                playerData.setResizingClaimName("");
-                playerData.setFirstPoint(data.block.location);
-
+                // figure out if the player is trying to resize a claim by selecting its corner
                 runInAllClaims((claim) => {
 
                     // user defined start and end points of the claim
@@ -205,6 +210,9 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                 });
 
                 if (!isResize) {
+                    playerData.setResizingClaimName("");
+                    playerData.setFirstPoint(data.block.location);
+
                     notifManager.send(data.player, AddonSounds.Shovel.SELECT, undefined, "chat.point.new:selected", data.block.x.toString(), data.block.y.toString(), data.block.z.toString());
                 }
             }
@@ -214,13 +222,8 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                 var claimIntersectingClaim = false;
                 var playerIntersectingClaim = false;
 
-                // if player has not set the first point yet
-                if (playerData.firstPoint == null) {
-                    // notify and don't continue with claim creation
-                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:point_not_set");
-                }
                 // if claim is resized
-                else if (playerData.resizingClaimName.length > 0) {
+                if (playerData.resizingClaimName.length > 0) {
 
                     // get the claim object that is being resized
                     var resizingClaim = playerData.getClaim(playerData.resizingClaimName);
@@ -266,13 +269,21 @@ world.beforeEvents.playerBreakBlock.subscribe((data) => {
                     }
                     // all requirements met, open the claim resizing ui
                     else {
+                        // reset resizingClaimName var
+                        playerData.setResizingClaimName("");
+
                         system.run(() => {
                             playSound(data.player, AddonSounds.Shovel.SELECT);
                             new ShovelUI(data.player, notifManager).resizeClaim(resizingClaim, playerData.oppositeCorner, secondPoint);
                         });
                     }
                 }
-                // not resizing, create a new claim
+                // if player has not set the first point yet
+                else if (playerData.firstPoint == null) {
+                    // notify and don't continue with claim creation
+                    notifManager.send(data.player, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim:point_not_set");
+                }
+                // create a new claim
                 else {
 
                     const claimWidth = Math.abs(playerData.firstPoint.x - secondPoint.x) + 1;
@@ -457,8 +468,18 @@ world.afterEvents.pistonActivate.subscribe((data) => {
 
 world.beforeEvents.itemUse.subscribe((data) => {
 
+    const notifManager = NotificationManagerStack.getById(data.source.id);
+
     // disallow player from using items while viewing claim
     if (PlayerData.fromId(data.source.id).viewingClaim) {
+        data.cancel = true;
+    }
+
+    // items that are disabled by admin; can't be used
+    if (settings.disallowedBlocks.includes(data.itemStack.typeId)) {
+        // notify player
+        notifManager.send(data.source, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.world:disabled_item");
+
         data.cancel = true;
     }
 });
@@ -621,61 +642,14 @@ world.afterEvents.worldLoad.subscribe(() => {
 });
 
 /**
- * Create an entity save after its loaded into the world, in case the entity is killed by a disallowed player.
- */
-world.afterEvents.entityLoad.subscribe(async (data) => {
-    const entityLoaded = await waitForEntityLoad(data.entity, 40); // wait up to 2 seconds for entity to be fully initialized
-    const disallowedEntityDeathLocation = world.getDynamicProperty("disallowedEntityDeathLocation") as Vector3; // the location of the last killed entity
-    const killedByDisallowedPlayer = disallowedEntityDeathLocation && (getDistance(data.entity.location, disallowedEntityDeathLocation) < 1.5); // if entity was killed by a disallowed player; we don't want to save it again
-
-    /**
-     * Note:
-     * We don't want to re-save a loaded/revived entity due to the following edge case;
-     * 
-     * If the entity is in a crowded mob farm, it may be killed and reloaded frequently,
-     * leading to possibly accidentally saving two entities within the same structure.
-     * 
-     * Saving two in the same structure should be handled by the entityLoaderManager,
-     * although some can still slip through. So its better to be safe than sorry.
-     */
-    
-    // only save the entity if in the overworld, wasn't killed by a disallowed player, and is fully initialized
-    if ((data.entity.dimension == world.getDimension("overworld")) && !killedByDisallowedPlayer && entityLoaded) {
-        entityLoaderManager.createSave(data.entity);
-    }
-
-    /**
-     * Note:
-     * We're not worried about removing the disallowedEntityDeathLocation property here
-     * because the xp cleanup should handle it anyways.
-    */
-});
-
-/**
- * Create an entity save after its spawned, in case the entity is killed by a disallowed player.
- * Also removes xp orbs and items spawned by disallowed killed entities.
- * Also also (lol) prevents wither spawning in the overworld.
+ * Prevents withers being spawned in the overworld, as they can grief the world by destroying blocks when damaged.
  */
 world.afterEvents.entitySpawn.subscribe(async (data) => {
     try {
         if (data.entity.dimension == world.getDimension("overworld")) {
-            
-            // items spawn before the hurtEntity event is fired,
-            // so we need to wait a couple ticks to ensure the disallowedEntityDeathLocation is set
-            if (data.entity.typeId == "minecraft:item") {
-                await system.waitTicks(2);
-            }
 
-            const disallowedEntityDeathLocation = world.getDynamicProperty("disallowedEntityDeathLocation") as Vector3; // the location of the last killed entity
-            const killedByDisallowedPlayer = disallowedEntityDeathLocation && (getDistance(data.entity.location, disallowedEntityDeathLocation) < 1.5);
-            const shouldRemoveXP = (data.entity.typeId == "minecraft:xp_orb") && disallowedEntityDeathLocation && (getDistance(data.entity.location, disallowedEntityDeathLocation) < 10);
-            const shouldRemoveItem = (data.entity.typeId == "minecraft:item") && disallowedEntityDeathLocation && (getDistance(data.entity.location, disallowedEntityDeathLocation) < 5);
-
-            if (shouldRemoveXP || shouldRemoveItem) {
-                data.entity.remove(); // bye bye... xp and or item? :)
-            }
             // disallow the wither from spawning in the overworld, as when damaged it will remove blocks and cause griefing
-            else if (data.entity.typeId == "minecraft:wither") {
+            if (data.entity.typeId == "minecraft:wither" && !settings.allowWitherSpawningInOverworld) {
 
                 // get the closest player to the wither spawn location, we will assume they spawned it
                 const closestPlayer: Player = getClosestPlayer(data.entity.location);
@@ -691,27 +665,6 @@ world.afterEvents.entitySpawn.subscribe(async (data) => {
                 // remove the wither
                 data.entity.remove();
             }
-            // if entity was killed by a disallowed player; we don't want to save it again
-            else if (!killedByDisallowedPlayer) {
-
-                const entityLoaded = await waitForEntityLoad(data.entity, 40); // wait up to 2 seconds for entity to be fully initialized
-
-                if (entityLoaded) {
-                    entityLoaderManager.createSave(data.entity); // save the entity
-                }
-            }
-
-            // remove the disallowedEntityDeathLocation property if necessary
-            if (killedByDisallowedPlayer || shouldRemoveXP) {
-                // unless already changed, remove the property after 2 seconds
-                // the delay is to ensure all calls of this (entitySpawn) event are processed before the property removal
-                const disallowedEntityDeathLocationOld = world.getDynamicProperty("disallowedEntityDeathLocation"); // save old value
-                    system.runTimeout(() => {
-                        if (disallowedEntityDeathLocationOld === world.getDynamicProperty("disallowedEntityDeathLocation")) {
-                        world.setDynamicProperty("disallowedEntityDeathLocation", undefined);
-                    }
-                }, 2000);
-            }
         }
     }
     catch (error) {
@@ -724,73 +677,11 @@ world.afterEvents.entitySpawn.subscribe(async (data) => {
 });
 
 /**
- * Create an entity save after a player has interacted with it or leashed it to a knot.
+ * Entity protection for disallowed players or mobs.
  */
-world.afterEvents.playerInteractWithEntity.subscribe((data) => {
-    try {
-        const dimension: Dimension = world.getDimension("overworld");
-
-        if (data.target.dimension == dimension) {
-            // if the target is a leash knot, save all entities that could be leashed to it
-            if (data.target.typeId == "minecraft:leash_knot") {
-                var queryOptions: EntityQueryOptions = {};
-                queryOptions.location = data.target.location;
-                queryOptions.maxDistance = 15;
-                dimension.getEntities(queryOptions).forEach((entity) => {
-                    entityLoaderManager.createSave(entity);
-                })
-            }
-            // othewise just save the entity
-            else {
-                entityLoaderManager.createSave(data.target);
-            }
-        }
-    }
-    catch (error) {
-        if (error instanceof InvalidEntityError) {
-            // this error is expected to occour from time to time
-        } else {
-            throw error;
-        }
-    }
-});
-
-/**
- * Detect if a player is leashing a mob to a fence and then save the entity.
- */
-world.afterEvents.playerInteractWithBlock.subscribe((data) => {
+world.beforeEvents.entityHurt.subscribe((data) => {
     const dimension: Dimension = world.getDimension("overworld");
-
-    if (data.player.dimension == dimension) {
-        var queryOptions: EntityQueryOptions = {};
-        queryOptions.maxDistance = 1;
-        queryOptions.type = "minecraft:leash_knot";
-        queryOptions.location = data.block.location;
-
-        var leashKnot = dimension.getEntities(queryOptions)[0];
-
-        // if a leashKnot exists at the block location, save all entities within a radius of 15 blocks
-        if (leashKnot) {
-            queryOptions.maxDistance = 15;
-            queryOptions.type = undefined;
-            dimension.getEntities(queryOptions).forEach((entity) => {
-                entityLoaderManager.createSave(entity);
-            })
-        }
-    }
-});
-
-const entityLoaderManager = new EntityLoaderManager();
-
-/**
- * If an entity is hurt by a disallowed player/mob reset its health, or (if killed) load its last save.
- */
-world.afterEvents.entityHurt.subscribe((data) => {
-    const dimension: Dimension = world.getDimension("overworld");
-    const healthComponent: EntityHealthComponent = data.hurtEntity.getComponent(EntityComponentTypes.Health);
     var damagePlayerSource: Player; // leaving as undefined will force hasPermission() to check the claims public permissions
-
-    var damageAllowed = true; // flag to indicate if the damage is allowed; used for entity save cleanup upon death
 
     // if the damaging entity is a player check their permissions to hurt it, otherwise if its a mob or unkown damage source use the claims public permissions
     if (data.damageSource.damagingEntity && (data.damageSource.damagingEntity instanceof Player)) {
@@ -816,8 +707,6 @@ world.afterEvents.entityHurt.subscribe((data) => {
                     return; // player/mob is allowed to hurt this entity
                 }
 
-                damageAllowed = false; // checks have been passed, set flag
-
                 // if it was a player that hurt the entity
                 if (damagePlayerSource) {
 
@@ -827,87 +716,9 @@ world.afterEvents.entityHurt.subscribe((data) => {
                     notifManager.send(damagePlayerSource, AddonSounds.Global.NEGATIVE_EVENT, undefined, "chat.claim.permission:hurt_entities");
                 }
 
-                // check if the game engine will count the entity as dead
-                if (healthComponent.currentValue > 0) {
-                    // if the entity is still considered alive we'll adjust its health to its previous value
-                    healthComponent.setCurrentValue(healthComponent.currentValue + data.damage);
-
-                    entityLoaderManager.createSave(data.hurtEntity); // re-save the entity in case it doesn't have a save on file yet
-                }
-                // the engine considers the entity as dead so we'll go ahead and load its last save
-                else {
-
-                    // skip player entities as they cannot be loaded
-                    if (data.hurtEntity.typeId === "minecraft:player") {
-                        return;
-                    }
-
-                    // save the entity location so we can clean up xp, items, and prevent the loaded entity from being re-saved
-                    world.setDynamicProperty("disallowedEntityDeathLocation", data.hurtEntity.location);
-
-                    // save vars so they can be used even after the entity is fully removed from the world
-                    const entityID = data.hurtEntity.id;
-                    const location: Vector3 = data.hurtEntity.location;
-                    const entityTypeID: string = data.hurtEntity.typeId;
-                    const leashKnotLocation = data.hurtEntity.getDynamicProperty("leashKnotLocation") as Vector3;
-
-                    // wait until the dead entity is fully removed
-                    while (data.hurtEntity.isValid) {
-                        await system.waitTicks(20);
-                    }
-
-                    // load the entity save
-                    entityLoaderManager.loadSave(entityID, location, entityTypeID);
-
-                    // get the new loaded entity
-                    var newEntity: Entity = null;
-                    var queryOptions: EntityQueryOptions = {};
-                    queryOptions.maxDistance = 1;
-                    queryOptions.type = entityTypeID;
-                    queryOptions.location = location;
-                    dimension.getEntities(queryOptions).forEach((e) => {
-                        newEntity = e;
-                    });
-
-                    const isEntityLoaded = await waitForEntityLoad(newEntity, 20); // wait 1 second for the entity to fully load
-
-                    // if loaded entity was not retrieve successfully do not continue
-                    if (!newEntity || !isEntityLoaded) {
-                        return;
-                    }
-
-                    // if the entity was leashed to a knot, reattach it to the knot
-                    if (leashKnotLocation) {
-                        var queryOptions: EntityQueryOptions = {};
-                        queryOptions.maxDistance = 1;
-                        queryOptions.type = "minecraft:leash_knot";
-                        queryOptions.location = leashKnotLocation;
-                        var leashKnot = dimension.getEntities(queryOptions)[0];
-
-                        // the leash knot doesn't exist spawn a new one
-                        if (!leashKnot) {
-                            // use an in game command to summon a leash knot, for some reason the dimension.spawnEntity method won't
-                            dimension.runCommand(`summon minecraft:leash_knot ${leashKnotLocation.x} ${leashKnotLocation.y} ${leashKnotLocation.z}`)
-                            // leashKnot = dimension.spawnEntity("minecraft:leash_knot", leashKnotLocation);
-
-                            leashKnot = dimension.getEntities(queryOptions)[0];
-                        }
-
-                        // reattach the leash
-                        const leashComponent: EntityLeashableComponent = newEntity.getComponent(EntityComponentTypes.Leashable);
-                        leashComponent.leashTo(leashKnot);
-                    }
-
-                    // transfer the entity save to the new id
-                    entityLoaderManager.transferSave(data.hurtEntity.id, newEntity.id);
-                }
+                data.cancel = true; // disallow the action
             }
         });
-
-        // if the allowed damage killed the entity, remove its save; memory cleanup :thumbs_up:
-        if (damageAllowed && (healthComponent.currentValue <= 0)) {
-            entityLoaderManager.deleteSave(data.hurtEntity.id);
-        }
     }
 });
 
@@ -951,6 +762,9 @@ system.runInterval(() => {
         const playerData = PlayerData.fromId(p.id);
         const notifManager = NotificationManagerStack.getById(p.id);
 
+        // update the players operator status
+        playerData.setIsOp(p.playerPermissionLevel == PlayerPermissionLevel.Operator);
+
         // only run if player is in overworld
         if (p.dimension == world.getDimension("overworld")) {
 
@@ -971,8 +785,10 @@ system.runInterval(() => {
                     const distanceMoved = playerData.distanceToPrevLocation();
 
                     playerData.setInClaim(true);
+                    playerData.setInClaimName(claim.name);
+                    playerData.setInClaimOwnerName(claim.getOwnerData().name);
 
-                    if (!playerData.viewingClaim) {
+                    if ((settings.claimNameDisplayBehavior == NameDisplayBehavior.ACTION_BAR) && !playerData.viewingClaim) {
                         // show claim name and owner onscreen
                         p.onScreenDisplay.setActionBar(
                             {
@@ -1043,15 +859,26 @@ system.runInterval(() => {
 
             // player has entered claim
             if (!inClaimOld && playerData.inClaim) {
+                if ((settings.claimNameDisplayBehavior == NameDisplayBehavior.CHAT_ON_ENTER)
+                    || (settings.claimNameDisplayBehavior == NameDisplayBehavior.CHAT_ON_ENTER_AND_EXIT)) {
+                    // show claim name and owner in chat
+                    notifManager.send(p, undefined, undefined, "chat.claim:entered", playerData.inClaimName, playerData.inClaimOwnerName);
+                }
+
                 // play entrance sound
-                playSound(p, AddonSounds.Claim.ENTER)
+                p.playSound(playerData.enableCustomEntranceExitSounds ? playerData.customEntranceSound : settings.defaultEntranceSound)
             }
             // player has exited the claim
             else if (inClaimOld && !playerData.inClaim) {
+                if (settings.claimNameDisplayBehavior == NameDisplayBehavior.CHAT_ON_ENTER_AND_EXIT) {
+                    // show claim name and owner in chat
+                    notifManager.send(p, undefined, undefined, "chat.claim:exited", playerData.inClaimName, playerData.inClaimOwnerName);
+                }
+
                 // play exit sound
-                playSound(p, AddonSounds.Claim.LEAVE)
+                p.playSound(playerData.enableCustomEntranceExitSounds ? playerData.customExitSound : settings.defaultExitSound)
             }
-            
+
             // the flag should always be false if player is not in a claim
             if (!playerData.inClaim){
                 // set pending entrance disallow flag to false; after this point the player will not be able to enter the claim again
@@ -1083,6 +910,11 @@ system.runInterval(() => {
                 const fP = playerData.firstPoint;
                 dimension.spawnParticle("slc:first_point_dust", { x: fP.x + 0.5, y: fP.y + 0.8, z: fP.z + 0.5 });
 
+            }
+
+            // apply particle density setting, some particles will be dropped
+            if (Math.floor(world.getAbsoluteTime() / 20) % (6 - playerData.claimParticleDensity) != 0) {
+                continue; // skip rendering for this player
             }
 
             runInAllClaims((claim) => {

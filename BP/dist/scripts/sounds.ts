@@ -9,8 +9,6 @@ export namespace AddonSounds {
 
     export enum Claim {
         DELETE = "mob.creeper.say",
-        ENTER = "random.door_open",
-        LEAVE = "random.door_close",
         VIEW = "beacon.activate",
         SAVE = "note.cow_bell"
     }
